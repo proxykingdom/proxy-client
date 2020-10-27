@@ -8,6 +8,7 @@ using System.Globalization;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Proxy.Client
@@ -65,8 +66,10 @@ namespace Proxy.Client
 
                 return await fn();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine(ex);
+
                 throw new ProxyException(String.Format(CultureInfo.InvariantCulture,
                     $"Connection to proxy host {proxyHost} on port {proxyPort} failed."));
             }
@@ -76,10 +79,7 @@ namespace Proxy.Client
         {
             Socket.Send(CreateGetCommand(destinationHost, headers, isSsl), SocketFlags.None);
 
-            var responseBuffer = new byte[Socket.ReceiveBufferSize];
-            var bytesRec = Socket.Receive(responseBuffer, SocketFlags.None);
-
-            var response = Encoding.UTF8.GetString(responseBuffer);
+            var response = Socket.ReceiveAll(SocketFlags.None);
 
             if (response.StartsWith("\0\0"))
                 throw new ProxyException("Response is empty");
@@ -89,12 +89,11 @@ namespace Proxy.Client
 
         protected internal async Task<ProxyResponse> SendGetCommandAsync(string destinationHost, IDictionary<string, string> headers, bool isSsl)
         {
+            Console.WriteLine("SendGetCommandAsync hit");
+
             await Socket.SendAsync(CreateGetCommand(destinationHost, headers, isSsl), SocketFlags.None);
 
-            var responseBuffer = new byte[20000];
-            await Socket.ReceiveAsync(responseBuffer, SocketFlags.None);
-
-            var response = Encoding.UTF8.GetString(responseBuffer);
+            var response = await Socket.ReceiveAllAsync(SocketFlags.None);
 
             if (response.StartsWith("\0\0"))
                 throw new ProxyException("Response is empty");

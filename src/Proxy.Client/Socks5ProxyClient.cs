@@ -115,7 +115,7 @@ namespace Proxy.Client
 
             Socket.Send(request, SocketFlags.None);
 
-            var response = new byte[255]; //maybe put to 20 max
+            var response = new byte[10];
             Socket.Receive(response, SocketFlags.None);
 
             var replyCode = response[1];
@@ -126,6 +126,8 @@ namespace Proxy.Client
 
         protected internal override async Task SendConnectCommandAsync(string destinationHost, int destinationPort)
         {
+            Console.WriteLine("SendConnectCommandAsync hit");
+
             var command = Socks5Constants.SOCKS5_CMD_CONNECT;
 
             var addressType = GetDestinationAddressType(destinationHost);
@@ -136,7 +138,7 @@ namespace Proxy.Client
 
             await Socket.SendAsync(request, SocketFlags.None);
 
-            var response = new byte[255];
+            var response = new byte[10];
             await Socket.ReceiveAsync(response, SocketFlags.None);
 
             var replyCode = response[1];
@@ -197,10 +199,10 @@ namespace Proxy.Client
         {
             Socket.Send(AuthRequest, SocketFlags.None);
 
-            var response = new byte[2];
-            Socket.Receive(response, SocketFlags.None);
+            var responseBytes = new byte[2];
+            Socket.Receive(responseBytes, SocketFlags.None);
 
-            var acceptedAuthMethod = response[1];
+            var acceptedAuthMethod = responseBytes[1];
 
             if (acceptedAuthMethod == Socks5Constants.SOCKS5_AUTH_METHOD_REPLY_NO_ACCEPTABLE_METHODS)
             {
@@ -232,14 +234,16 @@ namespace Proxy.Client
 
         private async Task NegotiateServerAuthMethodAsync()
         {
+            Console.WriteLine("NegotiateServerAuthMethodAsync");
+
             await Socket.SendAsync(AuthRequest, SocketFlags.None);
 
-            var response = new byte[2];
-            await Socket.ReceiveAsync(response, SocketFlags.None);
+            var responseBuffer = new byte[2];
+            await Socket.ReceiveAsync(responseBuffer, SocketFlags.None);
 
-            var acceptedAuthMethod = response[1];
+            var acceptedAuthMethod = responseBuffer[1];
 
-            if (acceptedAuthMethod == Socks5Constants. SOCKS5_AUTH_METHOD_REPLY_NO_ACCEPTABLE_METHODS)
+            if (acceptedAuthMethod == Socks5Constants.SOCKS5_AUTH_METHOD_REPLY_NO_ACCEPTABLE_METHODS)
             {
                 Socket.Close();
                 throw new ProxyException("The proxy destination does not accept the supported proxy client authentication methods.");
@@ -258,6 +262,8 @@ namespace Proxy.Client
 
                 var crResponse = new byte[2];
                 await Socket.ReceiveAsync(crResponse, SocketFlags.None);
+
+                Console.WriteLine("SOCKS5_AUTH_METHOD_USERNAME_PASSWORD");
 
                 if (crResponse[1] != 0)
                 {
