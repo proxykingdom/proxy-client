@@ -1,4 +1,6 @@
-﻿using System.Net.Security;
+﻿using System;
+using System.IO;
+using System.Net.Security;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
@@ -7,9 +9,11 @@ namespace Proxy.Client.Utilities.Extensions
 {
     public static class SocketTaskExtensions
     {
+        private const int StringBufferSize = 2048;
+
         public static string ReceiveAll(this Socket s, SocketFlags flags)
         {
-            var buffer = new byte[2048];
+            var buffer = new byte[StringBufferSize];
             var placeHolder = new StringBuilder();
 
             do
@@ -23,21 +27,21 @@ namespace Proxy.Client.Utilities.Extensions
 
         public static async Task<string> ReceiveAllAsync(this Socket s, SocketFlags flags)
         {
-            var buffer = new byte[2048];
+            var buffer = new byte[StringBufferSize];
             var placeHolder = new StringBuilder();
 
             do
             {
-                await s.ReceiveAsync(buffer, SocketFlags.None);
+                await s.ReceiveAsync(buffer, flags);
                 placeHolder.Append(Encoding.UTF8.GetString(buffer));
             } while (s.Available != 0);
 
             return placeHolder.ToString().Trim('\0');
         }
 
-        public static string ReadAll(this SslStream ss, Socket s)
+        public static string ReadString(this SslStream ss, Socket s)
         {
-            var buffer = new byte[2048];
+            var buffer = new byte[StringBufferSize];
             var placeHolder = new StringBuilder();
 
             do
@@ -49,9 +53,9 @@ namespace Proxy.Client.Utilities.Extensions
             return placeHolder.ToString().Trim('\0');
         }
 
-        public static async Task<string> ReadAllAsync(this SslStream ss, Socket s)
+        public static async Task<string> ReadStringAsync(this SslStream ss, Socket s)
         {
-            var buffer = new byte[2048];
+            var buffer = new byte[StringBufferSize];
             var placeHolder = new StringBuilder();
 
             do

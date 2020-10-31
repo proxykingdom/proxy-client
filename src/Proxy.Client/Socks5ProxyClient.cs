@@ -96,11 +96,37 @@ namespace Proxy.Client
             {
                 DetermineClientAuthMethod();
                 await NegotiateServerAuthMethodAsync();
-                await SendConnectCommandAsync(destinationHost, destinationPort);
+                await SendConnectCommandAsync();
 
             }, async () => 
             {
-                return await SendGetCommandAsync(destinationHost, headers, isSsl);
+                return await SendGetCommandAsync(headers, isSsl);
+            }, destinationHost, destinationPort);
+        }
+
+        public override ProxyResponse Post(string destinationHost, int destinationPort, string body, IDictionary<string, string> headers = null, bool isSsl = false)
+        {
+            return HandleRequest(() => 
+            {
+                DetermineClientAuthMethod();
+                NegotiateServerAuthMethod();
+                SendConnectCommand();
+            }, () => 
+            {
+                return SendPostCommand(body, headers, isSsl);
+            }, destinationHost, destinationPort);
+        }
+
+        public override Task<ProxyResponse> PostAsync(string destinationHost, int destinationPort, string body, IDictionary<string, string> headers = null, bool isSsl = false)
+        {
+            return HandleRequestAsync(async () => 
+            {
+                DetermineClientAuthMethod();
+                await NegotiateServerAuthMethodAsync();
+                await SendConnectCommandAsync();
+            }, async () => 
+            {
+                return await SendPostCommandAsync(body, headers, isSsl);
             }, destinationHost, destinationPort);
         }
 
@@ -122,16 +148,16 @@ namespace Proxy.Client
             var replyCode = response[1];
 
             if (replyCode != Socks5Constants.SOCKS5_CMD_REPLY_SUCCEEDED)
-                HandleProxyCommandError(response, DestinationHost, DestinationPort);
+                HandleProxyCommandError(response);
         }
 
-        protected internal override async Task SendConnectCommandAsync(string destinationHost, int destinationPort)
+        protected internal override async Task SendConnectCommandAsync()
         {
             var command = Socks5Constants.SOCKS5_CMD_CONNECT;
 
-            var addressType = GetDestinationAddressType(destinationHost);
-            var destinationAddressBytes = await GetDestinationAddressBytesAsync(addressType, destinationHost);
-            var destinationPortBytes = GetDestinationPortBytes(destinationPort);
+            var addressType = GetDestinationAddressType(DestinationHost);
+            var destinationAddressBytes = await GetDestinationAddressBytesAsync(addressType, DestinationHost);
+            var destinationPortBytes = GetDestinationPortBytes(DestinationPort);
 
             var request = GetCommandRequest(command, destinationAddressBytes, destinationPortBytes, addressType);
 
@@ -143,10 +169,10 @@ namespace Proxy.Client
             var replyCode = response[1];
 
             if (replyCode != Socks5Constants.SOCKS5_CMD_REPLY_SUCCEEDED)
-                HandleProxyCommandError(response, destinationHost, destinationPort);
+                HandleProxyCommandError(response);
         }
 
-        protected internal override void HandleProxyCommandError(byte[] response, string destinationHost, int destinationPort)
+        protected internal override void HandleProxyCommandError(byte[] response)
         {
             var replyCode = response[1];
 
@@ -184,7 +210,7 @@ namespace Proxy.Client
             }
 
             var responseText = response != null ? response.HexEncode() : string.Empty;
-            var exceptionMsg = String.Format(CultureInfo.InvariantCulture, $"Proxy error: {proxyErrorText} for destination host {destinationHost} port number {destinationPort}.  Server response (hex): {responseText}.");
+            var exceptionMsg = String.Format(CultureInfo.InvariantCulture, $"Proxy error: {proxyErrorText} for destination host {DestinationHost} port number {DestinationPort}.  Server response (hex): {responseText}.");
 
             throw new ProxyException(exceptionMsg);
         }
@@ -198,10 +224,10 @@ namespace Proxy.Client
         {
             Socket.Send(AuthRequest, SocketFlags.None);
 
-            var responseBytes = new byte[2];
-            Socket.Receive(responseBytes, SocketFlags.None);
+            var response = new byte[2];
+            Socket.Receive(response, SocketFlags.None);
 
-            var acceptedAuthMethod = responseBytes[1];
+            var acceptedAuthMethod = response[1];
 
             if (acceptedAuthMethod == Socks5Constants.SOCKS5_AUTH_METHOD_REPLY_NO_ACCEPTABLE_METHODS)
             {
@@ -233,8 +259,6 @@ namespace Proxy.Client
 
         private async Task NegotiateServerAuthMethodAsync()
         {
-            Console.WriteLine("NegotiateServerAuthMethodAsync");
-
             await Socket.SendAsync(AuthRequest, SocketFlags.None);
 
             var responseBuffer = new byte[2];

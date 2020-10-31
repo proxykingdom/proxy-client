@@ -9,7 +9,7 @@ using System.Linq;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;     
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Proxy.Client
@@ -26,9 +26,14 @@ namespace Proxy.Client
 
         private SslStream _sslStream;
 
+        public abstract ProxyResponse Get(string destinationHost, int destinationPort, IDictionary<string, string> headers = null, bool isSsl = false);
+        public abstract Task<ProxyResponse> GetAsync(string destinationHost, int destinationPort, IDictionary<string, string> headers = null, bool isSsl = false);
+        public abstract ProxyResponse Post(string destinationHost, int destinationPort, string body, IDictionary<string, string> headers = null, bool isSsl = false);
+        public abstract Task<ProxyResponse> PostAsync(string destinationHost, int destinationPort, string body, IDictionary<string, string> headers = null, bool isSsl = false);
+
         protected internal abstract void SendConnectCommand();
-        protected internal abstract Task SendConnectCommandAsync(string destinationHost, int destinationPort);
-        protected internal abstract void HandleProxyCommandError(byte[] response, string destinationHost, int destinationPort);
+        protected internal abstract Task SendConnectCommandAsync();
+        protected internal abstract void HandleProxyCommandError(byte[] response);
 
         protected internal ProxyResponse HandleRequest(Action notConnectedAtn, Func<ProxyResponse> connectedFn,
             string destinationHost, int destinationPort)
@@ -107,13 +112,16 @@ namespace Proxy.Client
             if (isSsl)
             {
                 HandleSslHandshake(DestinationHost);
-                _sslStream.Write(CreateGetCommand(DestinationHost, headers, isSsl));
 
-                response = _sslStream.ReadAll(Socket);
+                var writeBuffer = RequestHelper.GetCommand(DestinationHost, RequestHelper.Ssl, headers);
+                _sslStream.Write(writeBuffer);
+
+                response = _sslStream.ReadString(Socket);
             }
             else
             {
-                Socket.Send(CreateGetCommand(DestinationHost, headers, isSsl), SocketFlags.None);
+                var writeBuffer = RequestHelper.GetCommand(DestinationHost, RequestHelper.NoSsl, headers);
+                Socket.Send(writeBuffer);
 
                 response = Socket.ReceiveAll(SocketFlags.None);
             }
@@ -125,22 +133,23 @@ namespace Proxy.Client
             return ResponseBuilder.BuildProxyResponse(response);
         }
 
-        protected internal async Task<ProxyResponse> SendGetCommandAsync(string destinationHost, IDictionary<string, string> headers, bool isSsl)
+        protected internal async Task<ProxyResponse> SendGetCommandAsync(IDictionary<string, string> headers, bool isSsl)
         {
             string response;
 
             if (isSsl)
             {
-                await HandSslHandshakeAsync(destinationHost);
+                await HandleSslHandshakeAsync();
 
-                var writeBuffer = CreateGetCommand(destinationHost, headers, isSsl);
+                var writeBuffer = RequestHelper.GetCommand(DestinationHost, RequestHelper.Ssl, headers);
                 await _sslStream.WriteAsync(writeBuffer, 0, writeBuffer.Length);
 
-                response = await _sslStream.ReadAllAsync(Socket);
+                response = await _sslStream.ReadStringAsync(Socket);
             }
             else
             {
-                await Socket.SendAsync(CreateGetCommand(destinationHost, headers, isSsl), SocketFlags.None);
+                var writeBuffer = RequestHelper.GetCommand(DestinationHost, RequestHelper.NoSsl, headers);
+                await Socket.SendAsync(writeBuffer, SocketFlags.None);
 
                 response = await Socket.ReceiveAllAsync(SocketFlags.None);
             }
@@ -151,15 +160,58 @@ namespace Proxy.Client
             return ResponseBuilder.BuildProxyResponse(response);
         }
 
-        private static byte[] CreateGetCommand(string destinationHost, IDictionary<string, string> headers, bool isSsl)
+        protected internal ProxyResponse SendPostCommand(string body, IDictionary<string, string> headers, bool isSsl)
         {
-            var ssl = isSsl ? "https" : "http";
+            string response;
 
-            var request = headers != null
-                ? $"GET {ssl}://{destinationHost}/ HTTP/1.1\r\n" + $"{headers.Select(x => $"{x.Key}: {x.Value}")}\r\n"
-                : $"GET {ssl}://{destinationHost}/ HTTP/1.1\r\n\r\n";
+            if (isSsl)
+            {
+                HandleSslHandshake(DestinationHost);
 
-            return Encoding.ASCII.GetBytes(request);
+                var writeBuffer = RequestHelper.PostCommand(DestinationHost, body, RequestHelper.Ssl, headers);
+                _sslStream.Write(writeBuffer);
+
+                response = _sslStream.ReadString(Socket);
+            }
+            else
+            {
+                var writeBuffer = RequestHelper.PostCommand(DestinationHost, body, RequestHelper.NoSsl, headers);
+                Socket.Send(writeBuffer);
+
+                response = Socket.ReceiveAll(SocketFlags.None);
+            }
+
+            if (response.StartsWith("\0\0"))
+                throw new ProxyException("Response is empty");
+
+            return ResponseBuilder.BuildProxyResponse(response);
+        }
+
+        protected internal async Task<ProxyResponse> SendPostCommandAsync(string body, IDictionary<string, string> headers, bool isSsl)
+        {
+            string response;
+
+            if (isSsl)
+            {
+                await HandleSslHandshakeAsync();
+
+                var writeBuffer = RequestHelper.PostCommand(DestinationHost, body, RequestHelper.Ssl, headers);
+                _sslStream.Write(writeBuffer);
+
+                response = _sslStream.ReadString(Socket);
+            }
+            else
+            {
+                var writeBuffer = RequestHelper.PostCommand(DestinationHost, body, RequestHelper.NoSsl, headers);
+                await Socket.SendAsync(writeBuffer, SocketFlags.None);
+
+                response = await Socket.ReceiveAllAsync(SocketFlags.None);
+            }
+
+            if (response.StartsWith("\0\0"))
+                throw new ProxyException("Response is empty");
+
+            return ResponseBuilder.BuildProxyResponse(response);
         }
 
         #region Ssl Methods
@@ -171,12 +223,12 @@ namespace Proxy.Client
             _sslStream.AuthenticateAsClient(destinationHost);
         }
 
-        private async Task HandSslHandshakeAsync(string destinationHost)
+        private async Task HandleSslHandshakeAsync()
         {
             var networkStream = new NetworkStream(Socket);
             _sslStream = new SslStream(networkStream, false, new RemoteCertificateValidationCallback(ValidateServerCertificate), null);
 
-            await _sslStream.AuthenticateAsClientAsync(destinationHost);
+            await _sslStream.AuthenticateAsClientAsync(DestinationHost);
         }
 
         private static bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain,
@@ -189,8 +241,5 @@ namespace Proxy.Client
             Socket?.Close();
             _sslStream?.Dispose();
         }
-
-        public abstract ProxyResponse Get(string destinationHost, int destinationPort, IDictionary<string, string> headers = null, bool isSsl = false);
-        public abstract Task<ProxyResponse> GetAsync(string destinationHost, int destinationPort, IDictionary<string, string> headers = null, bool isSsl = false);
     }
 }
