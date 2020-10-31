@@ -12,10 +12,8 @@ using System.Threading.Tasks;
 
 namespace Proxy.Client
 {
-    public sealed class Socks5ProxyClient : BaseProxyClient, IProxyClient
+    public sealed class Socks5ProxyClient : BaseProxyClient
     {
-        public string ProxyHost { get; }
-        public int ProxyPort { get; }
         public string ProxyUsername { get; }
         public string ProxyPassword { get; }
 
@@ -79,37 +77,40 @@ namespace Proxy.Client
             ProxyPassword = proxyPassword;
         }
 
-        public ProxyResponse Get(string destinationHost, int destinationPort, IDictionary<string, string> headers = null, bool isSsl = false)
+        public override ProxyResponse Get(string destinationHost, int destinationPort, IDictionary<string, string> headers = null, bool isSsl = false)
         {
             return HandleRequest(() =>
             {
                 DetermineClientAuthMethod();
                 NegotiateServerAuthMethod();
-                SendConnectCommand(destinationHost, destinationPort);
-                return SendGetCommand(destinationHost, headers, isSsl);
-
-            }, destinationHost, destinationPort, ProxyHost, ProxyPort);
+                SendConnectCommand();
+            }, () => 
+            {
+                return SendGetCommand(headers, isSsl);
+            }, destinationHost, destinationPort);
         }
 
-        public async Task<ProxyResponse> GetAsync(string destinationHost, int destinationPort, IDictionary<string, string> headers = null, bool isSsl = false)
+        public override async Task<ProxyResponse> GetAsync(string destinationHost, int destinationPort, IDictionary<string, string> headers = null, bool isSsl = false)
         {
             return await HandleRequestAsync(async () =>
             {
                 DetermineClientAuthMethod();
                 await NegotiateServerAuthMethodAsync();
                 await SendConnectCommandAsync(destinationHost, destinationPort);
-                return await SendGetCommandAsync(destinationHost, headers, isSsl);
 
-            }, destinationHost, destinationPort, ProxyHost, ProxyPort);
+            }, async () => 
+            {
+                return await SendGetCommandAsync(destinationHost, headers, isSsl);
+            }, destinationHost, destinationPort);
         }
 
-        protected internal override void SendConnectCommand(string destinationHost, int destinationPort)
+        protected internal override void SendConnectCommand()
         {
             var command = Socks5Constants.SOCKS5_CMD_CONNECT;
 
-            var addressType = GetDestinationAddressType(destinationHost);
-            var destinationAddressBytes = GetDestinationAddressBytes(addressType, destinationHost);
-            var destinationPortBytes = GetDestinationPortBytes(destinationPort);
+            var addressType = GetDestinationAddressType(DestinationHost);
+            var destinationAddressBytes = GetDestinationAddressBytes(addressType, DestinationHost);
+            var destinationPortBytes = GetDestinationPortBytes(DestinationPort);
 
             var request = GetCommandRequest(command, destinationAddressBytes, destinationPortBytes, addressType);
 
@@ -121,7 +122,7 @@ namespace Proxy.Client
             var replyCode = response[1];
 
             if (replyCode != Socks5Constants.SOCKS5_CMD_REPLY_SUCCEEDED)
-                HandleProxyCommandError(response, destinationHost, destinationPort);
+                HandleProxyCommandError(response, DestinationHost, DestinationPort);
         }
 
         protected internal override async Task SendConnectCommandAsync(string destinationHost, int destinationPort)

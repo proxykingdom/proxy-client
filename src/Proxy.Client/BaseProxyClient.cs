@@ -9,24 +9,29 @@ using System.Linq;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
+using System.Text;     
 using System.Threading.Tasks;
 
 namespace Proxy.Client
 {
-    public abstract class BaseProxyClient : IDisposable
+    public abstract class BaseProxyClient : IProxyClient
     {
+        public string ProxyHost { get; protected set; }
+        public int ProxyPort { get; protected set; }
+
         protected internal Socket Socket { get; private set; }
+        protected internal bool IsConnected { get; private set; }
+        protected internal string DestinationHost { get; private set; }
+        protected internal int DestinationPort { get; private set; }
 
         private SslStream _sslStream;
 
-        protected internal abstract void SendConnectCommand(string destinationHost, int destinationPort);
+        protected internal abstract void SendConnectCommand();
         protected internal abstract Task SendConnectCommandAsync(string destinationHost, int destinationPort);
         protected internal abstract void HandleProxyCommandError(byte[] response, string destinationHost, int destinationPort);
 
-        protected internal ProxyResponse HandleRequest(Func<ProxyResponse> fn, 
-            string destinationHost, int destinationPort,
-            string proxyHost, int proxyPort)
+        protected internal ProxyResponse HandleRequest(Action notConnectedAtn, Func<ProxyResponse> connectedFn,
+            string destinationHost, int destinationPort)
         {
             try
             {
@@ -37,22 +42,30 @@ namespace Proxy.Client
                     throw new ArgumentOutOfRangeException(nameof(destinationPort),
                         "Destination port must be greater than zero and less than 65535");
 
-                Socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                if (!IsConnected)
+                {
+                    DestinationHost = destinationHost;
+                    DestinationPort = destinationPort;
 
-                Socket.Connect(proxyHost, proxyPort);
+                    Socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                    Socket.Connect(ProxyHost, ProxyPort);
 
-                return fn();
+                    notConnectedAtn();
+
+                    IsConnected = true;
+                }
+
+                return connectedFn();
             }
             catch (Exception)
             {
                 throw new ProxyException(String.Format(CultureInfo.InvariantCulture,
-                    $"Connection to proxy host {proxyHost} on port {proxyPort} failed."));
+                    $"Connection to proxy host {ProxyHost} on port {ProxyPort} failed."));
             }
         }
 
-        protected internal async Task<ProxyResponse> HandleRequestAsync(Func<Task<ProxyResponse>> fn,
-            string destinationHost, int destinationPort,
-            string proxyHost, int proxyPort)
+        protected internal async Task<ProxyResponse> HandleRequestAsync(Func<Task> notConnectedFn, Func<Task<ProxyResponse>> connectedFn,
+            string destinationHost, int destinationPort)
         {
             try
             {
@@ -63,35 +76,44 @@ namespace Proxy.Client
                     throw new ArgumentOutOfRangeException(nameof(destinationPort),
                         "Destination port must be greater than zero and less than 65535");
 
-                Socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                if (!IsConnected)
+                {
+                    DestinationHost = destinationHost;
+                    DestinationPort = destinationPort;
 
-                await Socket.ConnectAsync(proxyHost, proxyPort);
+                    Socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                    await Socket.ConnectAsync(ProxyHost, ProxyPort);
 
-                return await fn();
+                    await notConnectedFn();
+
+                    IsConnected = true;
+                }
+
+                return await connectedFn();
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
 
                 throw new ProxyException(String.Format(CultureInfo.InvariantCulture,
-                    $"Connection to proxy host {proxyHost} on port {proxyPort} failed."));
+                    $"Connection to proxy host {ProxyHost} on port {ProxyPort} failed."));
             }
         }
 
-        protected internal ProxyResponse SendGetCommand(string destinationHost, IDictionary<string, string> headers, bool isSsl)
+        protected internal ProxyResponse SendGetCommand(IDictionary<string, string> headers, bool isSsl)
         {
             string response;
 
             if (isSsl)
             {
-                HandleSslHandshake(destinationHost);
-                _sslStream.Write(CreateGetCommand(destinationHost, headers, isSsl));
+                HandleSslHandshake(DestinationHost);
+                _sslStream.Write(CreateGetCommand(DestinationHost, headers, isSsl));
 
                 response = _sslStream.ReadAll(Socket);
             }
             else
             {
-                Socket.Send(CreateGetCommand(destinationHost, headers, isSsl), SocketFlags.None);
+                Socket.Send(CreateGetCommand(DestinationHost, headers, isSsl), SocketFlags.None);
 
                 response = Socket.ReceiveAll(SocketFlags.None);
             }
@@ -167,5 +189,8 @@ namespace Proxy.Client
             Socket?.Close();
             _sslStream?.Dispose();
         }
+
+        public abstract ProxyResponse Get(string destinationHost, int destinationPort, IDictionary<string, string> headers = null, bool isSsl = false);
+        public abstract Task<ProxyResponse> GetAsync(string destinationHost, int destinationPort, IDictionary<string, string> headers = null, bool isSsl = false);
     }
 }

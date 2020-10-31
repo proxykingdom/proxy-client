@@ -37,12 +37,26 @@ namespace Proxy.Client.Utilities.Extensions
 
         public static string ReadAll(this SslStream ss, Socket s)
         {
-            var buffer = new byte[2000];
+            var buffer = new byte[2048];
             var placeHolder = new StringBuilder();
 
             do
             {
                 ss.Read(buffer, 0, buffer.Length);
+                placeHolder.Append(Encoding.UTF8.GetString(buffer));
+            } while (s.Available != 0);
+
+            return placeHolder.ToString().Trim('\0');
+        }
+
+        public static async Task<string> ReadAllAsync(this SslStream ss, Socket s)
+        {
+            var buffer = new byte[2048];
+            var placeHolder = new StringBuilder();
+
+            do
+            {
+                await ss.ReadAsync(buffer, 0, buffer.Length);
                 placeHolder.Append(Encoding.UTF8.GetString(buffer));
             } while (s.Available != 0);
 

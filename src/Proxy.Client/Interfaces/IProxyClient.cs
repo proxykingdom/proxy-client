@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Proxy.Client
 {
-    internal interface IProxyClient
+    internal interface IProxyClient : IDisposable
     {
         string ProxyHost { get; }
         int ProxyPort { get; }
