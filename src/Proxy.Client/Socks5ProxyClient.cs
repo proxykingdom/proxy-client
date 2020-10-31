@@ -126,8 +126,6 @@ namespace Proxy.Client
 
         protected internal override async Task SendConnectCommandAsync(string destinationHost, int destinationPort)
         {
-            Console.WriteLine("SendConnectCommandAsync hit");
-
             var command = Socks5Constants.SOCKS5_CMD_CONNECT;
 
             var addressType = GetDestinationAddressType(destinationHost);

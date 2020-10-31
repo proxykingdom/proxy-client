@@ -6,9 +6,10 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Net.Security;
 using System.Net.Sockets;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Proxy.Client
@@ -16,6 +17,8 @@ namespace Proxy.Client
     public abstract class BaseProxyClient : IDisposable
     {
         protected internal Socket Socket { get; private set; }
+
+        private SslStream _sslStream;
 
         protected internal abstract void SendConnectCommand(string destinationHost, int destinationPort);
         protected internal abstract Task SendConnectCommandAsync(string destinationHost, int destinationPort);
@@ -77,9 +80,22 @@ namespace Proxy.Client
 
         protected internal ProxyResponse SendGetCommand(string destinationHost, IDictionary<string, string> headers, bool isSsl)
         {
-            Socket.Send(CreateGetCommand(destinationHost, headers, isSsl), SocketFlags.None);
+            string response;
 
-            var response = Socket.ReceiveAll(SocketFlags.None);
+            if (isSsl)
+            {
+                HandleSslHandshake(destinationHost);
+                _sslStream.Write(CreateGetCommand(destinationHost, headers, isSsl));
+
+                response = _sslStream.ReadAll(Socket);
+            }
+            else
+            {
+                Socket.Send(CreateGetCommand(destinationHost, headers, isSsl), SocketFlags.None);
+
+                response = Socket.ReceiveAll(SocketFlags.None);
+            }
+            
 
             if (response.StartsWith("\0\0"))
                 throw new ProxyException("Response is empty");
@@ -89,11 +105,23 @@ namespace Proxy.Client
 
         protected internal async Task<ProxyResponse> SendGetCommandAsync(string destinationHost, IDictionary<string, string> headers, bool isSsl)
         {
-            Console.WriteLine("SendGetCommandAsync hit");
+            string response;
 
-            await Socket.SendAsync(CreateGetCommand(destinationHost, headers, isSsl), SocketFlags.None);
+            if (isSsl)
+            {
+                await HandSslHandshakeAsync(destinationHost);
 
-            var response = await Socket.ReceiveAllAsync(SocketFlags.None);
+                var writeBuffer = CreateGetCommand(destinationHost, headers, isSsl);
+                await _sslStream.WriteAsync(writeBuffer, 0, writeBuffer.Length);
+
+                response = await _sslStream.ReadAllAsync(Socket);
+            }
+            else
+            {
+                await Socket.SendAsync(CreateGetCommand(destinationHost, headers, isSsl), SocketFlags.None);
+
+                response = await Socket.ReceiveAllAsync(SocketFlags.None);
+            }
 
             if (response.StartsWith("\0\0"))
                 throw new ProxyException("Response is empty");
@@ -112,9 +140,32 @@ namespace Proxy.Client
             return Encoding.ASCII.GetBytes(request);
         }
 
+        #region Ssl Methods
+        private void HandleSslHandshake(string destinationHost)
+        {
+            var networkStream = new NetworkStream(Socket);
+            _sslStream = new SslStream(networkStream, false, new RemoteCertificateValidationCallback(ValidateServerCertificate), null);
+
+            _sslStream.AuthenticateAsClient(destinationHost);
+        }
+
+        private async Task HandSslHandshakeAsync(string destinationHost)
+        {
+            var networkStream = new NetworkStream(Socket);
+            _sslStream = new SslStream(networkStream, false, new RemoteCertificateValidationCallback(ValidateServerCertificate), null);
+
+            await _sslStream.AuthenticateAsClientAsync(destinationHost);
+        }
+
+        private static bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain,
+                                                  SslPolicyErrors sslPolicyErrors) => sslPolicyErrors == SslPolicyErrors.None ? true : false;
+
+        #endregion
+
         public void Dispose()
         {
-            Socket.Close();
+            Socket?.Close();
+            _sslStream?.Dispose();
         }
     }
 }

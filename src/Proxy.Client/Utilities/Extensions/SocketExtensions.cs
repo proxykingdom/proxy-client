@@ -1,5 +1,4 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Net.Security;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
@@ -30,6 +29,20 @@ namespace Proxy.Client.Utilities.Extensions
             do
             {
                 await s.ReceiveAsync(buffer, SocketFlags.None);
+                placeHolder.Append(Encoding.UTF8.GetString(buffer));
+            } while (s.Available != 0);
+
+            return placeHolder.ToString().Trim('\0');
+        }
+
+        public static string ReadAll(this SslStream ss, Socket s)
+        {
+            var buffer = new byte[2000];
+            var placeHolder = new StringBuilder();
+
+            do
+            {
+                ss.Read(buffer, 0, buffer.Length);
                 placeHolder.Append(Encoding.UTF8.GetString(buffer));
             } while (s.Available != 0);
 
