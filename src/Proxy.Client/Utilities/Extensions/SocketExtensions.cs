@@ -60,7 +60,7 @@ namespace Proxy.Client.Utilities.Extensions
             return _placeHolder.ToString();
         }
 
-        public static string ReadString(this SslStream ss, Socket s)
+        public static string ReadString(this SslStream ss)
         {
             var totalBytesRead = 0;
             var buffer = new byte[StringBufferSize];
@@ -80,7 +80,7 @@ namespace Proxy.Client.Utilities.Extensions
             return _placeHolder.ToString();
         }
 
-        public static async Task<string> ReadStringAsync(this SslStream ss, Socket s)
+        public static async Task<string> ReadStringAsync(this SslStream ss)
         {
             var totalBytesRead = 0;
             var buffer = new byte[StringBufferSize];
