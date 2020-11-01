@@ -12,7 +12,7 @@ namespace Proxy.Client.Utilities.Extensions
 {
     public static class SocketTaskExtensions
     {
-        private const int StringBufferSize = 1000;
+        private const int StringBufferSize = 500;
 
         private static readonly StringBuilder _placeHolder;
 
@@ -41,7 +41,7 @@ namespace Proxy.Client.Utilities.Extensions
             var splitBuffer = bufferString.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.None);
 
             if (String.IsNullOrEmpty(maybeContentLength))
-                throw new ProxyException("Proxy Server has no Content-Length header.");
+                throw new ProxyException("Destination Server has no Content-Length header.");
 
             var contentLength = Convert.ToInt32(maybeContentLength, CultureInfo.InvariantCulture);
 
@@ -77,7 +77,7 @@ namespace Proxy.Client.Utilities.Extensions
             var splitBuffer = bufferString.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.None);
 
             if (String.IsNullOrEmpty(maybeContentLength))
-                throw new ProxyException("Proxy Server has no Content-Length header.");
+                throw new ProxyException("Destination Server has no Content-Length header.");
 
             var contentLength = Convert.ToInt32(maybeContentLength, CultureInfo.InvariantCulture);
 
@@ -93,7 +93,7 @@ namespace Proxy.Client.Utilities.Extensions
             return _placeHolder.ToString();
         }
 
-        public static string ReadString(this SslStream ss)
+        public static string ReadAll(this SslStream ss)
         {
             var totalBytesRead = 0;
             var buffer = new byte[StringBufferSize];
@@ -113,7 +113,7 @@ namespace Proxy.Client.Utilities.Extensions
             var splitBuffer = bufferString.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.None);
 
             if (String.IsNullOrEmpty(maybeContentLength))
-                throw new ProxyException("Proxy Server has no Content-Length header.");
+                throw new ProxyException("Destination Server has no Content-Length header.");
 
             var contentLength = Convert.ToInt32(maybeContentLength, CultureInfo.InvariantCulture);
 
@@ -129,7 +129,7 @@ namespace Proxy.Client.Utilities.Extensions
             return _placeHolder.ToString();
         }
 
-        public static async Task<string> ReadStringAsync(this SslStream ss)
+        public static async Task<string> ReadAllAsync(this SslStream ss)
         {
             var totalBytesRead = 0;
             var buffer = new byte[StringBufferSize];
@@ -149,7 +149,7 @@ namespace Proxy.Client.Utilities.Extensions
             var splitBuffer = bufferString.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.None);
 
             if (String.IsNullOrEmpty(maybeContentLength))
-                throw new ProxyException("Proxy Server has no Content-Length header.");
+                throw new ProxyException("Destination Server has no Content-Length header.");
 
             var contentLength = Convert.ToInt32(maybeContentLength, CultureInfo.InvariantCulture);
 
