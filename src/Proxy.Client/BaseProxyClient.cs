@@ -47,20 +47,32 @@ namespace Proxy.Client
                     throw new ArgumentOutOfRangeException(nameof(destinationPort),
                         "Destination port must be greater than zero and less than 65535");
 
+                float connectTime = 0;
+
                 if (!IsConnected)
                 {
                     DestinationHost = destinationHost;
                     DestinationPort = destinationPort;
 
-                    Socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-                    Socket.Connect(ProxyHost, ProxyPort);
-
-                    notConnectedAtn();
+                    connectTime = TimingExtensions.Measure(() =>
+                    {
+                        Socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                        Socket.Connect(ProxyHost, ProxyPort);
+                        notConnectedAtn();
+                    });
 
                     IsConnected = true;
                 }
 
-                return connectedFn();
+                var (time, response) = TimingExtensions.Measure(() =>
+                {
+                    return connectedFn();
+                });
+
+                response.Timings.ConnectTime = connectTime;
+                response.Timings.ResponseTime = connectTime + time;
+
+                return response;
             }
             catch (Exception)
             {
@@ -81,20 +93,34 @@ namespace Proxy.Client
                     throw new ArgumentOutOfRangeException(nameof(destinationPort),
                         "Destination port must be greater than zero and less than 65535");
 
+                float connectTime = 0;
+
                 if (!IsConnected)
                 {
                     DestinationHost = destinationHost;
                     DestinationPort = destinationPort;
 
-                    Socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-                    await Socket.ConnectAsync(ProxyHost, ProxyPort);
+                    var proxyResponse = new ProxyResponse();
 
-                    await notConnectedFn();
+                    connectTime = await TimingExtensions.MeasureAsync(async () =>
+                    {
+                        Socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                        await Socket.ConnectAsync(ProxyHost, ProxyPort);
+                        await notConnectedFn();
+                    });
 
                     IsConnected = true;
                 }
 
-                return await connectedFn();
+                var (time, response) = await TimingExtensions.MeasureAsync(async () =>
+                {
+                    return await connectedFn();
+                });
+
+                response.Timings.ConnectTime = connectTime;
+                response.Timings.ResponseTime = connectTime + time;
+
+                return response;
             }
             catch (Exception ex)
             {

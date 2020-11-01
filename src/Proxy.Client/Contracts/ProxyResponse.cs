@@ -5,20 +5,9 @@ namespace Proxy.Client.Contracts
 {
     public class ProxyResponse
     {
-        public HttpStatusCode StatusCode { get; }
-        public IDictionary<string, string> ResponseHeaders { get; }
-        public string Content { get; }
-
-        private ProxyResponse(HttpStatusCode statusCode, IDictionary<string, string> responseHeaders, string content)
-        {
-            StatusCode = statusCode;
-            ResponseHeaders = responseHeaders;
-            Content = content;
-        }
-
-        public static ProxyResponse Create(HttpStatusCode statusCode, IDictionary<string, string> responseHeaders, string content)
-        {
-            return new ProxyResponse(statusCode, responseHeaders, content);
-        }
+        public HttpStatusCode StatusCode { get; internal set; }
+        public IDictionary<string, string> ResponseHeaders { get; internal set; }
+        public string Content { get; internal set; }
+        public Timings Timings { get; internal set; }
     }
 }

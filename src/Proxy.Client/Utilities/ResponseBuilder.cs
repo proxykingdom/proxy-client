@@ -43,7 +43,13 @@ namespace Proxy.Client.Utilities
             var headerArray = statusWithHeaders.Skip(1).ToArray();
             var headers = headerArray.Select(header => header.Split(':')).ToDictionary(key => key[0], value => value[1].Trim());
 
-            return ProxyResponse.Create(status, headers, content);
+            return new ProxyResponse
+            {
+                StatusCode = status,
+                ResponseHeaders = headers,
+                Content = content,
+                Timings = new Timings()
+            };
         }
     }
 }
