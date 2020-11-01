@@ -149,10 +149,6 @@ namespace Proxy.Client
                 response = Socket.ReceiveAll(SocketFlags.None);
             }
             
-
-            if (response.StartsWith("\0\0"))
-                throw new ProxyException("Response is empty");
-
             return ResponseBuilder.BuildProxyResponse(response);
         }
 
@@ -174,9 +170,6 @@ namespace Proxy.Client
 
                 response = await Socket.ReceiveAllAsync(SocketFlags.None);
             }
-
-            if (response.StartsWith("\0\0"))
-                throw new ProxyException("Response is empty");
 
             return ResponseBuilder.BuildProxyResponse(response);
         }
@@ -200,9 +193,6 @@ namespace Proxy.Client
                 response = Socket.ReceiveAll(SocketFlags.None);
             }
 
-            if (response.StartsWith("\0\0"))
-                throw new ProxyException("Response is empty");
-
             return ResponseBuilder.BuildProxyResponse(response);
         }
 
@@ -224,9 +214,6 @@ namespace Proxy.Client
 
                 response = await Socket.ReceiveAllAsync(SocketFlags.None);
             }
-
-            if (response.StartsWith("\0\0"))
-                throw new ProxyException("Response is empty");
 
             return ResponseBuilder.BuildProxyResponse(response);
         }
