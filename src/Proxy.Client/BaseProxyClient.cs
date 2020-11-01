@@ -1,4 +1,5 @@
 ﻿using Proxy.Client.Contracts;
+using Proxy.Client.Contracts.Constants;
 using Proxy.Client.Exceptions;
 using Proxy.Client.Utilities;
 using Proxy.Client.Utilities.Extensions;
@@ -135,14 +136,14 @@ namespace Proxy.Client
 
             if (isSsl)
             {
-                var writeBuffer = RequestHelper.GetCommand(DestinationHost, RequestHelper.Ssl, headers);
+                var writeBuffer = RequestHelper.GetCommand(DestinationHost, RequestConstants.SSL, headers);
                 _sslStream.Write(writeBuffer);
 
                 response = _sslStream.ReadString();
             }
             else
             {
-                var writeBuffer = RequestHelper.GetCommand(DestinationHost, RequestHelper.NoSsl, headers);
+                var writeBuffer = RequestHelper.GetCommand(DestinationHost, RequestConstants.NO_SSL, headers);
                 Socket.Send(writeBuffer);
 
                 response = Socket.ReceiveAll(SocketFlags.None);
@@ -161,14 +162,14 @@ namespace Proxy.Client
 
             if (isSsl)
             {
-                var writeBuffer = RequestHelper.GetCommand(DestinationHost, RequestHelper.Ssl, headers);
+                var writeBuffer = RequestHelper.GetCommand(DestinationHost, RequestConstants.SSL, headers);
                 await _sslStream.WriteAsync(writeBuffer, 0, writeBuffer.Length);
 
                 response = await _sslStream.ReadStringAsync();
             }
             else
             {
-                var writeBuffer = RequestHelper.GetCommand(DestinationHost, RequestHelper.NoSsl, headers);
+                var writeBuffer = RequestHelper.GetCommand(DestinationHost, RequestConstants.NO_SSL, headers);
                 await Socket.SendAsync(writeBuffer, SocketFlags.None);
 
                 response = await Socket.ReceiveAllAsync(SocketFlags.None);
@@ -186,14 +187,14 @@ namespace Proxy.Client
 
             if (isSsl)
             {
-                var writeBuffer = RequestHelper.PostCommand(DestinationHost, body, RequestHelper.Ssl, headers);
+                var writeBuffer = RequestHelper.PostCommand(DestinationHost, body, RequestConstants.SSL, headers);
                 _sslStream.Write(writeBuffer);
 
                 response = _sslStream.ReadString();
             }
             else
             {
-                var writeBuffer = RequestHelper.PostCommand(DestinationHost, body, RequestHelper.NoSsl, headers);
+                var writeBuffer = RequestHelper.PostCommand(DestinationHost, body, RequestConstants.NO_SSL, headers);
                 Socket.Send(writeBuffer);
 
                 response = Socket.ReceiveAll(SocketFlags.None);
@@ -211,14 +212,14 @@ namespace Proxy.Client
 
             if (isSsl)
             {
-                var writeBuffer = RequestHelper.PostCommand(DestinationHost, body, RequestHelper.Ssl, headers);
+                var writeBuffer = RequestHelper.PostCommand(DestinationHost, body, RequestConstants.SSL, headers);
                 await _sslStream.WriteAsync(writeBuffer, 0, writeBuffer.Length);
 
                 response = await _sslStream.ReadStringAsync();
             }
             else
             {
-                var writeBuffer = RequestHelper.PostCommand(DestinationHost, body, RequestHelper.NoSsl, headers);
+                var writeBuffer = RequestHelper.PostCommand(DestinationHost, body, RequestConstants.NO_SSL, headers);
                 await Socket.SendAsync(writeBuffer, SocketFlags.None);
 
                 response = await Socket.ReceiveAllAsync(SocketFlags.None);

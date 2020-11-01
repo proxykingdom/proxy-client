@@ -6,9 +6,6 @@ namespace Proxy.Client.Utilities
 {
     public static class RequestHelper
     {
-        public const string NoSsl = "http";
-        public const string Ssl = "https";
-
         public static byte[] GetCommand(string destHost, string ssl, IDictionary<string, string> headers)
         {
             var request = headers == null 

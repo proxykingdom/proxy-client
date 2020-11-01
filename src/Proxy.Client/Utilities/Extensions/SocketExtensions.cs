@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Proxy.Client.Contracts.Constants;
+using Proxy.Client.Exceptions;
+using System;
 using System.Globalization;
 using System.Net.Security;
 using System.Net.Sockets;
@@ -10,8 +12,7 @@ namespace Proxy.Client.Utilities.Extensions
 {
     public static class SocketTaskExtensions
     {
-        private const int StringBufferSize = 500;
-        private const string ContentLengthPattern = "(?<=Content-Length: ).\\d+";
+        private const int StringBufferSize = 1000;
 
         private static readonly StringBuilder _placeHolder;
 
@@ -26,9 +27,25 @@ namespace Proxy.Client.Utilities.Extensions
             var buffer = new byte[StringBufferSize];
             s.Receive(buffer, flags);
 
-            var (contentLength, readSize) = ExtractContentLengthWithReadByteSize(buffer);
+            var bufferString = Encoding.UTF8.GetString(buffer).Trim('\0');
+            _placeHolder.Append(bufferString);
 
-            totalBytesRead += readSize;
+            while (!bufferString.Contains(RequestConstants.CONTENT_SEPERATOR))
+            {
+                s.Receive(buffer, flags);
+                bufferString = Encoding.UTF8.GetString(buffer).Trim('\0');
+                _placeHolder.Append(bufferString);
+            }
+
+            var maybeContentLength = Regex.Match(_placeHolder.ToString(), RequestConstants.CONTENT_LENGTH_PATTERN).Value;
+            var splitBuffer = bufferString.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.None);
+
+            if (String.IsNullOrEmpty(maybeContentLength))
+                throw new ProxyException("Proxy Server has no Content-Length header.");
+
+            var contentLength = Convert.ToInt32(maybeContentLength, CultureInfo.InvariantCulture);
+
+            totalBytesRead += splitBuffer[1].Length;
 
             while (totalBytesRead < contentLength)
             {
@@ -46,9 +63,25 @@ namespace Proxy.Client.Utilities.Extensions
             var buffer = new byte[StringBufferSize];
             await s.ReceiveAsync(buffer, flags);
 
-            var (contentLength, readSize) = ExtractContentLengthWithReadByteSize(buffer);
+            var bufferString = Encoding.UTF8.GetString(buffer).Trim('\0');
+            _placeHolder.Append(bufferString);
 
-            totalBytesRead += readSize;
+            while (!bufferString.Contains(RequestConstants.CONTENT_SEPERATOR))
+            {
+                await s.ReceiveAsync(buffer, flags);
+                bufferString = Encoding.UTF8.GetString(buffer).Trim('\0');
+                _placeHolder.Append(bufferString);
+            }
+
+            var maybeContentLength = Regex.Match(_placeHolder.ToString(), RequestConstants.CONTENT_LENGTH_PATTERN).Value;
+            var splitBuffer = bufferString.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.None);
+
+            if (String.IsNullOrEmpty(maybeContentLength))
+                throw new ProxyException("Proxy Server has no Content-Length header.");
+
+            var contentLength = Convert.ToInt32(maybeContentLength, CultureInfo.InvariantCulture);
+
+            totalBytesRead += splitBuffer[1].Length;
 
             while (totalBytesRead < contentLength)
             {
@@ -66,9 +99,25 @@ namespace Proxy.Client.Utilities.Extensions
             var buffer = new byte[StringBufferSize];
             ss.Read(buffer, 0, buffer.Length);
 
-            var (contentLength, readSize) = ExtractContentLengthWithReadByteSize(buffer);
+            var bufferString = Encoding.UTF8.GetString(buffer).Trim('\0');
+            _placeHolder.Append(bufferString);
 
-            totalBytesRead += readSize;
+            while (!bufferString.Contains(RequestConstants.CONTENT_SEPERATOR))
+            {
+                ss.Read(buffer, 0, buffer.Length);
+                bufferString = Encoding.UTF8.GetString(buffer).Trim('\0');
+                _placeHolder.Append(bufferString);
+            }
+
+            var maybeContentLength = Regex.Match(_placeHolder.ToString(), RequestConstants.CONTENT_LENGTH_PATTERN).Value;
+            var splitBuffer = bufferString.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.None);
+
+            if (String.IsNullOrEmpty(maybeContentLength))
+                throw new ProxyException("Proxy Server has no Content-Length header.");
+
+            var contentLength = Convert.ToInt32(maybeContentLength, CultureInfo.InvariantCulture);
+
+            totalBytesRead += splitBuffer[1].Length;
 
             while (totalBytesRead < contentLength)
             {
@@ -86,9 +135,25 @@ namespace Proxy.Client.Utilities.Extensions
             var buffer = new byte[StringBufferSize];
             await ss.ReadAsync(buffer, 0, buffer.Length);
 
-            var (contentLength, readSize) = ExtractContentLengthWithReadByteSize(buffer);
+            var bufferString = Encoding.UTF8.GetString(buffer).Trim('\0');
+            _placeHolder.Append(bufferString);
 
-            totalBytesRead += readSize;
+            while(!bufferString.Contains(RequestConstants.CONTENT_SEPERATOR))
+            {
+                await ss.ReadAsync(buffer, 0, buffer.Length);
+                bufferString = Encoding.UTF8.GetString(buffer).Trim('\0');
+                _placeHolder.Append(bufferString);
+            }
+
+            var maybeContentLength = Regex.Match(_placeHolder.ToString(), RequestConstants.CONTENT_LENGTH_PATTERN).Value;
+            var splitBuffer = bufferString.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.None);
+
+            if (String.IsNullOrEmpty(maybeContentLength))
+                throw new ProxyException("Proxy Server has no Content-Length header.");
+
+            var contentLength = Convert.ToInt32(maybeContentLength, CultureInfo.InvariantCulture);
+
+            totalBytesRead += splitBuffer[1].Length;
 
             while (totalBytesRead < contentLength)
             {
@@ -114,17 +179,6 @@ namespace Proxy.Client.Utilities.Extensions
                 s.BeginReceive(buffer, 0, buffer.Length, flags, null, null),
                 s.EndReceive
             );
-        }
-
-        private static (int contentLength, int readSize) ExtractContentLengthWithReadByteSize(byte[] buffer)
-        {
-            var bufferString = Encoding.UTF8.GetString(buffer).Trim('\0');
-            var contentLength = Convert.ToInt32(Regex.Match(bufferString, ContentLengthPattern).Value, CultureInfo.InvariantCulture);
-            var splitBuffer = bufferString.Split(new[] { "\r\n\r\n" }, 2, StringSplitOptions.None);
-
-            _placeHolder.Append(bufferString);
-
-            return (contentLength, splitBuffer[1].Length);
         }
     }
 }
