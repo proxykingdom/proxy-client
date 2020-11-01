@@ -84,6 +84,7 @@ namespace Proxy.Client
                 DetermineClientAuthMethod();
                 NegotiateServerAuthMethod();
                 SendConnectCommand();
+                if (isSsl) HandleSslHandshake();
             }, () => 
             {
                 return SendGetCommand(headers, isSsl);
@@ -97,7 +98,7 @@ namespace Proxy.Client
                 DetermineClientAuthMethod();
                 await NegotiateServerAuthMethodAsync();
                 await SendConnectCommandAsync();
-
+                if (isSsl) await HandleSslHandshakeAsync();
             }, async () => 
             {
                 return await SendGetCommandAsync(headers, isSsl);
@@ -111,6 +112,7 @@ namespace Proxy.Client
                 DetermineClientAuthMethod();
                 NegotiateServerAuthMethod();
                 SendConnectCommand();
+                if (isSsl) HandleSslHandshake();
             }, () => 
             {
                 return SendPostCommand(body, headers, isSsl);
@@ -124,6 +126,7 @@ namespace Proxy.Client
                 DetermineClientAuthMethod();
                 await NegotiateServerAuthMethodAsync();
                 await SendConnectCommandAsync();
+                if (isSsl) await HandleSslHandshakeAsync();
             }, async () => 
             {
                 return await SendPostCommandAsync(body, headers, isSsl);

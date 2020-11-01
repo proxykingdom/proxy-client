@@ -100,8 +100,6 @@ namespace Proxy.Client
                     DestinationHost = destinationHost;
                     DestinationPort = destinationPort;
 
-                    var proxyResponse = new ProxyResponse();
-
                     connectTime = await TimingExtensions.MeasureAsync(async () =>
                     {
                         Socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
@@ -137,8 +135,6 @@ namespace Proxy.Client
 
             if (isSsl)
             {
-                HandleSslHandshake(DestinationHost);
-
                 var writeBuffer = RequestHelper.GetCommand(DestinationHost, RequestHelper.Ssl, headers);
                 _sslStream.Write(writeBuffer);
 
@@ -165,8 +161,6 @@ namespace Proxy.Client
 
             if (isSsl)
             {
-                await HandleSslHandshakeAsync();
-
                 var writeBuffer = RequestHelper.GetCommand(DestinationHost, RequestHelper.Ssl, headers);
                 await _sslStream.WriteAsync(writeBuffer, 0, writeBuffer.Length);
 
@@ -192,8 +186,6 @@ namespace Proxy.Client
 
             if (isSsl)
             {
-                HandleSslHandshake(DestinationHost);
-
                 var writeBuffer = RequestHelper.PostCommand(DestinationHost, body, RequestHelper.Ssl, headers);
                 _sslStream.Write(writeBuffer);
 
@@ -219,12 +211,10 @@ namespace Proxy.Client
 
             if (isSsl)
             {
-                await HandleSslHandshakeAsync();
-
                 var writeBuffer = RequestHelper.PostCommand(DestinationHost, body, RequestHelper.Ssl, headers);
-                _sslStream.Write(writeBuffer);
+                await _sslStream.WriteAsync(writeBuffer, 0, writeBuffer.Length);
 
-                response = _sslStream.ReadString(Socket);
+                response = await _sslStream.ReadStringAsync(Socket);
             }
             else
             {
@@ -241,15 +231,15 @@ namespace Proxy.Client
         }
 
         #region Ssl Methods
-        private void HandleSslHandshake(string destinationHost)
+        protected internal void HandleSslHandshake()
         {
             var networkStream = new NetworkStream(Socket);
             _sslStream = new SslStream(networkStream, false, new RemoteCertificateValidationCallback(ValidateServerCertificate), null);
 
-            _sslStream.AuthenticateAsClient(destinationHost);
+            _sslStream.AuthenticateAsClient(DestinationHost);
         }
 
-        private async Task HandleSslHandshakeAsync()
+        protected internal async Task HandleSslHandshakeAsync()
         {
             var networkStream = new NetworkStream(Socket);
             _sslStream = new SslStream(networkStream, false, new RemoteCertificateValidationCallback(ValidateServerCertificate), null);

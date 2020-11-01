@@ -1,70 +1,103 @@
 ﻿using System;
-using System.IO;
+using System.Globalization;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Proxy.Client.Utilities.Extensions
 {
     public static class SocketTaskExtensions
     {
-        private const int StringBufferSize = 2048;
+        private const int StringBufferSize = 500;
+        private const string ContentLengthPattern = "(?<=Content-Length: ).\\d+";
+
+        private static readonly StringBuilder _placeHolder;
+
+        static SocketTaskExtensions()
+        {
+            _placeHolder = new StringBuilder();
+        }
 
         public static string ReceiveAll(this Socket s, SocketFlags flags)
         {
+            var totalBytesRead = 0;
             var buffer = new byte[StringBufferSize];
-            var placeHolder = new StringBuilder();
+            s.Receive(buffer, flags);
 
-            do
+            var (contentLength, readSize) = ExtractContentLengthWithReadByteSize(buffer);
+
+            totalBytesRead += readSize;
+
+            while (totalBytesRead < contentLength)
             {
-                s.Receive(buffer, flags);
-                placeHolder.Append(Encoding.UTF8.GetString(buffer));
-            } while (s.Available != 0);
+                var innerBytesRead = s.Receive(buffer, flags);
+                totalBytesRead += innerBytesRead;
+                _placeHolder.Append(Encoding.UTF8.GetString(buffer, 0, innerBytesRead));
+            }
 
-            return placeHolder.ToString().Trim('\0');
+            return _placeHolder.ToString();
         }
 
         public static async Task<string> ReceiveAllAsync(this Socket s, SocketFlags flags)
         {
+            var totalBytesRead = 0;
             var buffer = new byte[StringBufferSize];
-            var placeHolder = new StringBuilder();
+            await s.ReceiveAsync(buffer, flags);
 
-            do
+            var (contentLength, readSize) = ExtractContentLengthWithReadByteSize(buffer);
+
+            totalBytesRead += readSize;
+
+            while (totalBytesRead < contentLength)
             {
-                await s.ReceiveAsync(buffer, flags);
-                placeHolder.Append(Encoding.UTF8.GetString(buffer));
-            } while (s.Available != 0);
+                var innerBytesRead = await s.ReceiveAsync(buffer, flags);
+                totalBytesRead += innerBytesRead;
+                _placeHolder.Append(Encoding.UTF8.GetString(buffer, 0, innerBytesRead));
+            }
 
-            return placeHolder.ToString().Trim('\0');
+            return _placeHolder.ToString();
         }
 
         public static string ReadString(this SslStream ss, Socket s)
         {
+            var totalBytesRead = 0;
             var buffer = new byte[StringBufferSize];
-            var placeHolder = new StringBuilder();
+            ss.Read(buffer, 0, buffer.Length);
 
-            do
+            var (contentLength, readSize) = ExtractContentLengthWithReadByteSize(buffer);
+
+            totalBytesRead += readSize;
+
+            while (totalBytesRead < contentLength)
             {
-                ss.Read(buffer, 0, buffer.Length);
-                placeHolder.Append(Encoding.UTF8.GetString(buffer));
-            } while (s.Available != 0);
+                var innerBytesRead = ss.Read(buffer, 0, buffer.Length);
+                totalBytesRead += innerBytesRead;
+                _placeHolder.Append(Encoding.UTF8.GetString(buffer, 0, innerBytesRead));
+            }
 
-            return placeHolder.ToString().Trim('\0');
+            return _placeHolder.ToString();
         }
 
         public static async Task<string> ReadStringAsync(this SslStream ss, Socket s)
         {
+            var totalBytesRead = 0;
             var buffer = new byte[StringBufferSize];
-            var placeHolder = new StringBuilder();
+            await ss.ReadAsync(buffer, 0, buffer.Length);
 
-            do
+            var (contentLength, readSize) = ExtractContentLengthWithReadByteSize(buffer);
+
+            totalBytesRead += readSize;
+
+            while (totalBytesRead < contentLength)
             {
-                await ss.ReadAsync(buffer, 0, buffer.Length);
-                placeHolder.Append(Encoding.UTF8.GetString(buffer));
-            } while (s.Available != 0);
+                var innerBytesRead = await ss.ReadAsync(buffer, 0, buffer.Length);
+                totalBytesRead += innerBytesRead;
+                _placeHolder.Append(Encoding.UTF8.GetString(buffer, 0, innerBytesRead));
+            }
 
-            return placeHolder.ToString().Trim('\0');
+            return _placeHolder.ToString();
         }
 
         public static Task<int> SendAsync(this Socket s, byte[] buffer, SocketFlags flags)
@@ -81,6 +114,17 @@ namespace Proxy.Client.Utilities.Extensions
                 s.BeginReceive(buffer, 0, buffer.Length, flags, null, null),
                 s.EndReceive
             );
+        }
+
+        private static (int contentLength, int readSize) ExtractContentLengthWithReadByteSize(byte[] buffer)
+        {
+            var bufferString = Encoding.UTF8.GetString(buffer).Trim('\0');
+            var contentLength = Convert.ToInt32(Regex.Match(bufferString, ContentLengthPattern).Value, CultureInfo.InvariantCulture);
+            var splitBuffer = bufferString.Split(new[] { "\r\n\r\n" }, 2, StringSplitOptions.None);
+
+            _placeHolder.Append(bufferString);
+
+            return (contentLength, splitBuffer[1].Length);
         }
     }
 }

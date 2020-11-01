@@ -21,8 +21,8 @@ namespace Proxy.Client.Utilities
         public static byte[] PostCommand(string destHost, string body, string ssl, IDictionary<string, string> headers)
         {
             var request = headers == null 
-                ? $"POST {ssl}://{destHost}/ HTTP/1.1\r\nContent-Length: {body.Length}\r\n\r\n {body}\r\n\r\n"
-                : $"POST {ssl}://{destHost}/ HTTP/1.1\r\nContent-Length: {body.Length}\r\n\r\n {headers.ConcatenateHeadersKvp()} {body}\r\n\r\n";
+                ? $"POST {ssl}://{destHost}/ HTTP/1.1\r\nContent-Length: {body.Length}\r\n\r\n{body}"
+                : $"POST {ssl}://{destHost}/ HTTP/1.1\r\nContent-Length: {body.Length}\r\n{headers.ConcatenateHeadersKvp()}\r\n{body}";
 
             return Encoding.ASCII.GetBytes(request);
         }
