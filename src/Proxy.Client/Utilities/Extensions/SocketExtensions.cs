@@ -14,30 +14,28 @@ namespace Proxy.Client.Utilities.Extensions
     {
         private const int StringBufferSize = 500;
 
-        private static readonly StringBuilder _placeHolder;
-
-        static SocketTaskExtensions()
-        {
-            _placeHolder = new StringBuilder();
-        }
-
-        public static string ReceiveAll(this Socket s, SocketFlags flags)
+        public static (string response, float firstByteTime) ReceiveAll(this Socket s, SocketFlags flags)
         {
             var totalBytesRead = 0;
             var buffer = new byte[StringBufferSize];
-            s.Receive(buffer, flags);
+            var placeHolder = new StringBuilder();
+
+            var firstByteTime = TimingHelper.Measure(() => 
+            {
+                s.Receive(buffer, flags); 
+            });
 
             var bufferString = Encoding.UTF8.GetString(buffer).Trim('\0');
-            _placeHolder.Append(bufferString);
+            placeHolder.Append(bufferString);
 
             while (!bufferString.Contains(RequestConstants.CONTENT_SEPERATOR))
             {
                 s.Receive(buffer, flags);
                 bufferString = Encoding.UTF8.GetString(buffer).Trim('\0');
-                _placeHolder.Append(bufferString);
+                placeHolder.Append(bufferString);
             }
 
-            var maybeContentLength = Regex.Match(_placeHolder.ToString(), RequestConstants.CONTENT_LENGTH_PATTERN).Value;
+            var maybeContentLength = Regex.Match(placeHolder.ToString(), RequestConstants.CONTENT_LENGTH_PATTERN).Value;
             var splitBuffer = bufferString.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.None);
 
             if (String.IsNullOrEmpty(maybeContentLength))
@@ -51,29 +49,34 @@ namespace Proxy.Client.Utilities.Extensions
             {
                 var innerBytesRead = s.Receive(buffer, flags);
                 totalBytesRead += innerBytesRead;
-                _placeHolder.Append(Encoding.UTF8.GetString(buffer, 0, innerBytesRead));
+                placeHolder.Append(Encoding.UTF8.GetString(buffer, 0, innerBytesRead));
             }
 
-            return _placeHolder.ToString();
+            return (placeHolder.ToString(), firstByteTime);
         }
 
-        public static async Task<string> ReceiveAllAsync(this Socket s, SocketFlags flags)
+        public static async Task<(string response, float firstByteTime)> ReceiveAllAsync(this Socket s, SocketFlags flags)
         {
             var totalBytesRead = 0;
             var buffer = new byte[StringBufferSize];
-            await s.ReceiveAsync(buffer, flags);
+            var placeHolder = new StringBuilder();
+
+            var firstByteTime = await TimingHelper.MeasureAsync(async () => 
+            { 
+                await s.ReceiveAsync(buffer, flags); 
+            });
 
             var bufferString = Encoding.UTF8.GetString(buffer).Trim('\0');
-            _placeHolder.Append(bufferString);
+            placeHolder.Append(bufferString);
 
             while (!bufferString.Contains(RequestConstants.CONTENT_SEPERATOR))
             {
                 await s.ReceiveAsync(buffer, flags);
                 bufferString = Encoding.UTF8.GetString(buffer).Trim('\0');
-                _placeHolder.Append(bufferString);
+                placeHolder.Append(bufferString);
             }
 
-            var maybeContentLength = Regex.Match(_placeHolder.ToString(), RequestConstants.CONTENT_LENGTH_PATTERN).Value;
+            var maybeContentLength = Regex.Match(placeHolder.ToString(), RequestConstants.CONTENT_LENGTH_PATTERN).Value;
             var splitBuffer = bufferString.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.None);
 
             if (String.IsNullOrEmpty(maybeContentLength))
@@ -87,29 +90,31 @@ namespace Proxy.Client.Utilities.Extensions
             {
                 var innerBytesRead = await s.ReceiveAsync(buffer, flags);
                 totalBytesRead += innerBytesRead;
-                _placeHolder.Append(Encoding.UTF8.GetString(buffer, 0, innerBytesRead));
+                placeHolder.Append(Encoding.UTF8.GetString(buffer, 0, innerBytesRead));
             }
 
-            return _placeHolder.ToString();
+            return (placeHolder.ToString(), firstByteTime);
         }
 
-        public static string ReadAll(this SslStream ss)
+        public static (string response, float firstByteTime) ReadAll(this SslStream ss)
         {
             var totalBytesRead = 0;
             var buffer = new byte[StringBufferSize];
-            ss.Read(buffer, 0, buffer.Length);
+            var placeHolder = new StringBuilder();
+
+            var firstByteTime = ss.Read(buffer, 0, buffer.Length);
 
             var bufferString = Encoding.UTF8.GetString(buffer).Trim('\0');
-            _placeHolder.Append(bufferString);
+            placeHolder.Append(bufferString);
 
             while (!bufferString.Contains(RequestConstants.CONTENT_SEPERATOR))
             {
                 ss.Read(buffer, 0, buffer.Length);
                 bufferString = Encoding.UTF8.GetString(buffer).Trim('\0');
-                _placeHolder.Append(bufferString);
+                placeHolder.Append(bufferString);
             }
 
-            var maybeContentLength = Regex.Match(_placeHolder.ToString(), RequestConstants.CONTENT_LENGTH_PATTERN).Value;
+            var maybeContentLength = Regex.Match(placeHolder.ToString(), RequestConstants.CONTENT_LENGTH_PATTERN).Value;
             var splitBuffer = bufferString.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.None);
 
             if (String.IsNullOrEmpty(maybeContentLength))
@@ -123,29 +128,34 @@ namespace Proxy.Client.Utilities.Extensions
             {
                 var innerBytesRead = ss.Read(buffer, 0, buffer.Length);
                 totalBytesRead += innerBytesRead;
-                _placeHolder.Append(Encoding.UTF8.GetString(buffer, 0, innerBytesRead));
+                placeHolder.Append(Encoding.UTF8.GetString(buffer, 0, innerBytesRead));
             }
 
-            return _placeHolder.ToString();
+            return (placeHolder.ToString(), firstByteTime);
         }
 
-        public static async Task<string> ReadAllAsync(this SslStream ss)
+        public static async Task<(string response, float firstByteTime)> ReadAllAsync(this SslStream ss)
         {
             var totalBytesRead = 0;
             var buffer = new byte[StringBufferSize];
-            await ss.ReadAsync(buffer, 0, buffer.Length);
+            var placeHolder = new StringBuilder();
+
+            var firstByteTime = await TimingHelper.MeasureAsync(async () =>
+            {
+                await ss.ReadAsync(buffer, 0, buffer.Length);
+            });
 
             var bufferString = Encoding.UTF8.GetString(buffer).Trim('\0');
-            _placeHolder.Append(bufferString);
+            placeHolder.Append(bufferString);
 
             while(!bufferString.Contains(RequestConstants.CONTENT_SEPERATOR))
             {
                 await ss.ReadAsync(buffer, 0, buffer.Length);
                 bufferString = Encoding.UTF8.GetString(buffer).Trim('\0');
-                _placeHolder.Append(bufferString);
+                placeHolder.Append(bufferString);
             }
 
-            var maybeContentLength = Regex.Match(_placeHolder.ToString(), RequestConstants.CONTENT_LENGTH_PATTERN).Value;
+            var maybeContentLength = Regex.Match(placeHolder.ToString(), RequestConstants.CONTENT_LENGTH_PATTERN).Value;
             var splitBuffer = bufferString.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.None);
 
             if (String.IsNullOrEmpty(maybeContentLength))
@@ -159,10 +169,10 @@ namespace Proxy.Client.Utilities.Extensions
             {
                 var innerBytesRead = await ss.ReadAsync(buffer, 0, buffer.Length);
                 totalBytesRead += innerBytesRead;
-                _placeHolder.Append(Encoding.UTF8.GetString(buffer, 0, innerBytesRead));
+                placeHolder.Append(Encoding.UTF8.GetString(buffer, 0, innerBytesRead));
             }
 
-            return _placeHolder.ToString();
+            return (placeHolder.ToString(), firstByteTime);
         }
 
         public static Task<int> SendAsync(this Socket s, byte[] buffer, SocketFlags flags)

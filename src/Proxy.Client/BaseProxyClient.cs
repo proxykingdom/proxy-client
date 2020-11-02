@@ -36,7 +36,7 @@ namespace Proxy.Client
         protected internal abstract Task SendConnectCommandAsync();
         protected internal abstract void HandleProxyCommandError(byte[] response);
 
-        protected internal ProxyResponse HandleRequest(Action notConnectedAtn, Func<ProxyResponse> connectedFn,
+        protected internal ProxyResponse HandleRequest(Action notConnectedAtn, Func<(ProxyResponse response, float firstByteTime)> connectedFn,
             string destinationHost, int destinationPort)
         {
             try
@@ -55,7 +55,7 @@ namespace Proxy.Client
                     DestinationHost = destinationHost;
                     DestinationPort = destinationPort;
 
-                    connectTime = TimingExtensions.Measure(() =>
+                    connectTime = TimingHelper.Measure(() =>
                     {
                         Socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
                         Socket.Connect(ProxyHost, ProxyPort);
@@ -65,15 +65,16 @@ namespace Proxy.Client
                     IsConnected = true;
                 }
 
-                var (time, response) = TimingExtensions.Measure(() =>
+                var (time, innerResult) = TimingHelper.Measure(() =>
                 {
                     return connectedFn();
                 });
 
-                response.Timings.ConnectTime = connectTime;
-                response.Timings.ResponseTime = connectTime + time;
+                innerResult.response.Timings.ConnectTime = connectTime;
+                innerResult.response.Timings.ResponseTime = connectTime + time;
+                innerResult.response.Timings.FirstByteTime = innerResult.firstByteTime;
 
-                return response;
+                return innerResult.response;
             }
             catch (Exception)
             {
@@ -82,7 +83,7 @@ namespace Proxy.Client
             }
         }
 
-        protected internal async Task<ProxyResponse> HandleRequestAsync(Func<Task> notConnectedFn, Func<Task<ProxyResponse>> connectedFn,
+        protected internal async Task<ProxyResponse> HandleRequestAsync(Func<Task> notConnectedFn, Func<Task<(ProxyResponse response, float firstByteTime)>> connectedFn,
             string destinationHost, int destinationPort)
         {
             try
@@ -101,7 +102,7 @@ namespace Proxy.Client
                     DestinationHost = destinationHost;
                     DestinationPort = destinationPort;
 
-                    connectTime = await TimingExtensions.MeasureAsync(async () =>
+                    connectTime = await TimingHelper.MeasureAsync(async () =>
                     {
                         Socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
                         await Socket.ConnectAsync(ProxyHost, ProxyPort);
@@ -111,15 +112,16 @@ namespace Proxy.Client
                     IsConnected = true;
                 }
 
-                var (time, response) = await TimingExtensions.MeasureAsync(async () =>
+                var (time, innerResult) = await TimingHelper.MeasureAsync(async () =>
                 {
                     return await connectedFn();
                 });
 
-                response.Timings.ConnectTime = connectTime;
-                response.Timings.ResponseTime = connectTime + time;
+                innerResult.response.Timings.ConnectTime = connectTime;
+                innerResult.response.Timings.ResponseTime = connectTime + time;
+                innerResult.response.Timings.FirstByteTime = connectTime + innerResult.firstByteTime;
 
-                return response;
+                return innerResult.response;
             }
             catch (Exception ex)
             {
@@ -130,92 +132,96 @@ namespace Proxy.Client
             }
         }
 
-        protected internal ProxyResponse SendGetCommand(IDictionary<string, string> headers, bool isSsl)
+        protected internal (ProxyResponse response, float firstByteTime) SendGetCommand(IDictionary<string, string> headers, bool isSsl)
         {
             string response;
+            float firstByteTime;
 
             if (isSsl)
             {
                 var writeBuffer = RequestHelper.GetCommand(DestinationHost, RequestConstants.SSL, headers);
                 _sslStream.Write(writeBuffer);
 
-                response = _sslStream.ReadAll();
+                (response, firstByteTime) = _sslStream.ReadAll();
             }
             else
             {
                 var writeBuffer = RequestHelper.GetCommand(DestinationHost, RequestConstants.NO_SSL, headers);
                 Socket.Send(writeBuffer);
 
-                response = Socket.ReceiveAll(SocketFlags.None);
+                (response, firstByteTime) = Socket.ReceiveAll(SocketFlags.None);
             }
             
-            return ResponseBuilder.BuildProxyResponse(response);
+            return (ResponseBuilder.BuildProxyResponse(response), firstByteTime);
         }
 
-        protected internal async Task<ProxyResponse> SendGetCommandAsync(IDictionary<string, string> headers, bool isSsl)
+        protected internal async Task<(ProxyResponse response, float firstByteTime)> SendGetCommandAsync(IDictionary<string, string> headers, bool isSsl)
         {
             string response;
+            float firstByteTime;
 
             if (isSsl)
             {
                 var writeBuffer = RequestHelper.GetCommand(DestinationHost, RequestConstants.SSL, headers);
                 await _sslStream.WriteAsync(writeBuffer, 0, writeBuffer.Length);
 
-                response = await _sslStream.ReadAllAsync();
+                (response, firstByteTime) = await _sslStream.ReadAllAsync();
             }
             else
             {
                 var writeBuffer = RequestHelper.GetCommand(DestinationHost, RequestConstants.NO_SSL, headers);
                 await Socket.SendAsync(writeBuffer, SocketFlags.None);
 
-                response = await Socket.ReceiveAllAsync(SocketFlags.None);
+                (response, firstByteTime) = await Socket.ReceiveAllAsync(SocketFlags.None);
             }
 
-            return ResponseBuilder.BuildProxyResponse(response);
+            return (ResponseBuilder.BuildProxyResponse(response), firstByteTime);
         }
 
-        protected internal ProxyResponse SendPostCommand(string body, IDictionary<string, string> headers, bool isSsl)
+        protected internal (ProxyResponse response, float firstByteTime) SendPostCommand(string body, IDictionary<string, string> headers, bool isSsl)
         {
             string response;
+            float firstByteTime;
 
             if (isSsl)
             {
                 var writeBuffer = RequestHelper.PostCommand(DestinationHost, body, RequestConstants.SSL, headers);
                 _sslStream.Write(writeBuffer);
 
-                response = _sslStream.ReadAll();
+                (response, firstByteTime) = _sslStream.ReadAll();
             }
             else
             {
                 var writeBuffer = RequestHelper.PostCommand(DestinationHost, body, RequestConstants.NO_SSL, headers);
                 Socket.Send(writeBuffer);
 
-                response = Socket.ReceiveAll(SocketFlags.None);
+                (response, firstByteTime) = Socket.ReceiveAll(SocketFlags.None);
             }
 
-            return ResponseBuilder.BuildProxyResponse(response);
+            return (ResponseBuilder.BuildProxyResponse(response), firstByteTime);
         }
 
-        protected internal async Task<ProxyResponse> SendPostCommandAsync(string body, IDictionary<string, string> headers, bool isSsl)
+        protected internal async Task<(ProxyResponse response, float firstByteTime)> SendPostCommandAsync(string body, IDictionary<string, string> headers, bool isSsl)
         {
             string response;
+            float firstByteTime;
 
             if (isSsl)
             {
                 var writeBuffer = RequestHelper.PostCommand(DestinationHost, body, RequestConstants.SSL, headers);
                 await _sslStream.WriteAsync(writeBuffer, 0, writeBuffer.Length);
 
-                response = await _sslStream.ReadAllAsync();
+                (response, firstByteTime) = await _sslStream.ReadAllAsync();
             }
             else
             {
                 var writeBuffer = RequestHelper.PostCommand(DestinationHost, body, RequestConstants.NO_SSL, headers);
                 await Socket.SendAsync(writeBuffer, SocketFlags.None);
 
-                response = await Socket.ReceiveAllAsync(SocketFlags.None);
+                (response, firstByteTime) = await Socket.ReceiveAllAsync(SocketFlags.None);
             }
 
-            return ResponseBuilder.BuildProxyResponse(response);
+            return (ResponseBuilder.BuildProxyResponse(response), firstByteTime);
         }
 
         #region Ssl Methods
