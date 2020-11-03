@@ -83,8 +83,7 @@ namespace Proxy.Client
             {
                 DetermineClientAuthMethod();
                 NegotiateServerAuthMethod();
-                SendConnectCommand();
-                if (isSsl) HandleSslHandshake();
+                SendConnectCommand(isSsl);
             }, () => 
             {
                 return SendGetCommand(headers, isSsl);
@@ -97,8 +96,7 @@ namespace Proxy.Client
             {
                 DetermineClientAuthMethod();
                 await NegotiateServerAuthMethodAsync();
-                await SendConnectCommandAsync();
-                if (isSsl) await HandleSslHandshakeAsync();
+                await SendConnectCommandAsync(isSsl);
             }, async () => 
             {
                 return await SendGetCommandAsync(headers, isSsl);
@@ -111,8 +109,7 @@ namespace Proxy.Client
             {
                 DetermineClientAuthMethod();
                 NegotiateServerAuthMethod();
-                SendConnectCommand();
-                if (isSsl) HandleSslHandshake();
+                SendConnectCommand(isSsl);
             }, () => 
             {
                 return SendPostCommand(body, headers, isSsl);
@@ -125,15 +122,14 @@ namespace Proxy.Client
             {
                 DetermineClientAuthMethod();
                 await NegotiateServerAuthMethodAsync();
-                await SendConnectCommandAsync();
-                if (isSsl) await HandleSslHandshakeAsync();
+                await SendConnectCommandAsync(isSsl);
             }, async () => 
             {
                 return await SendPostCommandAsync(body, headers, isSsl);
             }, destinationHost, destinationPort);
         }
 
-        protected internal override void SendConnectCommand()
+        protected internal override void SendConnectCommand(bool isSsl)
         {
             var command = Socks5Constants.SOCKS5_CMD_CONNECT;
 
@@ -152,9 +148,12 @@ namespace Proxy.Client
 
             if (replyCode != Socks5Constants.SOCKS5_CMD_REPLY_SUCCEEDED)
                 HandleProxyCommandError(response);
+
+            if (isSsl)
+                HandleSslHandshake();
         }
 
-        protected internal override async Task SendConnectCommandAsync()
+        protected internal override async Task SendConnectCommandAsync(bool isSsl)
         {
             var command = Socks5Constants.SOCKS5_CMD_CONNECT;
 
@@ -173,6 +172,9 @@ namespace Proxy.Client
 
             if (replyCode != Socks5Constants.SOCKS5_CMD_REPLY_SUCCEEDED)
                 HandleProxyCommandError(response);
+
+            if (isSsl)
+                await HandleSslHandshakeAsync();
         }
 
         protected internal override void HandleProxyCommandError(byte[] response)

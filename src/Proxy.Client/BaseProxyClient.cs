@@ -32,8 +32,8 @@ namespace Proxy.Client
         public abstract ProxyResponse Post(string destinationHost, int destinationPort, string body, IDictionary<string, string> headers = null, bool isSsl = false);
         public abstract Task<ProxyResponse> PostAsync(string destinationHost, int destinationPort, string body, IDictionary<string, string> headers = null, bool isSsl = false);
 
-        protected internal abstract void SendConnectCommand();
-        protected internal abstract Task SendConnectCommandAsync();
+        protected internal abstract void SendConnectCommand(bool isSsl);
+        protected internal abstract Task SendConnectCommandAsync(bool isSsl);
         protected internal abstract void HandleProxyCommandError(byte[] response);
 
         protected internal ProxyResponse HandleRequest(Action notConnectedAtn, Func<(ProxyResponse response, float firstByteTime)> connectedFn,
