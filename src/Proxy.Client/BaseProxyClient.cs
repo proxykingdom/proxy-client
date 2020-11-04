@@ -132,6 +132,22 @@ namespace Proxy.Client
             }
         }
 
+        protected internal void HandleConnectCommand(Action atn, bool isSsl)
+        {
+            atn();
+
+            if (isSsl)
+                HandleSslHandshake();
+        }
+
+        protected internal async Task HandleConnectCommandAsync(Func<Task> fn, bool isSsl)
+        {
+            await fn();
+
+            if (isSsl)
+                await HandleSslHandshakeAsync();
+        }
+
         protected internal (ProxyResponse response, float firstByteTime) SendGetCommand(IDictionary<string, string> headers, bool isSsl)
         {
             string response;
@@ -225,7 +241,7 @@ namespace Proxy.Client
         }
 
         #region Ssl Methods
-        protected internal void HandleSslHandshake()
+        private void HandleSslHandshake()
         {
             var networkStream = new NetworkStream(Socket);
             _sslStream = new SslStream(networkStream, false, new RemoteCertificateValidationCallback(ValidateServerCertificate), null);
@@ -233,7 +249,7 @@ namespace Proxy.Client
             _sslStream.AuthenticateAsClient(DestinationHost);
         }
 
-        protected internal async Task HandleSslHandshakeAsync()
+        private async Task HandleSslHandshakeAsync()
         {
             var networkStream = new NetworkStream(Socket);
             _sslStream = new SslStream(networkStream, false, new RemoteCertificateValidationCallback(ValidateServerCertificate), null);

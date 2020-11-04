@@ -131,50 +131,46 @@ namespace Proxy.Client
 
         protected internal override void SendConnectCommand(bool isSsl)
         {
-            var command = Socks5Constants.SOCKS5_CMD_CONNECT;
+            HandleConnectCommand(() =>
+            {
+                var addressType = GetDestinationAddressType();
+                var destinationAddressBytes = GetDestinationAddressBytes(addressType);
+                var destinationPortBytes = GetDestinationPortBytes();
 
-            var addressType = GetDestinationAddressType(DestinationHost);
-            var destinationAddressBytes = GetDestinationAddressBytes(addressType, DestinationHost);
-            var destinationPortBytes = GetDestinationPortBytes(DestinationPort);
+                var request = GetCommandRequest(destinationAddressBytes, destinationPortBytes, addressType);
 
-            var request = GetCommandRequest(command, destinationAddressBytes, destinationPortBytes, addressType);
+                Socket.Send(request, SocketFlags.None);
 
-            Socket.Send(request, SocketFlags.None);
+                var response = new byte[10];
+                Socket.Receive(response, SocketFlags.None);
 
-            var response = new byte[10];
-            Socket.Receive(response, SocketFlags.None);
+                var replyCode = response[1];
 
-            var replyCode = response[1];
-
-            if (replyCode != Socks5Constants.SOCKS5_CMD_REPLY_SUCCEEDED)
-                HandleProxyCommandError(response);
-
-            if (isSsl)
-                HandleSslHandshake();
+                if (replyCode != Socks5Constants.SOCKS5_CMD_REPLY_SUCCEEDED)
+                    HandleProxyCommandError(response);
+            }, isSsl);
         }
 
         protected internal override async Task SendConnectCommandAsync(bool isSsl)
         {
-            var command = Socks5Constants.SOCKS5_CMD_CONNECT;
+            await HandleConnectCommandAsync(async () =>
+            {
+                var addressType = GetDestinationAddressType();
+                var destinationAddressBytes = await GetDestinationAddressBytesAsync(addressType);
+                var destinationPortBytes = GetDestinationPortBytes();
 
-            var addressType = GetDestinationAddressType(DestinationHost);
-            var destinationAddressBytes = await GetDestinationAddressBytesAsync(addressType, DestinationHost);
-            var destinationPortBytes = GetDestinationPortBytes(DestinationPort);
+                var request = GetCommandRequest(destinationAddressBytes, destinationPortBytes, addressType);
 
-            var request = GetCommandRequest(command, destinationAddressBytes, destinationPortBytes, addressType);
+                await Socket.SendAsync(request, SocketFlags.None);
 
-            await Socket.SendAsync(request, SocketFlags.None);
+                var response = new byte[10];
+                await Socket.ReceiveAsync(response, SocketFlags.None);
 
-            var response = new byte[10];
-            await Socket.ReceiveAsync(response, SocketFlags.None);
+                var replyCode = response[1];
 
-            var replyCode = response[1];
-
-            if (replyCode != Socks5Constants.SOCKS5_CMD_REPLY_SUCCEEDED)
-                HandleProxyCommandError(response);
-
-            if (isSsl)
-                await HandleSslHandshakeAsync();
+                if (replyCode != Socks5Constants.SOCKS5_CMD_REPLY_SUCCEEDED)
+                    HandleProxyCommandError(response);
+            }, isSsl);
         }
 
         protected internal override void HandleProxyCommandError(byte[] response)
@@ -302,9 +298,9 @@ namespace Proxy.Client
         }
 
         #region SendCommand Byte Private Methods
-        private byte GetDestinationAddressType(string destinationHost)
+        private byte GetDestinationAddressType()
         {
-            bool result = IPAddress.TryParse(destinationHost, out var ipAddress);
+            bool result = IPAddress.TryParse(DestinationHost, out var ipAddress);
 
             if (!result)
                 return Socks5Constants.SOCKS5_ADDRTYPE_DOMAIN_NAME;
@@ -317,59 +313,73 @@ namespace Proxy.Client
                     return Socks5Constants.SOCKS5_ADDRTYPE_IPV6;
                 default:
                     throw new Exception(String.Format(CultureInfo.InvariantCulture,
-                        $"The host addess {destinationHost} of type '{Enum.GetName(typeof(AddressFamily), ipAddress.AddressFamily)}' is not a supported address type.  The supported types are InterNetwork and InterNetworkV6."));
+                        $"The host addess {DestinationHost} of type '{Enum.GetName(typeof(AddressFamily), ipAddress.AddressFamily)}' is not a supported address type.  The supported types are InterNetwork and InterNetworkV6."));
             }
         }
 
-        private byte[] GetDestinationAddressBytes(byte addressType, string destinationHost)
+        private byte[] GetDestinationAddressBytes(byte addressType)
         {
             switch (addressType)
             {
                 case Socks5Constants.SOCKS5_ADDRTYPE_IPV4:
                 case Socks5Constants.SOCKS5_ADDRTYPE_IPV6:
-                    var hostAddress = Dns.GetHostAddresses(destinationHost).FirstOrDefault();
-                    return hostAddress.GetAddressBytes();
+                    try
+                    {
+                        var hostAddress = Dns.GetHostAddresses(DestinationHost).First();
+                        return hostAddress.GetAddressBytes();
+                    }
+                    catch (Exception)
+                    {
+                        throw new ProxyException($"No such known host for: {DestinationHost}");
+                    }
                 case Socks5Constants.SOCKS5_ADDRTYPE_DOMAIN_NAME:
-                    byte[] bytes = new byte[destinationHost.Length + 1];
-                    bytes[0] = Convert.ToByte(destinationHost.Length);
-                    Encoding.ASCII.GetBytes(destinationHost).CopyTo(bytes, 1);
+                    byte[] bytes = new byte[DestinationHost.Length + 1];
+                    bytes[0] = Convert.ToByte(DestinationHost.Length);
+                    Encoding.ASCII.GetBytes(DestinationHost).CopyTo(bytes, 1);
                     return bytes;
                 default:
                     return null;
             }
         }
 
-        private async Task<byte[]> GetDestinationAddressBytesAsync(byte addressType, string destinationHost)
+        private async Task<byte[]> GetDestinationAddressBytesAsync(byte addressType)
         {
             switch (addressType)
             {
                 case Socks5Constants.SOCKS5_ADDRTYPE_IPV4:
                 case Socks5Constants.SOCKS5_ADDRTYPE_IPV6:
-                    var hostAddress = await Dns.GetHostAddressesAsync(destinationHost);
-                    return hostAddress.FirstOrDefault().GetAddressBytes();
+                    try
+                    {
+                        var hostAddress = await Dns.GetHostAddressesAsync(DestinationHost);
+                        return hostAddress.First().GetAddressBytes();
+                    }
+                    catch (Exception)
+                    {
+                        throw new ProxyException($"No such known host for: {DestinationHost}");
+                    }
                 case Socks5Constants.SOCKS5_ADDRTYPE_DOMAIN_NAME:
-                    byte[] bytes = new byte[destinationHost.Length + 1];
-                    bytes[0] = Convert.ToByte(destinationHost.Length);
-                    Encoding.ASCII.GetBytes(destinationHost).CopyTo(bytes, 1);
+                    byte[] bytes = new byte[DestinationHost.Length + 1];
+                    bytes[0] = Convert.ToByte(DestinationHost.Length);
+                    Encoding.ASCII.GetBytes(DestinationHost).CopyTo(bytes, 1);
                     return bytes;
                 default:
                     return null;
             }
         }
 
-        private byte[] GetDestinationPortBytes(int destinationPort) =>
+        private byte[] GetDestinationPortBytes() =>
             new byte[2]
             {
-                Convert.ToByte(destinationPort / 256),
-                Convert.ToByte(destinationPort % 256)
+                Convert.ToByte(DestinationPort / 256),
+                Convert.ToByte(DestinationPort % 256)
             };
 
-        private byte[] GetCommandRequest(byte command, byte[] destinationAddressBytes, byte[] destinationPortBytes, byte addressType)
+        private byte[] GetCommandRequest(byte[] destinationAddressBytes, byte[] destinationPortBytes, byte addressType)
         {
             var request = new byte[4 + destinationAddressBytes.Length + 2];
             
             request[0] = Socks5Constants.SOCKS5_VERSION_NUMBER;
-            request[1] = command;
+            request[1] = Socks5Constants.SOCKS5_CMD_CONNECT;
             request[2] = Socks5Constants.SOCKS5_RESERVED;
             request[3] = addressType;
             destinationAddressBytes.CopyTo(request, 4);
