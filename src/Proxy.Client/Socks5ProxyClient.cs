@@ -1,12 +1,16 @@
 ﻿using Proxy.Client.Contracts;
+using Proxy.Client.Contracts.Constants;
 using Proxy.Client.Exceptions;
+using Proxy.Client.Utilities;
 using Proxy.Client.Utilities.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net;
+using System.Net.Security;
 using System.Net.Sockets;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -40,8 +44,8 @@ namespace Proxy.Client
                 return credentials;
             }
         }
-
         private SocksAuthentication _proxyAuthMethod;
+        private SslStream _sslStream;
 
         public Socks5ProxyClient(string proxyHost, int proxyPort)
         {
@@ -69,7 +73,7 @@ namespace Proxy.Client
                 throw new ArgumentNullException(nameof(proxyUsername));
 
             if (proxyPassword == null)
-                throw new ArgumentNullException(nameof(ProxyPassword));
+                throw new ArgumentNullException(nameof(proxyPassword));
 
             ProxyHost = proxyHost;
             ProxyPort = proxyPort;
@@ -129,51 +133,143 @@ namespace Proxy.Client
             }, destinationHost, destinationPort);
         }
 
-        protected internal override void SendConnectCommand(bool isSsl)
+        private void SendConnectCommand(bool isSsl)
         {
-            HandleConnectCommand(() =>
-            {
-                var addressType = GetDestinationAddressType();
-                var destinationAddressBytes = GetDestinationAddressBytes(addressType);
-                var destinationPortBytes = GetDestinationPortBytes();
+            var addressType = GetDestinationAddressType();
+            var destinationAddressBytes = GetDestinationAddressBytes(addressType);
+            var destinationPortBytes = GetDestinationPortBytes();
 
-                var request = GetCommandRequest(destinationAddressBytes, destinationPortBytes, addressType);
+            var request = GetCommandRequest(destinationAddressBytes, destinationPortBytes, addressType);
 
-                Socket.Send(request, SocketFlags.None);
+            Socket.Send(request, SocketFlags.None);
 
-                var response = new byte[10];
-                Socket.Receive(response, SocketFlags.None);
+            var response = new byte[10];
+            Socket.Receive(response, SocketFlags.None);
 
-                var replyCode = response[1];
+            var replyCode = response[1];
 
-                if (replyCode != Socks5Constants.SOCKS5_CMD_REPLY_SUCCEEDED)
-                    HandleProxyCommandError(response);
-            }, isSsl);
+            if (replyCode != Socks5Constants.SOCKS5_CMD_REPLY_SUCCEEDED)
+                HandleProxyCommandError(response);
+
+            if (isSsl)
+                HandleSslHandshake();
         }
 
-        protected internal override async Task SendConnectCommandAsync(bool isSsl)
+        private async Task SendConnectCommandAsync(bool isSsl)
         {
-            await HandleConnectCommandAsync(async () =>
-            {
-                var addressType = GetDestinationAddressType();
-                var destinationAddressBytes = await GetDestinationAddressBytesAsync(addressType);
-                var destinationPortBytes = GetDestinationPortBytes();
+            var addressType = GetDestinationAddressType();
+            var destinationAddressBytes = await GetDestinationAddressBytesAsync(addressType);
+            var destinationPortBytes = GetDestinationPortBytes();
 
-                var request = GetCommandRequest(destinationAddressBytes, destinationPortBytes, addressType);
+            var request = GetCommandRequest(destinationAddressBytes, destinationPortBytes, addressType);
 
-                await Socket.SendAsync(request, SocketFlags.None);
+            await Socket.SendAsync(request, SocketFlags.None);
 
-                var response = new byte[10];
-                await Socket.ReceiveAsync(response, SocketFlags.None);
+            var response = new byte[10];
+            await Socket.ReceiveAsync(response, SocketFlags.None);
 
-                var replyCode = response[1];
+            var replyCode = response[1];
 
-                if (replyCode != Socks5Constants.SOCKS5_CMD_REPLY_SUCCEEDED)
-                    HandleProxyCommandError(response);
-            }, isSsl);
+            if (replyCode != Socks5Constants.SOCKS5_CMD_REPLY_SUCCEEDED)
+                HandleProxyCommandError(response);
+
+            if (isSsl)
+                await HandleSslHandshakeAsync();
         }
 
-        protected internal override void HandleProxyCommandError(byte[] response)
+        protected internal override (ProxyResponse response, float firstByteTime) SendGetCommand(IDictionary<string, string> headers, bool isSsl)
+        {
+            string response;
+            float firstByteTime;
+
+            if (isSsl)
+            {
+                var writeBuffer = RequestHelper.GetCommand(DestinationHost, RequestConstants.SSL, headers);
+                _sslStream.Write(writeBuffer);
+
+                (response, firstByteTime) = _sslStream.ReadAll();
+            }
+            else
+            {
+                var writeBuffer = RequestHelper.GetCommand(DestinationHost, RequestConstants.NO_SSL, headers);
+                Socket.Send(writeBuffer);
+
+                (response, firstByteTime) = Socket.ReceiveAll(SocketFlags.None);
+            }
+
+            return (ResponseBuilder.BuildProxyResponse(response), firstByteTime);
+        }
+
+        protected internal override async Task<(ProxyResponse response, float firstByteTime)> SendGetCommandAsync(IDictionary<string, string> headers, bool isSsl)
+        {
+            string response;
+            float firstByteTime;
+
+            if (isSsl)
+            {
+                var writeBuffer = RequestHelper.GetCommand(DestinationHost, RequestConstants.SSL, headers);
+                await _sslStream.WriteAsync(writeBuffer, 0, writeBuffer.Length);
+
+                (response, firstByteTime) = await _sslStream.ReadAllAsync();
+            }
+            else
+            {
+                var writeBuffer = RequestHelper.GetCommand(DestinationHost, RequestConstants.NO_SSL, headers);
+                await Socket.SendAsync(writeBuffer, SocketFlags.None);
+
+                (response, firstByteTime) = await Socket.ReceiveAllAsync(SocketFlags.None);
+            }
+
+            return (ResponseBuilder.BuildProxyResponse(response), firstByteTime);
+        }
+
+        protected internal override (ProxyResponse response, float firstByteTime) SendPostCommand(string body, IDictionary<string, string> headers, bool isSsl)
+        {
+            string response;
+            float firstByteTime;
+
+            if (isSsl)
+            {
+                var writeBuffer = RequestHelper.PostCommand(DestinationHost, body, RequestConstants.SSL, headers);
+                _sslStream.Write(writeBuffer);
+
+                (response, firstByteTime) = _sslStream.ReadAll();
+            }
+            else
+            {
+                var writeBuffer = RequestHelper.PostCommand(DestinationHost, body, RequestConstants.NO_SSL, headers);
+                Socket.Send(writeBuffer);
+
+                (response, firstByteTime) = Socket.ReceiveAll(SocketFlags.None);
+            }
+
+            return (ResponseBuilder.BuildProxyResponse(response), firstByteTime);
+        }
+
+        protected internal override async Task<(ProxyResponse response, float firstByteTime)> SendPostCommandAsync(string body, IDictionary<string, string> headers, bool isSsl)
+        {
+            string response;
+            float firstByteTime;
+
+            if (isSsl)
+            {
+                var writeBuffer = RequestHelper.PostCommand(DestinationHost, body, RequestConstants.SSL, headers);
+                await _sslStream.WriteAsync(writeBuffer, 0, writeBuffer.Length);
+
+                (response, firstByteTime) = await _sslStream.ReadAllAsync();
+            }
+            else
+            {
+                var writeBuffer = RequestHelper.PostCommand(DestinationHost, body, RequestConstants.NO_SSL, headers);
+                await Socket.SendAsync(writeBuffer, SocketFlags.None);
+
+                (response, firstByteTime) = await Socket.ReceiveAllAsync(SocketFlags.None);
+            }
+
+            return (ResponseBuilder.BuildProxyResponse(response), firstByteTime);
+        }
+
+        private void HandleProxyCommandError(byte[] response)
         {
             var replyCode = response[1];
 
@@ -387,7 +483,34 @@ namespace Proxy.Client
 
             return request;
         }
+        #endregion
+
+        #region Ssl Methods
+        private void HandleSslHandshake()
+        {
+            var networkStream = new NetworkStream(Socket);
+            _sslStream = new SslStream(networkStream, false, new RemoteCertificateValidationCallback(ValidateServerCertificate), null);
+
+            _sslStream.AuthenticateAsClient(DestinationHost);
+        }
+
+        private async Task HandleSslHandshakeAsync()
+        {
+            var networkStream = new NetworkStream(Socket);
+            _sslStream = new SslStream(networkStream, false, new RemoteCertificateValidationCallback(ValidateServerCertificate), null);
+
+            await _sslStream.AuthenticateAsClientAsync(DestinationHost);
+        }
+
+        private static bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain,
+                                                  SslPolicyErrors sslPolicyErrors) => sslPolicyErrors == SslPolicyErrors.None ? true : false;
 
         #endregion
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            _sslStream.Dispose();
+        }
     }
 }

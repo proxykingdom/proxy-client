@@ -25,13 +25,13 @@ namespace Proxy.Client.Utilities.Extensions
                 s.Receive(buffer, flags); 
             });
 
-            var bufferString = Encoding.UTF8.GetString(buffer).Trim('\0');
+            var bufferString = Encoding.ASCII.GetString(buffer).Trim('\0');
             placeHolder.Append(bufferString);
 
             while (!bufferString.Contains(RequestConstants.CONTENT_SEPERATOR))
             {
                 s.Receive(buffer, flags);
-                bufferString = Encoding.UTF8.GetString(buffer).Trim('\0');
+                bufferString = Encoding.ASCII.GetString(buffer).Trim('\0');
                 placeHolder.Append(bufferString);
             }
 
@@ -49,7 +49,7 @@ namespace Proxy.Client.Utilities.Extensions
             {
                 var innerBytesRead = s.Receive(buffer, flags);
                 totalBytesRead += innerBytesRead;
-                placeHolder.Append(Encoding.UTF8.GetString(buffer, 0, innerBytesRead));
+                placeHolder.Append(Encoding.ASCII.GetString(buffer, 0, innerBytesRead));
             }
 
             return (placeHolder.ToString(), firstByteTime);
@@ -66,13 +66,13 @@ namespace Proxy.Client.Utilities.Extensions
                 await s.ReceiveAsync(buffer, flags); 
             });
 
-            var bufferString = Encoding.UTF8.GetString(buffer).Trim('\0');
+            var bufferString = Encoding.ASCII.GetString(buffer).Trim('\0');
             placeHolder.Append(bufferString);
 
             while (!bufferString.Contains(RequestConstants.CONTENT_SEPERATOR))
             {
-                await s.ReceiveAsync(buffer, flags);
-                bufferString = Encoding.UTF8.GetString(buffer).Trim('\0');
+                var t = await s.ReceiveAsync(buffer, flags);
+                bufferString = Encoding.ASCII.GetString(buffer).Trim('\0');
                 placeHolder.Append(bufferString);
             }
 
@@ -90,7 +90,7 @@ namespace Proxy.Client.Utilities.Extensions
             {
                 var innerBytesRead = await s.ReceiveAsync(buffer, flags);
                 totalBytesRead += innerBytesRead;
-                placeHolder.Append(Encoding.UTF8.GetString(buffer, 0, innerBytesRead));
+                placeHolder.Append(Encoding.ASCII.GetString(buffer, 0, innerBytesRead));
             }
 
             return (placeHolder.ToString(), firstByteTime);
@@ -104,13 +104,13 @@ namespace Proxy.Client.Utilities.Extensions
 
             var firstByteTime = ss.Read(buffer, 0, buffer.Length);
 
-            var bufferString = Encoding.UTF8.GetString(buffer).Trim('\0');
+            var bufferString = Encoding.ASCII.GetString(buffer).Trim('\0');
             placeHolder.Append(bufferString);
 
             while (!bufferString.Contains(RequestConstants.CONTENT_SEPERATOR))
             {
                 ss.Read(buffer, 0, buffer.Length);
-                bufferString = Encoding.UTF8.GetString(buffer).Trim('\0');
+                bufferString = Encoding.ASCII.GetString(buffer).Trim('\0');
                 placeHolder.Append(bufferString);
             }
 
@@ -128,7 +128,7 @@ namespace Proxy.Client.Utilities.Extensions
             {
                 var innerBytesRead = ss.Read(buffer, 0, buffer.Length);
                 totalBytesRead += innerBytesRead;
-                placeHolder.Append(Encoding.UTF8.GetString(buffer, 0, innerBytesRead));
+                placeHolder.Append(Encoding.ASCII.GetString(buffer, 0, innerBytesRead));
             }
 
             return (placeHolder.ToString(), firstByteTime);
@@ -145,13 +145,13 @@ namespace Proxy.Client.Utilities.Extensions
                 await ss.ReadAsync(buffer, 0, buffer.Length);
             });
 
-            var bufferString = Encoding.UTF8.GetString(buffer).Trim('\0');
+            var bufferString = Encoding.ASCII.GetString(buffer).Trim('\0');
             placeHolder.Append(bufferString);
 
             while(!bufferString.Contains(RequestConstants.CONTENT_SEPERATOR))
             {
                 await ss.ReadAsync(buffer, 0, buffer.Length);
-                bufferString = Encoding.UTF8.GetString(buffer).Trim('\0');
+                bufferString = Encoding.ASCII.GetString(buffer).Trim('\0');
                 placeHolder.Append(bufferString);
             }
 
@@ -169,7 +169,7 @@ namespace Proxy.Client.Utilities.Extensions
             {
                 var innerBytesRead = await ss.ReadAsync(buffer, 0, buffer.Length);
                 totalBytesRead += innerBytesRead;
-                placeHolder.Append(Encoding.UTF8.GetString(buffer, 0, innerBytesRead));
+                placeHolder.Append(Encoding.ASCII.GetString(buffer, 0, innerBytesRead));
             }
 
             return (placeHolder.ToString(), firstByteTime);
