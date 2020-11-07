@@ -327,7 +327,7 @@ namespace Proxy.Client
         public override void Dispose()
         {
             base.Dispose();
-            _sslStream.Dispose();
+            _sslStream?.Dispose();
         }
     }
 }
