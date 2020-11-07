@@ -187,7 +187,7 @@ namespace Proxy.Client
                 var writeBuffer = RequestHelper.GetCommand(DestinationHost, RequestConstants.SSL, headers);
                 _sslStream.Write(writeBuffer);
 
-                (response, firstByteTime) = _sslStream.ReadAll();
+                (response, firstByteTime) = _sslStream.ReceiveAll();
             }
             else
             {
@@ -210,7 +210,7 @@ namespace Proxy.Client
                 var writeBuffer = RequestHelper.GetCommand(DestinationHost, RequestConstants.SSL, headers);
                 await _sslStream.WriteAsync(writeBuffer, 0, writeBuffer.Length);
 
-                (response, firstByteTime) = await _sslStream.ReadAllAsync();
+                (response, firstByteTime) = await _sslStream.ReceiveAllAsync();
             }
             else
             {
@@ -233,7 +233,7 @@ namespace Proxy.Client
                 var writeBuffer = RequestHelper.PostCommand(DestinationHost, body, RequestConstants.SSL, headers);
                 _sslStream.Write(writeBuffer);
 
-                (response, firstByteTime) = _sslStream.ReadAll();
+                (response, firstByteTime) = _sslStream.ReceiveAll();
             }
             else
             {
@@ -256,7 +256,7 @@ namespace Proxy.Client
                 var writeBuffer = RequestHelper.PostCommand(DestinationHost, body, RequestConstants.SSL, headers);
                 await _sslStream.WriteAsync(writeBuffer, 0, writeBuffer.Length);
 
-                (response, firstByteTime) = await _sslStream.ReadAllAsync();
+                (response, firstByteTime) = await _sslStream.ReceiveAllAsync();
             }
             else
             {

@@ -96,7 +96,7 @@ namespace Proxy.Client.Utilities.Extensions
             return (placeHolder.ToString(), firstByteTime);
         }
 
-        public static (string response, float firstByteTime) ReadAll(this SslStream ss)
+        public static (string response, float firstByteTime) ReceiveAll(this SslStream ss)
         {
             var totalBytesRead = 0;
             var buffer = new byte[StringBufferSize];
@@ -134,7 +134,7 @@ namespace Proxy.Client.Utilities.Extensions
             return (placeHolder.ToString(), firstByteTime);
         }
 
-        public static async Task<(string response, float firstByteTime)> ReadAllAsync(this SslStream ss)
+        public static async Task<(string response, float firstByteTime)> ReceiveAllAsync(this SslStream ss)
         {
             var totalBytesRead = 0;
             var buffer = new byte[StringBufferSize];
@@ -175,6 +175,7 @@ namespace Proxy.Client.Utilities.Extensions
             return (placeHolder.ToString(), firstByteTime);
         }
 
+        #region APM to Task Methods
         public static Task<int> SendAsync(this Socket s, byte[] buffer, SocketFlags flags)
         {
             return Task.Factory.FromAsync(
@@ -190,5 +191,6 @@ namespace Proxy.Client.Utilities.Extensions
                 s.EndReceive
             );
         }
+        #endregion
     }
 }
