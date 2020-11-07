@@ -163,10 +163,10 @@ namespace Proxy.Client
 
             var request = GetCommandRequest(destinationAddressBytes, destinationPortBytes, addressType);
 
-            await Socket.SendAsync(request, SocketFlags.None);
+            await Socket.SendAsync(request);
 
             var response = new byte[10];
-            await Socket.ReceiveAsync(response, SocketFlags.None);
+            await Socket.ReceiveAsync(response);
 
             var replyCode = response[1];
 
@@ -194,7 +194,7 @@ namespace Proxy.Client
                 var writeBuffer = RequestHelper.GetCommand(DestinationHost, RequestConstants.NO_SSL, headers);
                 Socket.Send(writeBuffer);
 
-                (response, firstByteTime) = Socket.ReceiveAll(SocketFlags.None);
+                (response, firstByteTime) = Socket.ReceiveAll();
             }
 
             return (ResponseBuilder.BuildProxyResponse(response), firstByteTime);
@@ -215,9 +215,9 @@ namespace Proxy.Client
             else
             {
                 var writeBuffer = RequestHelper.GetCommand(DestinationHost, RequestConstants.NO_SSL, headers);
-                await Socket.SendAsync(writeBuffer, SocketFlags.None);
+                await Socket.SendAsync(writeBuffer);
 
-                (response, firstByteTime) = await Socket.ReceiveAllAsync(SocketFlags.None);
+                (response, firstByteTime) = await Socket.ReceiveAllAsync();
             }
 
             return (ResponseBuilder.BuildProxyResponse(response), firstByteTime);
@@ -240,7 +240,7 @@ namespace Proxy.Client
                 var writeBuffer = RequestHelper.PostCommand(DestinationHost, body, RequestConstants.NO_SSL, headers);
                 Socket.Send(writeBuffer);
 
-                (response, firstByteTime) = Socket.ReceiveAll(SocketFlags.None);
+                (response, firstByteTime) = Socket.ReceiveAll();
             }
 
             return (ResponseBuilder.BuildProxyResponse(response), firstByteTime);
@@ -261,9 +261,9 @@ namespace Proxy.Client
             else
             {
                 var writeBuffer = RequestHelper.PostCommand(DestinationHost, body, RequestConstants.NO_SSL, headers);
-                await Socket.SendAsync(writeBuffer, SocketFlags.None);
+                await Socket.SendAsync(writeBuffer);
 
-                (response, firstByteTime) = await Socket.ReceiveAllAsync(SocketFlags.None);
+                (response, firstByteTime) = await Socket.ReceiveAllAsync();
             }
 
             return (ResponseBuilder.BuildProxyResponse(response), firstByteTime);
@@ -356,10 +356,10 @@ namespace Proxy.Client
 
         private async Task NegotiateServerAuthMethodAsync()
         {
-            await Socket.SendAsync(AuthRequest, SocketFlags.None);
+            await Socket.SendAsync(AuthRequest);
 
             var responseBuffer = new byte[2];
-            await Socket.ReceiveAsync(responseBuffer, SocketFlags.None);
+            await Socket.ReceiveAsync(responseBuffer);
 
             var acceptedAuthMethod = responseBuffer[1];
 
@@ -378,10 +378,10 @@ namespace Proxy.Client
 
             if (acceptedAuthMethod == Socks5Constants.SOCKS5_AUTH_METHOD_USERNAME_PASSWORD)
             {
-                await Socket.SendAsync(AuthCrendetials, SocketFlags.None);
+                await Socket.SendAsync(AuthCrendetials);
 
                 var crResponse = new byte[2];
-                await Socket.ReceiveAsync(crResponse, SocketFlags.None);
+                await Socket.ReceiveAsync(crResponse);
 
                 Console.WriteLine("SOCKS5_AUTH_METHOD_USERNAME_PASSWORD");
 

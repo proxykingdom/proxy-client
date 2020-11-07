@@ -125,10 +125,10 @@ namespace Proxy.Client
 
             var request = GetCommandRequest(destinationAddressBytes, destinationPortBytes, userIdBytes);
 
-            await Socket.SendAsync(request, SocketFlags.None);
+            await Socket.SendAsync(request);
 
             var response = new byte[8];
-            await Socket.ReceiveAsync(response, SocketFlags.None);
+            await Socket.ReceiveAsync(response);
 
             if (response[1] != Socks4Constants.SOCKS4_CMD_REPLY_REQUEST_GRANTED)
                 HandleProxyCommandError(response);
@@ -154,7 +154,7 @@ namespace Proxy.Client
                 var writeBuffer = RequestHelper.GetCommand(DestinationHost, RequestConstants.NO_SSL, headers);
                 Socket.Send(writeBuffer);
 
-                (response, firstByteTime) = Socket.ReceiveAll(SocketFlags.None);
+                (response, firstByteTime) = Socket.ReceiveAll();
             }
 
             return (ResponseBuilder.BuildProxyResponse(response), firstByteTime);
@@ -175,9 +175,9 @@ namespace Proxy.Client
             else
             {
                 var writeBuffer = RequestHelper.GetCommand(DestinationHost, RequestConstants.NO_SSL, headers);
-                await Socket.SendAsync(writeBuffer, SocketFlags.None);
+                await Socket.SendAsync(writeBuffer);
 
-                (response, firstByteTime) = await Socket.ReceiveAllAsync(SocketFlags.None);
+                (response, firstByteTime) = await Socket.ReceiveAllAsync();
             }
 
             return (ResponseBuilder.BuildProxyResponse(response), firstByteTime);
@@ -200,7 +200,7 @@ namespace Proxy.Client
                 var writeBuffer = RequestHelper.PostCommand(DestinationHost, body, RequestConstants.NO_SSL, headers);
                 Socket.Send(writeBuffer);
 
-                (response, firstByteTime) = Socket.ReceiveAll(SocketFlags.None);
+                (response, firstByteTime) = Socket.ReceiveAll();
             }
 
             return (ResponseBuilder.BuildProxyResponse(response), firstByteTime);
@@ -221,9 +221,9 @@ namespace Proxy.Client
             else
             {
                 var writeBuffer = RequestHelper.PostCommand(DestinationHost, body, RequestConstants.NO_SSL, headers);
-                await Socket.SendAsync(writeBuffer, SocketFlags.None);
+                await Socket.SendAsync(writeBuffer);
 
-                (response, firstByteTime) = await Socket.ReceiveAllAsync(SocketFlags.None);
+                (response, firstByteTime) = await Socket.ReceiveAllAsync();
             }
 
             return (ResponseBuilder.BuildProxyResponse(response), firstByteTime);
