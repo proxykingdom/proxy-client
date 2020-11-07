@@ -118,10 +118,8 @@ namespace Proxy.Client
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
-
                 throw new ProxyException(String.Format(CultureInfo.InvariantCulture,
-                    $"Connection to proxy host {ProxyHost} on port {ProxyPort} failed."));
+                    $"Connection to proxy host {ProxyHost} on port {ProxyPort} failed with Exception: {ex}"));
             }
         }
 
