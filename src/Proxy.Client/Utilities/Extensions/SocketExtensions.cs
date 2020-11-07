@@ -51,7 +51,7 @@ namespace Proxy.Client.Utilities.Extensions
 
             var firstByteTime = await TimingHelper.MeasureAsync(async () => 
             { 
-                await s.ReceiveAsync(buffer, s.Available); 
+                await s.ReceiveAsync(buffer, buffer.Length); 
             });
 
             var bufferString = Encoding.ASCII.GetString(buffer).Trim('\0');
