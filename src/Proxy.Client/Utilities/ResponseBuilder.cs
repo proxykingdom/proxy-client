@@ -22,7 +22,11 @@ namespace Proxy.Client.Utilities
             var status = (HttpStatusCode)statusNumber;
 
             var headerArray = statusWithHeaders.Skip(1).ToArray();
-            var headers = headerArray.Select(header => header.Split(new[] { ":" }, 2, StringSplitOptions.None)).ToDictionary(key => key[0], value => value[1].Trim());
+            var headers = headerArray.Select(header =>
+            {
+                var splitValues = header.Split(new[] { ":" }, 2, StringSplitOptions.None);
+                return ResponseHeader.Create(splitValues[0], splitValues[1].Trim());
+            });
 
             return new ProxyResponse
             {

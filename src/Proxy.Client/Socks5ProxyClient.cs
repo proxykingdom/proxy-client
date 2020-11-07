@@ -166,7 +166,7 @@ namespace Proxy.Client
             await Socket.SendAsync(request);
 
             var response = new byte[10];
-            await Socket.ReceiveAsync(response);
+            await Socket.ReceiveAsync(response, response.Length);
 
             var replyCode = response[1];
 
@@ -359,7 +359,7 @@ namespace Proxy.Client
             await Socket.SendAsync(AuthRequest);
 
             var responseBuffer = new byte[2];
-            await Socket.ReceiveAsync(responseBuffer);
+            await Socket.ReceiveAsync(responseBuffer, responseBuffer.Length);
 
             var acceptedAuthMethod = responseBuffer[1];
 
@@ -381,7 +381,7 @@ namespace Proxy.Client
                 await Socket.SendAsync(AuthCrendetials);
 
                 var crResponse = new byte[2];
-                await Socket.ReceiveAsync(crResponse);
+                await Socket.ReceiveAsync(crResponse, crResponse.Length);
 
                 Console.WriteLine("SOCKS5_AUTH_METHOD_USERNAME_PASSWORD");
 

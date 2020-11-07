@@ -128,7 +128,7 @@ namespace Proxy.Client
             await Socket.SendAsync(request);
 
             var response = new byte[8];
-            await Socket.ReceiveAsync(response);
+            await Socket.ReceiveAsync(response, response.Length);
 
             if (response[1] != Socks4Constants.SOCKS4_CMD_REPLY_REQUEST_GRANTED)
                 HandleProxyCommandError(response);
