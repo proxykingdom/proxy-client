@@ -11,9 +11,6 @@ namespace Proxy.Client
 {
     public sealed class HttpProxyClient : BaseProxyClient
     {
-        public string ProxyUsername { get; }
-        public string ProxyPassword { get; }
-
         public HttpProxyClient(string proxyHost, int proxyPort)
         {
             if (String.IsNullOrEmpty(proxyHost))
@@ -25,27 +22,6 @@ namespace Proxy.Client
 
             ProxyHost = proxyHost;
             ProxyPort = proxyPort;
-        }
-
-        public HttpProxyClient(string proxyHost, int proxyPort, string proxyUsername, string proxyPassword)
-        {
-            if (String.IsNullOrEmpty(proxyHost))
-                throw new ArgumentNullException(nameof(proxyHost));
-
-            if (proxyPort <= 0 || proxyPort > 65535)
-                throw new ArgumentOutOfRangeException(nameof(proxyPort),
-                    "Proxy port must be greater than zero and less than 65535");
-
-            if (proxyUsername == null)
-                throw new ArgumentNullException(nameof(proxyUsername));
-
-            if (proxyPassword == null)
-                throw new ArgumentNullException(nameof(proxyPassword));
-
-            ProxyHost = proxyHost;
-            ProxyPort = proxyPort;
-            ProxyUsername = proxyUsername;
-            ProxyPassword = proxyPassword;
         }
 
         public override ProxyResponse Get(string destinationHost, int destinationPort, IDictionary<string, string> headers = null, bool isSsl = false)

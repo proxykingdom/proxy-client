@@ -320,7 +320,7 @@ namespace Proxy.Client.Utilities.Extensions
 
         private static (int chunkSize, int bytesRead) ExtractChunkSize(string newContentLine)
         {
-            var foundNewLine = newContentLine.IndexOf("\r\n");
+            var foundNewLine = newContentLine.IndexOf(RequestConstants.NEW_LINE);
             var chunkSizeString = newContentLine.Substring(0, foundNewLine);
             var chunkSize = int.Parse(chunkSizeString, NumberStyles.HexNumber);
             var totalBytesRead = newContentLine.Length - (foundNewLine + 4);
