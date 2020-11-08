@@ -32,8 +32,7 @@ namespace Proxy.Client.Utilities
             {
                 StatusCode = status,
                 ResponseHeaders = headers,
-                Content = splitResponse[1],
-                Timings = new Timings()
+                Content = splitResponse[1]
             };
         }
     }

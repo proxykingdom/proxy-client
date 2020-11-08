@@ -63,9 +63,7 @@ namespace Proxy.Client
                     return connectedFn();
                 });
 
-                innerResult.response.Timings.ConnectTime = connectTime;
-                innerResult.response.Timings.ResponseTime = connectTime + time;
-                innerResult.response.Timings.FirstByteTime = innerResult.firstByteTime;
+                innerResult.response.Timings = Timings.Create(connectTime, connectTime + time, innerResult.firstByteTime);
 
                 return innerResult.response;
             }
@@ -110,9 +108,7 @@ namespace Proxy.Client
                     return await connectedFn();
                 });
 
-                innerResult.response.Timings.ConnectTime = connectTime;
-                innerResult.response.Timings.ResponseTime = connectTime + time;
-                innerResult.response.Timings.FirstByteTime = connectTime + innerResult.firstByteTime;
+                innerResult.response.Timings = Timings.Create(connectTime, connectTime + time, innerResult.firstByteTime);
 
                 return innerResult.response;
             }

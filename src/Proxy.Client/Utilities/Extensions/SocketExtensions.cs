@@ -140,10 +140,7 @@ namespace Proxy.Client.Utilities.Extensions
         #region Content Length Methods
         private static string DecodeContentLength(this Socket s, StringBuilder placeHolder, byte[] buffer, string bufferString)
         {
-            var splitBuffer = bufferString.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.RemoveEmptyEntries);
-            var contentLengthString = Regex.Match(placeHolder.ToString(), RequestConstants.CONTENT_LENGTH_PATTERN).Value;
-            var contentLength = Convert.ToInt32(contentLengthString, CultureInfo.InvariantCulture);
-            var totalBytesRead = splitBuffer.Length == 1 ? 0 : splitBuffer[1].Length;
+            var (contentLength, totalBytesRead) = ExtractContentLength(placeHolder, bufferString);
 
             while (totalBytesRead < contentLength)
             {
@@ -157,10 +154,7 @@ namespace Proxy.Client.Utilities.Extensions
 
         private static async Task<string> DecodeContentLengthAsync(this Socket s, StringBuilder placeHolder, byte[] buffer, string bufferString)
         {
-            var splitBuffer = bufferString.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.RemoveEmptyEntries);
-            var contentLengthString = Regex.Match(placeHolder.ToString(), RequestConstants.CONTENT_LENGTH_PATTERN).Value;
-            var contentLength = Convert.ToInt32(contentLengthString, CultureInfo.InvariantCulture);
-            var totalBytesRead = splitBuffer.Length == 1 ? 0 : splitBuffer[1].Length;
+            var (contentLength, totalBytesRead) = ExtractContentLength(placeHolder, bufferString);
 
             while (totalBytesRead < contentLength)
             {
@@ -174,10 +168,7 @@ namespace Proxy.Client.Utilities.Extensions
 
         private static void DecodeContentLength(this SslStream ss, StringBuilder placeHolder, byte[] buffer, string bufferString)
         {
-            var splitBuffer = bufferString.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.RemoveEmptyEntries);
-            var contentLengthString = Regex.Match(placeHolder.ToString(), RequestConstants.CONTENT_LENGTH_PATTERN).Value;
-            var contentLength = Convert.ToInt32(contentLengthString, CultureInfo.InvariantCulture);
-            var totalBytesRead = splitBuffer.Length == 1 ? 0 : splitBuffer[1].Length;
+            var (contentLength, totalBytesRead) = ExtractContentLength(placeHolder, bufferString);
 
             while (totalBytesRead < contentLength)
             {
@@ -189,10 +180,7 @@ namespace Proxy.Client.Utilities.Extensions
 
         private static async Task DecodeContentLengthAsync(this SslStream ss, StringBuilder placeHolder, byte[] buffer, string bufferString)
         {
-            var splitBuffer = bufferString.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.RemoveEmptyEntries);
-            var contentLengthString = Regex.Match(placeHolder.ToString(), RequestConstants.CONTENT_LENGTH_PATTERN).Value;
-            var contentLength = Convert.ToInt32(contentLengthString, CultureInfo.InvariantCulture);
-            var totalBytesRead = splitBuffer.Length == 1 ? 0 : splitBuffer[1].Length;
+            var (contentLength, totalBytesRead) = ExtractContentLength(placeHolder, bufferString);
 
             while (totalBytesRead < contentLength)
             {
@@ -200,6 +188,20 @@ namespace Proxy.Client.Utilities.Extensions
                 totalBytesRead += innerBytesRead;
                 placeHolder.Append(Encoding.ASCII.GetString(buffer, 0, innerBytesRead));
             }
+        }
+
+        private static (int contentLength, int bytesRead) ExtractContentLength(StringBuilder placeHolder, string bufferString)
+        {
+            var splitBuffer = bufferString.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.RemoveEmptyEntries);
+
+            if (splitBuffer.Length == 1)
+                return (0, 0);
+
+            var contentLengthString = Regex.Match(placeHolder.ToString(), RequestConstants.CONTENT_LENGTH_PATTERN).Value;
+            var contentLength = Convert.ToInt32(contentLengthString, CultureInfo.InvariantCulture);
+            var totalBytesRead = splitBuffer[1].Length;
+
+            return (contentLength, totalBytesRead);
         }
         #endregion
 
@@ -211,10 +213,7 @@ namespace Proxy.Client.Utilities.Extensions
             if (splitBuffer.Length == 1)
                 return;
 
-            var foundNewLine = splitBuffer[1].IndexOf("\r\n");
-            var chunkSizeString = splitBuffer[1].Substring(0, foundNewLine);
-            var chunkSize = int.Parse(chunkSizeString, NumberStyles.HexNumber);
-            var totalBytesRead = splitBuffer[1].Length - (foundNewLine + 4);
+            var (chunkSize, totalBytesRead) = ExtractChunkSize(splitBuffer[1]);
 
             while (chunkSize != 0)
             {
@@ -231,10 +230,7 @@ namespace Proxy.Client.Utilities.Extensions
                 var peekBytesRead = s.Receive(buffer, PeekBufferSize, SocketFlags.None);
                 bufferString = Encoding.ASCII.GetString(buffer, 0, peekBytesRead);
 
-                foundNewLine = bufferString.IndexOf("\r\n");
-                chunkSizeString = bufferString.Substring(0, foundNewLine);
-                chunkSize = int.Parse(chunkSizeString, NumberStyles.HexNumber);
-                totalBytesRead = bufferString.Length - (foundNewLine + 4);
+                (chunkSize, totalBytesRead) = ExtractChunkSize(bufferString);
             }
         }
 
@@ -245,10 +241,7 @@ namespace Proxy.Client.Utilities.Extensions
             if (splitBuffer.Length == 1)
                 return;
 
-            var foundNewLine = splitBuffer[1].IndexOf("\r\n");
-            var chunkSizeString = splitBuffer[1].Substring(0, foundNewLine);
-            var chunkSize = int.Parse(chunkSizeString, NumberStyles.HexNumber);
-            var totalBytesRead = splitBuffer[1].Length - (foundNewLine + 4);
+            var (chunkSize, totalBytesRead) = ExtractChunkSize(splitBuffer[1]);
 
             while (chunkSize != 0)
             {
@@ -265,10 +258,7 @@ namespace Proxy.Client.Utilities.Extensions
                 var peekBytesRead = await s.ReceiveAsync(buffer, PeekBufferSize);
                 bufferString = Encoding.ASCII.GetString(buffer, 0, peekBytesRead);
 
-                foundNewLine = bufferString.IndexOf("\r\n");
-                chunkSizeString = bufferString.Substring(0, foundNewLine);
-                chunkSize = int.Parse(chunkSizeString, NumberStyles.HexNumber);
-                totalBytesRead = bufferString.Length - (foundNewLine + 4);
+                (chunkSize, totalBytesRead) = ExtractChunkSize(bufferString);
             }
         }
 
@@ -279,10 +269,7 @@ namespace Proxy.Client.Utilities.Extensions
             if (splitBuffer.Length == 1)
                 return;
 
-            var foundNewLine = splitBuffer[1].IndexOf("\r\n");
-            var chunkSizeString = splitBuffer[1].Substring(0, foundNewLine);
-            var chunkSize = int.Parse(chunkSizeString, NumberStyles.HexNumber);
-            var totalBytesRead = splitBuffer[1].Length - (foundNewLine + 4);
+            var (chunkSize, totalBytesRead) = ExtractChunkSize(splitBuffer[1]);
 
             while (chunkSize != 0)
             {
@@ -299,10 +286,7 @@ namespace Proxy.Client.Utilities.Extensions
                 var peekBytesRead = ss.Read(buffer, 0, PeekBufferSize);
                 bufferString = Encoding.ASCII.GetString(buffer, 0, peekBytesRead);
 
-                foundNewLine = bufferString.IndexOf("\r\n");
-                chunkSizeString = bufferString.Substring(0, foundNewLine);
-                chunkSize = int.Parse(chunkSizeString, NumberStyles.HexNumber);
-                totalBytesRead = bufferString.Length - (foundNewLine + 4);
+                (chunkSize, totalBytesRead) = ExtractChunkSize(bufferString);
             }
         }
 
@@ -313,10 +297,7 @@ namespace Proxy.Client.Utilities.Extensions
             if (splitBuffer.Length == 1)
                 return;
 
-            var foundNewLine = splitBuffer[1].IndexOf("\r\n");
-            var chunkSizeString = splitBuffer[1].Substring(0, foundNewLine);
-            var chunkSize = int.Parse(chunkSizeString, NumberStyles.HexNumber);
-            var totalBytesRead = splitBuffer[1].Length - (foundNewLine + 4);
+            var (chunkSize, totalBytesRead) = ExtractChunkSize(splitBuffer[1]);
 
             while (chunkSize != 0)
             {
@@ -333,11 +314,18 @@ namespace Proxy.Client.Utilities.Extensions
                 var peekBytesRead = await ss.ReadAsync(buffer, 0, PeekBufferSize);
                 bufferString = Encoding.ASCII.GetString(buffer, 0, peekBytesRead);
 
-                foundNewLine = bufferString.IndexOf("\r\n");
-                chunkSizeString = bufferString.Substring(0, foundNewLine);
-                chunkSize = int.Parse(chunkSizeString, NumberStyles.HexNumber);
-                totalBytesRead = bufferString.Length - (foundNewLine + 4);
+                (chunkSize, totalBytesRead) = ExtractChunkSize(bufferString);
             }
+        }
+
+        private static (int chunkSize, int bytesRead) ExtractChunkSize(string newContentLine)
+        {
+            var foundNewLine = newContentLine.IndexOf("\r\n");
+            var chunkSizeString = newContentLine.Substring(0, foundNewLine);
+            var chunkSize = int.Parse(chunkSizeString, NumberStyles.HexNumber);
+            var totalBytesRead = newContentLine.Length - (foundNewLine + 4);
+
+            return (chunkSize, totalBytesRead);
         }
         #endregion
 
