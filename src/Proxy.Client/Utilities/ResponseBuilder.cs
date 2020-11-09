@@ -6,13 +6,12 @@ using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
-using Cookie = Proxy.Client.Contracts.Cookie;
 
 namespace Proxy.Client.Utilities
 {
     public static class ResponseBuilder
     {
-        public static ProxyResponse BuildProxyResponse(string response)
+        public static ProxyResponse BuildProxyResponse(string response, string ssl, string destinationHost)
         {
             var splitResponse = response.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.None);
 
@@ -24,15 +23,19 @@ namespace Proxy.Client.Utilities
             var status = (HttpStatusCode)statusNumber;
 
             var headerArray = statusWithHeaders.Skip(1);
+            var destinationUri = new Uri($"{ssl}://{destinationHost}");
             var headerDict = new Dictionary<string, string>();
-            var cookies = new List<Cookie>();
+            var cookieContainer = new CookieContainer();
 
             foreach (var header in headerArray)
             {
-                var headerPair = header.Split(':');
+                var headerPair = header.Split(new[] { ": " }, 2, StringSplitOptions.None);
 
-                if (headerPair[0].Contains(RequestConstants.COOKIE_HEADER))
-                    cookies.Add(Cookie.Create(headerPair[0], headerPair[2]));
+                if (headerPair[0].Contains(RequestConstants.SET_COOKIE_HEADER))
+                {
+                    cookieContainer.SetCookies(destinationUri, headerPair[1]);
+                    continue;
+                }
 
                 headerDict.Add(headerPair[0], headerPair[1]);
             }
@@ -41,7 +44,7 @@ namespace Proxy.Client.Utilities
             {
                 StatusCode = status,
                 Headers = headerDict,
-                Cookies = cookies,
+                Cookies = cookieContainer.GetCookies(destinationUri) as IEnumerable<Cookie>,
                 Content = splitResponse[1]
             };
         }

@@ -16,12 +16,20 @@ using System.Threading.Tasks;
 
 namespace Proxy.Client
 {
+    /// <summary>
+    /// Socks4 connection proxy class. This class implements the Socks4 standard proxy protocol.
+    /// </summary>
     public sealed class Socks4ProxyClient : BaseProxyClient
     {
         public string ProxyUserId { get; }
 
         private SslStream _sslStream;
 
+        /// <summary>
+        /// Create a Socks4 proxy client object.
+        /// </summary>
+        /// <param name="proxyHost">Host name or IP address of the proxy server.</param>
+        /// <param name="proxyPort">Port used to connect to proxy server.</param>
         public Socks4ProxyClient(string proxyHost, int proxyPort)
         {
             if (String.IsNullOrEmpty(proxyHost))
@@ -36,6 +44,12 @@ namespace Proxy.Client
             ProxyUserId = string.Empty;
         }
 
+        /// <summary>
+        /// Create a Socks4 proxy client object.
+        /// </summary>
+        /// <param name="proxyHost">Host name or IP address of the proxy server.</param>
+        /// <param name="proxyPort">Port used to connect to proxy server.</param>
+        /// <param name="proxyUserId">Proxy user identification information.</param>
         public Socks4ProxyClient(string proxyHost, int proxyPort, string proxyUserId)
         {
             if (String.IsNullOrEmpty(proxyHost))
@@ -53,47 +67,61 @@ namespace Proxy.Client
             ProxyUserId = proxyUserId;
         }
 
-        public override ProxyResponse Get(string destinationHost, int destinationPort, IDictionary<string, string> headers = null, bool isSsl = false)
+        /// <summary>
+        /// Connects to the proxy client, sends the GET command to the destination server and returns the response.
+        /// </summary>
+        /// <param name="destinationHost">Host name or IP address of the destination server</param>
+        /// <param name="destinationPort">Port used to connect to the destination server</param>
+        /// <param name="headers">Headers to be sent with the GET command</param>
+        /// <param name="isSsl">Indicates if the request will be http or https</param>
+        public override ProxyResponse Get(string destinationHost, int destinationPort, IDictionary<string, string> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false)
         {
             return HandleRequest(() =>
             {
                 SendConnectCommand(isSsl);
             }, () =>
             {
-                return SendGetCommand(headers, isSsl);
+                return SendGetCommand(headers, cookies, isSsl);
             }, destinationHost, destinationPort);
         }
 
-        public override async Task<ProxyResponse> GetAsync(string destinationHost, int destinationPort, IDictionary<string, string> headers = null, bool isSsl = false)
+        /// <summary>
+        /// Asynchronously connects to the proxy client, sends the GET command to the destination server and returns the response.
+        /// </summary>
+        /// <param name="destinationHost">Host name or IP address of the destination server</param>
+        /// <param name="destinationPort">Port used to connect to the destination server</param>
+        /// <param name="headers">Headers to be sent with the GET command</param>
+        /// <param name="isSsl">Indicates if the request will be http or https</param>
+        public override async Task<ProxyResponse> GetAsync(string destinationHost, int destinationPort, IDictionary<string, string> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false)
         {
             return await HandleRequestAsync(async () =>
             {
                 await SendConnectCommandAsync(isSsl);
             }, async () =>
             {
-                return await SendGetCommandAsync(headers, isSsl);
+                return await SendGetCommandAsync(headers, cookies, isSsl);
             }, destinationHost, destinationPort);
         }
 
-        public override ProxyResponse Post(string destinationHost, int destinationPort, string body, IDictionary<string, string> headers = null, bool isSsl = false)
+        public override ProxyResponse Post(string destinationHost, int destinationPort, string body, IDictionary<string, string> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false)
         {
             return HandleRequest(() =>
             {
                 SendConnectCommand(isSsl);
             }, () =>
             {
-                return SendPostCommand(body, headers, isSsl);
+                return SendPostCommand(body, headers, cookies, isSsl);
             }, destinationHost, destinationPort);
         }
 
-        public override async Task<ProxyResponse> PostAsync(string destinationHost, int destinationPort, string body, IDictionary<string, string> headers = null, bool isSsl = false)
+        public override async Task<ProxyResponse> PostAsync(string destinationHost, int destinationPort, string body, IDictionary<string, string> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false)
         {
             return await HandleRequestAsync(async () =>
             {
                 await SendConnectCommandAsync(isSsl);
             }, async () =>
             {
-                return await SendPostCommandAsync(body, headers, isSsl);
+                return await SendPostCommandAsync(body, headers, cookies, isSsl);
             }, destinationHost, destinationPort);
         }
 
@@ -137,96 +165,124 @@ namespace Proxy.Client
                 await HandleSslHandshakeAsync();
         }
 
-        protected internal override (ProxyResponse response, float firstByteTime) SendGetCommand(IDictionary<string, string> headers, bool isSsl)
+        protected internal override (ProxyResponse response, float firstByteTime) SendGetCommand(IDictionary<string, string> headers, IEnumerable<Cookie> cookies, bool isSsl)
         {
+            string ssl;
             string response;
             float firstByteTime;
 
             if (isSsl)
             {
-                var writeBuffer = RequestHelper.GetCommand(DestinationHost, RequestConstants.SSL, headers);
+                ssl = RequestConstants.SSL;
+
+                var writeBuffer = CommandHelper.GetCommand(DestinationHost, ssl, headers, cookies);
+
                 _sslStream.Write(writeBuffer);
 
                 (response, firstByteTime) = _sslStream.ReceiveAll();
             }
             else
             {
-                var writeBuffer = RequestHelper.GetCommand(DestinationHost, RequestConstants.NO_SSL, headers);
+                ssl = RequestConstants.NO_SSL;
+
+                var writeBuffer = CommandHelper.GetCommand(DestinationHost, ssl, headers, cookies);
+
                 Socket.Send(writeBuffer);
 
                 (response, firstByteTime) = Socket.ReceiveAll();
             }
 
-            return (ResponseBuilder.BuildProxyResponse(response), firstByteTime);
+            return (ResponseBuilder.BuildProxyResponse(response, ssl, DestinationHost), firstByteTime);
         }
 
-        protected internal override async Task<(ProxyResponse response, float firstByteTime)> SendGetCommandAsync(IDictionary<string, string> headers, bool isSsl)
+        protected internal override async Task<(ProxyResponse response, float firstByteTime)> SendGetCommandAsync(IDictionary<string, string> headers, IEnumerable<Cookie> cookies, bool isSsl)
         {
+            string ssl;
             string response;
             float firstByteTime;
 
             if (isSsl)
             {
-                var writeBuffer = RequestHelper.GetCommand(DestinationHost, RequestConstants.SSL, headers);
+                ssl = RequestConstants.SSL;
+
+                var writeBuffer = CommandHelper.GetCommand(DestinationHost, ssl, headers, cookies);
+
                 await _sslStream.WriteAsync(writeBuffer, 0, writeBuffer.Length);
 
                 (response, firstByteTime) = await _sslStream.ReceiveAllAsync();
             }
             else
             {
-                var writeBuffer = RequestHelper.GetCommand(DestinationHost, RequestConstants.NO_SSL, headers);
+                ssl = RequestConstants.NO_SSL;
+
+                var writeBuffer = CommandHelper.GetCommand(DestinationHost, RequestConstants.NO_SSL, headers, cookies);
+
                 await Socket.SendAsync(writeBuffer);
 
                 (response, firstByteTime) = await Socket.ReceiveAllAsync();
             }
 
-            return (ResponseBuilder.BuildProxyResponse(response), firstByteTime);
+            return (ResponseBuilder.BuildProxyResponse(response, ssl, DestinationHost), firstByteTime);
         }
 
-        protected internal override (ProxyResponse response, float firstByteTime) SendPostCommand(string body, IDictionary<string, string> headers, bool isSsl)
+        protected internal override (ProxyResponse response, float firstByteTime) SendPostCommand(string body, IDictionary<string, string> headers, IEnumerable<Cookie> cookies, bool isSsl)
         {
+            string ssl;
             string response;
             float firstByteTime;
 
             if (isSsl)
             {
-                var writeBuffer = RequestHelper.PostCommand(DestinationHost, body, RequestConstants.SSL, headers);
+                ssl = RequestConstants.SSL;
+
+                var writeBuffer = CommandHelper.PostCommand(DestinationHost, body, ssl, headers, cookies);
+
                 _sslStream.Write(writeBuffer);
 
                 (response, firstByteTime) = _sslStream.ReceiveAll();
             }
             else
             {
-                var writeBuffer = RequestHelper.PostCommand(DestinationHost, body, RequestConstants.NO_SSL, headers);
+                ssl = RequestConstants.NO_SSL;
+
+                var writeBuffer = CommandHelper.PostCommand(DestinationHost, body, ssl, headers, cookies);
+
                 Socket.Send(writeBuffer);
 
                 (response, firstByteTime) = Socket.ReceiveAll();
             }
 
-            return (ResponseBuilder.BuildProxyResponse(response), firstByteTime);
+            return (ResponseBuilder.BuildProxyResponse(response, ssl, DestinationHost), firstByteTime);
         }
 
-        protected internal override async Task<(ProxyResponse response, float firstByteTime)> SendPostCommandAsync(string body, IDictionary<string, string> headers, bool isSsl)
+        protected internal override async Task<(ProxyResponse response, float firstByteTime)> SendPostCommandAsync(string body, IDictionary<string, string> headers, IEnumerable<Cookie> cookies, bool isSsl)
         {
+            string ssl;
             string response;
             float firstByteTime;
 
             if (isSsl)
             {
-                var writeBuffer = RequestHelper.PostCommand(DestinationHost, body, RequestConstants.SSL, headers);
+                ssl = RequestConstants.SSL;
+
+                var writeBuffer = CommandHelper.PostCommand(DestinationHost, body, ssl, headers, cookies);
+
                 await _sslStream.WriteAsync(writeBuffer, 0, writeBuffer.Length);
 
                 (response, firstByteTime) = await _sslStream.ReceiveAllAsync();
             }
             else
             {
-                var writeBuffer = RequestHelper.PostCommand(DestinationHost, body, RequestConstants.NO_SSL, headers);
+                ssl = RequestConstants.NO_SSL;
+
+                var writeBuffer = CommandHelper.PostCommand(DestinationHost, body, ssl, headers, cookies);
+
                 await Socket.SendAsync(writeBuffer);
 
                 (response, firstByteTime) = await Socket.ReceiveAllAsync();
             }
 
-            return (ResponseBuilder.BuildProxyResponse(response), firstByteTime);
+            return (ResponseBuilder.BuildProxyResponse(response, ssl, DestinationHost), firstByteTime);
         }
 
         private void HandleProxyCommandError(byte[] response)
@@ -263,7 +319,7 @@ namespace Proxy.Client
                 var hostAddress = Dns.GetHostAddresses(DestinationHost).First();
                 return hostAddress.GetAddressBytes();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 throw new ProxyException($"No such known host for: {DestinationHost}");
             }

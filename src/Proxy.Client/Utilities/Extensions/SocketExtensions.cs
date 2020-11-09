@@ -194,12 +194,9 @@ namespace Proxy.Client.Utilities.Extensions
         {
             var splitBuffer = bufferString.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.RemoveEmptyEntries);
 
-            if (splitBuffer.Length == 1)
-                return (0, 0);
-
             var contentLengthString = Regex.Match(placeHolder.ToString(), RequestConstants.CONTENT_LENGTH_PATTERN).Value;
             var contentLength = Convert.ToInt32(contentLengthString, CultureInfo.InvariantCulture);
-            var totalBytesRead = splitBuffer[1].Length;
+            var totalBytesRead = splitBuffer.Length == 1 ? 0 : splitBuffer[1].Length;
 
             return (contentLength, totalBytesRead);
         }
@@ -211,9 +208,16 @@ namespace Proxy.Client.Utilities.Extensions
             var splitBuffer = bufferString.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.RemoveEmptyEntries);
 
             if (splitBuffer.Length == 1)
-                return;
+            {
+                var peekBytesRead = s.Receive(buffer, PeekBufferSize, SocketFlags.None);
+                bufferString = Encoding.ASCII.GetString(buffer, 0, peekBytesRead);
+            }
+            else
+            {
+                bufferString = splitBuffer[1];
+            }
 
-            var (chunkSize, totalBytesRead) = ExtractChunkSize(splitBuffer[1]);
+            var (chunkSize, totalBytesRead) = ExtractChunkSize(bufferString);
 
             while (chunkSize != 0)
             {
@@ -239,9 +243,16 @@ namespace Proxy.Client.Utilities.Extensions
             var splitBuffer = bufferString.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.RemoveEmptyEntries);
 
             if (splitBuffer.Length == 1)
-                return;
+            {
+                var peekBytesRead = await s.ReceiveAsync(buffer, PeekBufferSize);
+                bufferString = Encoding.ASCII.GetString(buffer, 0, peekBytesRead);
+            }
+            else
+            {
+                bufferString = splitBuffer[1];
+            }
 
-            var (chunkSize, totalBytesRead) = ExtractChunkSize(splitBuffer[1]);
+            var (chunkSize, totalBytesRead) = ExtractChunkSize(bufferString);
 
             while (chunkSize != 0)
             {
@@ -267,9 +278,16 @@ namespace Proxy.Client.Utilities.Extensions
             var splitBuffer = bufferString.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.RemoveEmptyEntries);
 
             if (splitBuffer.Length == 1)
-                return;
-
-            var (chunkSize, totalBytesRead) = ExtractChunkSize(splitBuffer[1]);
+            {
+                var peekBytesRead = ss.Read(buffer, 0, PeekBufferSize);
+                bufferString = Encoding.ASCII.GetString(buffer, 0, peekBytesRead);
+            }
+            else
+            {
+                bufferString = splitBuffer[1];
+            }
+             
+            var (chunkSize, totalBytesRead) = ExtractChunkSize(bufferString);
 
             while (chunkSize != 0)
             {
@@ -295,9 +313,16 @@ namespace Proxy.Client.Utilities.Extensions
             var splitBuffer = bufferString.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.RemoveEmptyEntries);
 
             if (splitBuffer.Length == 1)
-                return;
+            {
+                var peekBytesRead = await ss.ReadAsync(buffer, 0, PeekBufferSize);
+                bufferString = Encoding.ASCII.GetString(buffer, 0, peekBytesRead);
+            }
+            else
+            {
+                bufferString = splitBuffer[1];
+            }
 
-            var (chunkSize, totalBytesRead) = ExtractChunkSize(splitBuffer[1]);
+            var (chunkSize, totalBytesRead) = ExtractChunkSize(bufferString);
 
             while (chunkSize != 0)
             {
@@ -320,7 +345,11 @@ namespace Proxy.Client.Utilities.Extensions
 
         private static (int chunkSize, int bytesRead) ExtractChunkSize(string newContentLine)
         {
-            var foundNewLine = newContentLine.IndexOf(RequestConstants.NEW_LINE);
+            var foundNewLine = newContentLine.IndexOf(Environment.NewLine);
+
+            if (foundNewLine == -1)
+                return (0, 0);
+
             var chunkSizeString = newContentLine.Substring(0, foundNewLine);
             var chunkSize = int.Parse(chunkSizeString, NumberStyles.HexNumber);
             var totalBytesRead = newContentLine.Length - (foundNewLine + 4);

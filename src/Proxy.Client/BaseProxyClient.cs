@@ -4,6 +4,7 @@ using Proxy.Client.Utilities.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
@@ -19,15 +20,15 @@ namespace Proxy.Client
         protected internal string DestinationHost { get; private set; }
         protected internal int DestinationPort { get; private set; }
 
-        public abstract ProxyResponse Get(string destinationHost, int destinationPort, IDictionary<string, string> headers = null, bool isSsl = false);
-        public abstract Task<ProxyResponse> GetAsync(string destinationHost, int destinationPort, IDictionary<string, string> headers = null, bool isSsl = false);
-        public abstract ProxyResponse Post(string destinationHost, int destinationPort, string body, IDictionary<string, string> headers = null, bool isSsl = false);
-        public abstract Task<ProxyResponse> PostAsync(string destinationHost, int destinationPort, string body, IDictionary<string, string> headers = null, bool isSsl = false);
+        public abstract ProxyResponse Get(string destinationHost, int destinationPort, IDictionary<string, string> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false);
+        public abstract Task<ProxyResponse> GetAsync(string destinationHost, int destinationPort, IDictionary<string, string> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false);
+        public abstract ProxyResponse Post(string destinationHost, int destinationPort, string body, IDictionary<string, string> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false);
+        public abstract Task<ProxyResponse> PostAsync(string destinationHost, int destinationPort, string body, IDictionary<string, string> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false);
 
-        protected internal abstract (ProxyResponse response, float firstByteTime) SendGetCommand(IDictionary<string, string> headers, bool isSsl);
-        protected internal abstract Task<(ProxyResponse response, float firstByteTime)> SendGetCommandAsync(IDictionary<string, string> headers, bool isSsl);
-        protected internal abstract (ProxyResponse response, float firstByteTime) SendPostCommand(string body, IDictionary<string, string> headers, bool isSsl);
-        protected internal abstract Task<(ProxyResponse response, float firstByteTime)> SendPostCommandAsync(string body, IDictionary<string, string> headers, bool isSsl);
+        protected internal abstract (ProxyResponse response, float firstByteTime) SendGetCommand(IDictionary<string, string> headers, IEnumerable<Cookie> cookies, bool isSsl);
+        protected internal abstract Task<(ProxyResponse response, float firstByteTime)> SendGetCommandAsync(IDictionary<string, string> headers, IEnumerable<Cookie> cookies, bool isSsl);
+        protected internal abstract (ProxyResponse response, float firstByteTime) SendPostCommand(string body, IDictionary<string, string> headers, IEnumerable<Cookie> cookies, bool isSsl);
+        protected internal abstract Task<(ProxyResponse response, float firstByteTime)> SendPostCommandAsync(string body, IDictionary<string, string> headers, IEnumerable<Cookie> cookies, bool isSsl);
 
         protected internal ProxyResponse HandleRequest(Action notConnectedAtn, Func<(ProxyResponse response, float firstByteTime)> connectedFn,
             string destinationHost, int destinationPort)
@@ -63,11 +64,10 @@ namespace Proxy.Client
                     return connectedFn();
                 });
 
-                innerResult.response.Timings = Timings.Create(connectTime, connectTime + time, innerResult.firstByteTime);
+                innerResult.response.Timings = Timings.Create(connectTime, connectTime + time, connectTime + innerResult.firstByteTime);
 
                 return innerResult.response;
             }
-            catch (Exception)
             {
                 throw new ProxyException(String.Format(CultureInfo.InvariantCulture,
                     $"Connection to proxy host {ProxyHost} on port {ProxyPort} failed."));
@@ -108,7 +108,7 @@ namespace Proxy.Client
                     return await connectedFn();
                 });
 
-                innerResult.response.Timings = Timings.Create(connectTime, connectTime + time, innerResult.firstByteTime);
+                innerResult.response.Timings = Timings.Create(connectTime, connectTime + time, connectTime + innerResult.firstByteTime);
 
                 return innerResult.response;
             }
