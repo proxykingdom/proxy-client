@@ -1,10 +1,12 @@
 ﻿using Proxy.Client.Contracts;
 using Proxy.Client.Contracts.Constants;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
+using Cookie = Proxy.Client.Contracts.Cookie;
 
 namespace Proxy.Client.Utilities
 {
@@ -21,17 +23,25 @@ namespace Proxy.Client.Utilities
             var statusNumber = Convert.ToInt32(Regex.Match(statusHtml, RequestConstants.STATUS_CODE_PATTERN).Value, CultureInfo.InvariantCulture);
             var status = (HttpStatusCode)statusNumber;
 
-            var headerArray = statusWithHeaders.Skip(1).ToArray();
-            var headers = headerArray.Select(header =>
+            var headerArray = statusWithHeaders.Skip(1);
+            var headerDict = new Dictionary<string, string>();
+            var cookies = new List<Cookie>();
+
+            foreach (var header in headerArray)
             {
-                var splitValues = header.Split(new[] { ":" }, 2, StringSplitOptions.None);
-                return ResponseHeader.Create(splitValues[0], splitValues[1].Trim());
-            });
+                var headerPair = header.Split(':');
+
+                if (headerPair[0].Contains(RequestConstants.COOKIE_HEADER))
+                    cookies.Add(Cookie.Create(headerPair[0], headerPair[2]));
+
+                headerDict.Add(headerPair[0], headerPair[1]);
+            }
 
             return new ProxyResponse
             {
                 StatusCode = status,
-                ResponseHeaders = headers,
+                Headers = headerDict,
+                Cookies = cookies,
                 Content = splitResponse[1]
             };
         }
