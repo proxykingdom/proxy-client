@@ -22,12 +22,12 @@ namespace Proxy.Client
     public sealed class Socks5ProxyClient : BaseProxyClient
     {
         /// <summary>
-        /// Proxy Username used to connec to the Proxy Server.
+        /// Proxy Username used to connect to the Proxy Server.
         /// </summary>
         public string ProxyUsername { get; }
 
         /// <summary>
-        /// Proxy Password used to connec to the Proxy Server.
+        /// Proxy Password used to connect to the Proxy Server.
         /// </summary>
         public string ProxyPassword { get; }
 
