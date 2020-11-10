@@ -68,6 +68,7 @@ namespace Proxy.Client
 
                 return innerResult.response;
             }
+            catch (Exception)
             {
                 throw new ProxyException(String.Format(CultureInfo.InvariantCulture,
                     $"Connection to proxy host {ProxyHost} on port {ProxyPort} failed."));

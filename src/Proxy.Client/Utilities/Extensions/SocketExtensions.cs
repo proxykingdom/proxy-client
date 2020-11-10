@@ -217,6 +217,7 @@ namespace Proxy.Client.Utilities.Extensions
                 bufferString = splitBuffer[1];
             }
 
+            placeHolder.Append(bufferString);
             var (chunkSize, totalBytesRead) = ExtractChunkSize(bufferString);
 
             while (chunkSize != 0)
@@ -252,6 +253,7 @@ namespace Proxy.Client.Utilities.Extensions
                 bufferString = splitBuffer[1];
             }
 
+            placeHolder.Append(bufferString);
             var (chunkSize, totalBytesRead) = ExtractChunkSize(bufferString);
 
             while (chunkSize != 0)
@@ -286,7 +288,8 @@ namespace Proxy.Client.Utilities.Extensions
             {
                 bufferString = splitBuffer[1];
             }
-             
+
+            placeHolder.Append(bufferString);
             var (chunkSize, totalBytesRead) = ExtractChunkSize(bufferString);
 
             while (chunkSize != 0)
@@ -322,6 +325,7 @@ namespace Proxy.Client.Utilities.Extensions
                 bufferString = splitBuffer[1];
             }
 
+            placeHolder.Append(bufferString);
             var (chunkSize, totalBytesRead) = ExtractChunkSize(bufferString);
 
             while (chunkSize != 0)

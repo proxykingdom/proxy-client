@@ -40,13 +40,7 @@ namespace Proxy.Client.Utilities
                 headerDict.Add(headerPair[0], headerPair[1]);
             }
 
-            return new ProxyResponse
-            {
-                StatusCode = status,
-                Headers = headerDict,
-                Cookies = cookieContainer.GetCookies(destinationUri) as IEnumerable<Cookie>,
-                Content = splitResponse[1]
-            };
+            return ProxyResponse.Create(status, headerDict, cookieContainer.GetCookies(destinationUri) as IEnumerable<Cookie>, splitResponse[1]);
         }
     }
 }
