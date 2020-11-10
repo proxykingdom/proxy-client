@@ -6,8 +6,19 @@ using System.Text;
 
 namespace Proxy.Client.Utilities
 {
-    public static class CommandHelper
+    /// <summary>
+    /// Helper class to create the request commands.
+    /// </summary>
+    internal static class CommandHelper
     {
+        /// <summary>
+        /// Creates the raw GET bytes request.
+        /// </summary>
+        /// <param name="destHost">Host name or IP address of the destination server.</param>
+        /// <param name="ssl">Http or Https.</param>
+        /// <param name="headers">Headers to be sent with the GET command.</param>
+        /// <param name="cookies">Cookies to be send with the GET command.</param>
+        /// <returns>Raw GET bytes request</returns>
         public static byte[] GetCommand(string destHost, string ssl, IDictionary<string, string> headers, IEnumerable<Cookie> cookies)
         {
             return HandleCommand((headerString, cookieString) =>
@@ -22,6 +33,15 @@ namespace Proxy.Client.Utilities
             }, headers, cookies);
         }
 
+        /// <summary>
+        /// Creates the raw POST bytes request.
+        /// </summary>
+        /// <param name="destHost">Host name or IP address of the destination server.</param>
+        /// <param name="body">Request Body to be sent with the POST command.</param>
+        /// <param name="ssl">Http or Https.</param>
+        /// <param name="headers">Headers to be sent with the POST command.</param>
+        /// <param name="cookies">Cookies to be sent with the POST command.</param>
+        /// <returns>Raw POST bytes request</returns>
         public static byte[] PostCommand(string destHost, string body, string ssl, IDictionary<string, string> headers, IEnumerable<Cookie> cookies)
         {
             return HandleCommand((headerString, cookieString) =>
@@ -38,7 +58,7 @@ namespace Proxy.Client.Utilities
             }, headers, cookies);
         }
 
-        public static byte[] HandleCommand(Func<string, string, string> fn, IDictionary<string, string> headers, IEnumerable<Cookie> cookies)
+        private static byte[] HandleCommand(Func<string, string, string> fn, IDictionary<string, string> headers, IEnumerable<Cookie> cookies)
         {
             var headerString = headers != null
                 ? headers.ConcatenateHeaders()

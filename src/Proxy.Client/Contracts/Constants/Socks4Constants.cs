@@ -1,5 +1,8 @@
 ﻿namespace Proxy.Client.Contracts.Constants
 {
+    /// <summary>
+    /// Socks4 Constants class.
+    /// </summary>
     internal class Socks4Constants
     {
         internal const byte SOCKS4_VERSION_NUMBER = 4;

@@ -1,5 +1,8 @@
 ﻿namespace Proxy.Client.Contracts
 {
+    /// <summary>
+    /// Socks5 Constants class.
+    /// </summary>
     internal class Socks5Constants
     {
         internal const byte SOCKS5_VERSION_NUMBER = 5;

@@ -1,5 +1,8 @@
 ﻿namespace Proxy.Client.Contracts.Constants
 {
+    /// <summary>
+    /// Request Constants class.
+    /// </summary>
     internal class RequestConstants
     {
         internal const string CONTENT_SEPERATOR = "\r\n\r\n";

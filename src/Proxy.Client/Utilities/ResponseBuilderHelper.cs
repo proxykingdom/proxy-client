@@ -9,8 +9,18 @@ using System.Text.RegularExpressions;
 
 namespace Proxy.Client.Utilities
 {
-    public static class ResponseBuilder
+    /// <summary>
+    /// Helper class to build the given raw response.
+    /// </summary>
+    internal static class ResponseBuilderHelper
     {
+        /// <summary>
+        /// Parses the raw response into a proxy response object.
+        /// </summary>
+        /// <param name="response">Raw response returned by the destionation server.</param>
+        /// <param name="ssl">Http or Https.</param>
+        /// <param name="destinationHost">Host name or IP address of the destination server.</param>
+        /// <returns>Proxy Response</returns>
         public static ProxyResponse BuildProxyResponse(string response, string ssl, string destinationHost)
         {
             var splitResponse = response.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.None);
@@ -22,10 +32,11 @@ namespace Proxy.Client.Utilities
             var statusNumber = Convert.ToInt32(Regex.Match(statusHtml, RequestConstants.STATUS_CODE_PATTERN).Value, CultureInfo.InvariantCulture);
             var status = (HttpStatusCode)statusNumber;
 
-            var headerArray = statusWithHeaders.Skip(1);
             var destinationUri = new Uri($"{ssl}://{destinationHost}");
             var headerDict = new Dictionary<string, string>();
             var cookieContainer = new CookieContainer();
+
+            var headerArray = statusWithHeaders.Skip(1);
 
             foreach (var header in headerArray)
             {

@@ -10,12 +10,20 @@ using System.Threading.Tasks;
 
 namespace Proxy.Client.Utilities.Extensions
 {
-    public static class SocketTaskExtensions
+    /// <summary>
+    /// Extension class that performs socket operations.
+    /// </summary>
+    internal static class SocketTaskExtensions
     {
         private const int BufferSize = 500;
         private const int PeekBufferSize = 10;
 
-        public static (string response, float firstByteTime) ReceiveAll(this Socket s)
+        /// <summary>
+        /// Receives the response from the destination server.
+        /// </summary>
+        /// <param name="socket">Underlying socket.</param>
+        /// <returns>The raw response and the time to first byte</returns>
+        public static (string response, float firstByteTime) ReceiveAll(this Socket socket)
         {
             var buffer = new byte[BufferSize];
             var placeHolder = new StringBuilder();
@@ -23,7 +31,7 @@ namespace Proxy.Client.Utilities.Extensions
 
             var firstByteTime = TimingHelper.Measure(() => 
             {
-                bytesRead = s.Receive(buffer); 
+                bytesRead = socket.Receive(buffer); 
             });
 
             var bufferString = Encoding.ASCII.GetString(buffer, 0, bytesRead);
@@ -31,21 +39,26 @@ namespace Proxy.Client.Utilities.Extensions
 
             while (!bufferString.Contains(RequestConstants.CONTENT_SEPERATOR))
             {
-                var innerBytesRead = s.Receive(buffer);
+                var innerBytesRead = socket.Receive(buffer);
                 bufferString = Encoding.ASCII.GetString(buffer, 0, innerBytesRead);
                 placeHolder.Append(bufferString);
             }
 
             var readString = placeHolder.ToString();
 
-            if (readString.Contains(RequestConstants.CONTENT_LENGTH_HEADER)) s.DecodeContentLength(placeHolder, buffer, bufferString);
-            else if (readString.Contains(RequestConstants.TRANSFER_ENCODING_CHUNKED_HEADER)) s.DecodeChunked(placeHolder, buffer, bufferString);
+            if (readString.Contains(RequestConstants.CONTENT_LENGTH_HEADER)) socket.DecodeContentLength(placeHolder, buffer, bufferString);
+            else if (readString.Contains(RequestConstants.TRANSFER_ENCODING_CHUNKED_HEADER)) socket.DecodeChunked(placeHolder, buffer, bufferString);
             else throw new ProxyException("Unknown Content Encoding provided by Destination Server");
 
             return (placeHolder.ToString(), firstByteTime);
         }
 
-        public static async Task<(string response, float firstByteTime)> ReceiveAllAsync(this Socket s)
+        /// <summary>
+        /// Asynchronously receives the response from the destination server.
+        /// </summary>
+        /// <param name="socket">Underlying socket.</param>
+        /// <returns>The raw response and the time to first byte</returns>
+        public static async Task<(string response, float firstByteTime)> ReceiveAllAsync(this Socket socket)
         {
             var buffer = new byte[BufferSize];
             var placeHolder = new StringBuilder();
@@ -53,7 +66,7 @@ namespace Proxy.Client.Utilities.Extensions
 
             var firstByteTime = await TimingHelper.MeasureAsync(async () => 
             {
-                bytesRead = await s.ReceiveAsync(buffer, buffer.Length);
+                bytesRead = await socket.ReceiveAsync(buffer, buffer.Length);
             });
 
             var bufferString = Encoding.ASCII.GetString(buffer, 0, bytesRead);
@@ -61,21 +74,26 @@ namespace Proxy.Client.Utilities.Extensions
 
             while (!bufferString.Contains(RequestConstants.CONTENT_SEPERATOR))
             {
-                var innerBytesRead = await s.ReceiveAsync(buffer, buffer.Length);
+                var innerBytesRead = await socket.ReceiveAsync(buffer, buffer.Length);
                 bufferString = Encoding.ASCII.GetString(buffer, 0, innerBytesRead);
                 placeHolder.Append(bufferString);
             }
 
             var readString = placeHolder.ToString();
 
-            if (readString.Contains(RequestConstants.CONTENT_LENGTH_HEADER)) await s.DecodeContentLengthAsync(placeHolder, buffer, bufferString);
-            else if (readString.Contains(RequestConstants.TRANSFER_ENCODING_CHUNKED_HEADER)) await s.DecodeChunkedAsync(placeHolder, buffer, bufferString);
+            if (readString.Contains(RequestConstants.CONTENT_LENGTH_HEADER)) await socket.DecodeContentLengthAsync(placeHolder, buffer, bufferString);
+            else if (readString.Contains(RequestConstants.TRANSFER_ENCODING_CHUNKED_HEADER)) await socket.DecodeChunkedAsync(placeHolder, buffer, bufferString);
             else throw new ProxyException("Unknown Content Encoding provided by Destination Server");
 
             return (placeHolder.ToString(), firstByteTime);
         }
 
-        public static (string response, float firstByteTime) ReceiveAll(this SslStream ss)
+        /// <summary>
+        /// Receives the response from the destination server.
+        /// </summary>
+        /// <param name="sslStream">Underlying SSL encrypted stream.</param>
+        /// <returns>The raw response and the time to first byte</returns>
+        public static (string response, float firstByteTime) ReceiveAll(this SslStream sslStream)
         {
             var buffer = new byte[BufferSize];
             var placeHolder = new StringBuilder();
@@ -83,7 +101,7 @@ namespace Proxy.Client.Utilities.Extensions
 
             var firstByteTime = TimingHelper.Measure(() => 
             {
-                bytesRead = ss.Read(buffer, 0, buffer.Length); 
+                bytesRead = sslStream.Read(buffer, 0, buffer.Length); 
             });
 
             var bufferString = Encoding.ASCII.GetString(buffer, 0, bytesRead);
@@ -91,21 +109,26 @@ namespace Proxy.Client.Utilities.Extensions
 
             while (!bufferString.Contains(RequestConstants.CONTENT_SEPERATOR))
             {
-                var innerBytesRead = ss.Read(buffer, 0, buffer.Length);
+                var innerBytesRead = sslStream.Read(buffer, 0, buffer.Length);
                 bufferString = Encoding.ASCII.GetString(buffer, 0, innerBytesRead);
                 placeHolder.Append(bufferString);
             }
 
             var readString = placeHolder.ToString();
 
-            if (readString.Contains(RequestConstants.CONTENT_LENGTH_HEADER)) ss.DecodeContentLength(placeHolder, buffer, bufferString);
-            else if (readString.Contains(RequestConstants.TRANSFER_ENCODING_CHUNKED_HEADER)) ss.DecodeChunked(placeHolder, buffer, bufferString);
+            if (readString.Contains(RequestConstants.CONTENT_LENGTH_HEADER)) sslStream.DecodeContentLength(placeHolder, buffer, bufferString);
+            else if (readString.Contains(RequestConstants.TRANSFER_ENCODING_CHUNKED_HEADER)) sslStream.DecodeChunked(placeHolder, buffer, bufferString);
             else throw new ProxyException("Unknown Content Encoding provided by Destination Server");
 
             return (placeHolder.ToString(), firstByteTime);
         }
 
-        public static async Task<(string response, float firstByteTime)> ReceiveAllAsync(this SslStream ss)
+        /// <summary>
+        /// Asynchronously receives the response from the destination server.
+        /// </summary>
+        /// <param name="sslStream">Underlying SSL encrypted stream.</param>
+        /// <returns>The raw response and the time to first byte</returns>
+        public static async Task<(string response, float firstByteTime)> ReceiveAllAsync(this SslStream sslStream)
         {
             var buffer = new byte[BufferSize];
             var placeHolder = new StringBuilder();
@@ -113,7 +136,7 @@ namespace Proxy.Client.Utilities.Extensions
 
             var firstByteTime = await TimingHelper.MeasureAsync(async () =>
             {
-                bytesRead = await ss.ReadAsync(buffer, 0, buffer.Length);
+                bytesRead = await sslStream.ReadAsync(buffer, 0, buffer.Length);
             });
 
             var bufferString = Encoding.ASCII.GetString(buffer, 0, bytesRead);
@@ -121,19 +144,50 @@ namespace Proxy.Client.Utilities.Extensions
 
             while(!bufferString.Contains(RequestConstants.CONTENT_SEPERATOR))
             {
-                bytesRead = await ss.ReadAsync(buffer, 0, buffer.Length);
+                bytesRead = await sslStream.ReadAsync(buffer, 0, buffer.Length);
                 bufferString = Encoding.ASCII.GetString(buffer, 0, bytesRead);
                 placeHolder.Append(bufferString);
             }
 
             var readString = placeHolder.ToString();
 
-            if (readString.Contains(RequestConstants.CONTENT_LENGTH_HEADER)) await ss.DecodeContentLengthAsync(placeHolder, buffer, bufferString);
-            else if (readString.Contains(RequestConstants.TRANSFER_ENCODING_CHUNKED_HEADER)) await ss.DecodeChunkedAsync(placeHolder, buffer, bufferString);
+            if (readString.Contains(RequestConstants.CONTENT_LENGTH_HEADER)) await sslStream.DecodeContentLengthAsync(placeHolder, buffer, bufferString);
+            else if (readString.Contains(RequestConstants.TRANSFER_ENCODING_CHUNKED_HEADER)) await sslStream.DecodeChunkedAsync(placeHolder, buffer, bufferString);
             else throw new ProxyException("Unknown Content Encoding provided by Destination Server");
 
             return (placeHolder.ToString(), firstByteTime);
         }
+
+        #region APM to Task Methods
+        /// <summary>
+        /// Asynchronously sends the request to the destination server.
+        /// </summary>
+        /// <param name="socket">Underlying socket.</param>
+        /// <param name="buffer">Buffer used to send the request.</param>
+        /// <returns>Number of bytes sent</returns>
+        public static Task<int> SendAsync(this Socket socket, byte[] buffer)
+        {
+            return Task.Factory.FromAsync(
+                socket.BeginSend(buffer, 0, buffer.Length, SocketFlags.None, null, null),
+                socket.EndSend
+            );
+        }
+
+        /// <summary>
+        /// Asynchronously received the response from the destination server.
+        /// </summary>
+        /// <param name="socket">Underlying socket.</param>
+        /// <param name="buffer">Buffer used to receive the response.</param>
+        /// <param name="count">Buffer count.</param>
+        /// <returns>Number of bytes received</returns>
+        public static Task<int> ReceiveAsync(this Socket socket, byte[] buffer, int count)
+        {
+            return Task.Factory.FromAsync(
+                socket.BeginReceive(buffer, 0, count, SocketFlags.None, null, null),
+                socket.EndReceive
+            );
+        }
+        #endregion
 
         #region Content Decoding Methods
         #region Content Length Methods
@@ -361,24 +415,6 @@ namespace Proxy.Client.Utilities.Extensions
             return (chunkSize, totalBytesRead);
         }
         #endregion
-        #endregion
-
-        #region APM to Task Methods
-        public static Task<int> SendAsync(this Socket s, byte[] buffer)
-        {
-            return Task.Factory.FromAsync(
-                s.BeginSend(buffer, 0, buffer.Length, SocketFlags.None, null, null),
-                s.EndSend
-            );
-        }
-
-        public static Task<int> ReceiveAsync(this Socket s, byte[] buffer, int count)
-        {
-            return Task.Factory.FromAsync(
-                s.BeginReceive(buffer, 0, count, SocketFlags.None, null, null),
-                s.EndReceive
-            );
-        }
         #endregion
     }
 }

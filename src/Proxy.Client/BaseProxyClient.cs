@@ -10,26 +10,78 @@ using System.Threading.Tasks;
 
 namespace Proxy.Client
 {
+    /// <summary>
+    /// Base proxy client class containing the shared logic to be implemented in all derived proxy clients.
+    /// </summary>
     public abstract class BaseProxyClient : IProxyClient
     {
         public string ProxyHost { get; protected set; }
+
         public int ProxyPort { get; protected set; }
 
+        public string DestinationHost { get; private set; }
+
+        public int DestinationPort { get; private set; }
+
+        public bool IsConnected { get; private set; }
+
+        /// <summary>
+        /// Socket used to send and receive requests.
+        /// </summary>
         protected internal Socket Socket { get; private set; }
-        protected internal bool IsConnected { get; private set; }
-        protected internal string DestinationHost { get; private set; }
-        protected internal int DestinationPort { get; private set; }
 
         public abstract ProxyResponse Get(string destinationHost, int destinationPort, IDictionary<string, string> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false);
+
         public abstract Task<ProxyResponse> GetAsync(string destinationHost, int destinationPort, IDictionary<string, string> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false);
+
         public abstract ProxyResponse Post(string destinationHost, int destinationPort, string body, IDictionary<string, string> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false);
+
         public abstract Task<ProxyResponse> PostAsync(string destinationHost, int destinationPort, string body, IDictionary<string, string> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false);
 
+        /// <summary>
+        /// Sends the GET command to the destination server, and creates the proxy response.
+        /// </summary>
+        /// <param name="headers">Headers to be sent with the GET command.</param>
+        /// <param name="cookies">Cookies to be sent with the GET command.</param>
+        /// <param name="isSsl">Indicates if the request will be http or https.</param>
+        /// <returns>Proxy Response with the time to first byte</returns>
         protected internal abstract (ProxyResponse response, float firstByteTime) SendGetCommand(IDictionary<string, string> headers, IEnumerable<Cookie> cookies, bool isSsl);
+
+        /// <summary>
+        /// Asynchronously sends the GET command to the destination server, and creates the proxy response.
+        /// </summary>
+        /// <param name="headers">Headers to be sent with the GET command.</param>
+        /// <param name="cookies">Cookies to be sent with the GET command.</param>
+        /// <param name="isSsl">Indicates if the request will be http or https.</param>
+        /// <returns>Proxy Response with the time to first byte</returns>
         protected internal abstract Task<(ProxyResponse response, float firstByteTime)> SendGetCommandAsync(IDictionary<string, string> headers, IEnumerable<Cookie> cookies, bool isSsl);
+
+        /// <summary>
+        /// Sends the POST command to the destination server, and creates the proxy response.
+        /// </summary>
+        /// <param name="headers">Headers to be sent with the GET command.</param>
+        /// <param name="cookies">Cookies to be sent with the GET command.</param>
+        /// <param name="isSsl">Indicates if the request will be http or https.</param>
+        /// <returns>Proxy Response with the time to first byte</returns>
         protected internal abstract (ProxyResponse response, float firstByteTime) SendPostCommand(string body, IDictionary<string, string> headers, IEnumerable<Cookie> cookies, bool isSsl);
+
+        /// <summary>
+        /// Asynchronously sends the POST command to the destination server, and creates the proxy response.
+        /// </summary>
+        /// <param name="headers">Headers to be sent with the GET command.</param>
+        /// <param name="cookies">Cookies to be sent with the GET command.</param>
+        /// <param name="isSsl">Indicates if the request will be http or https.</param>
+        /// <returns>Proxy Response with the time to first byte</returns>
         protected internal abstract Task<(ProxyResponse response, float firstByteTime)> SendPostCommandAsync(string body, IDictionary<string, string> headers, IEnumerable<Cookie> cookies, bool isSsl);
 
+        /// <summary>
+        /// Handles the given request based on if the proxy client is connected or not.
+        /// </summary>
+        /// <param name="notConnectedAtn"></param>
+        /// <param name="connectedFn"></param>
+        /// <param name="destinationHost"></param>
+        /// <param name="destinationPort"></param>
+        /// <returns>Proxy Response</returns>
         protected internal ProxyResponse HandleRequest(Action notConnectedAtn, Func<(ProxyResponse response, float firstByteTime)> connectedFn,
             string destinationHost, int destinationPort)
         {
@@ -75,6 +127,14 @@ namespace Proxy.Client
             }
         }
 
+        /// <summary>
+        /// Asynchronously handles the given request based on if the proxy client is connected or not.
+        /// </summary>
+        /// <param name="notConnectedAtn"></param>
+        /// <param name="connectedFn"></param>
+        /// <param name="destinationHost"></param>
+        /// <param name="destinationPort"></param>
+        /// <returns>Proxy Response</returns>
         protected internal async Task<ProxyResponse> HandleRequestAsync(Func<Task> notConnectedFn, Func<Task<(ProxyResponse response, float firstByteTime)>> connectedFn,
             string destinationHost, int destinationPort)
         {

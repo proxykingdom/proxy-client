@@ -5,8 +5,16 @@ using System.Text;
 
 namespace Proxy.Client.Utilities.Extensions
 {
-    public static class CommandExtensions
+    /// <summary>
+    /// Command Extension class.
+    /// </summary>
+    internal static class CommandExtensions
     {
+        /// <summary>
+        /// Concatenates a header dictionary into a formatted HTTP request string.
+        /// </summary>
+        /// <param name="dict">Header dictionary.</param>
+        /// <returns>Concatenated header string</returns>
         public static string ConcatenateHeaders(this IDictionary<string, string> dict)
         {
             var headerString = new StringBuilder();
@@ -19,6 +27,11 @@ namespace Proxy.Client.Utilities.Extensions
             return headerString.ToString();
         }
 
+        /// <summary>
+        /// Concatenates a list of cookies into a formatted HTTP request string.
+        /// </summary>
+        /// <param name="cookies">List of cookies.</param>
+        /// <returns>Concatenated cookie string</returns>
         public static string ConcatenateCookies(this IEnumerable<Cookie> cookies)
         {
             var cookieString = new StringBuilder();
