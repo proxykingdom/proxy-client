@@ -61,62 +61,70 @@ namespace Proxy.Client
             {
                 return Task.CompletedTask;
             },
-           async () =>
-           {
-               return await SendPostCommandAsync(body, headers, cookies, isSsl);
-           }, destinationHost, destinationPort);
+            async () =>
+            {
+                return await SendPostCommandAsync(body, headers, cookies, isSsl);
+            }, destinationHost, destinationPort);
         }
 
         protected internal override (ProxyResponse response, float firstByteTime) SendGetCommand(IDictionary<string, string> headers, IEnumerable<Cookie> cookies, bool isSsl)
         {
-            var ssl = isSsl ? RequestConstants.SSL : RequestConstants.NO_SSL;
-
-            var writeBuffer = CommandHelper.GetCommand(DestinationHost, ssl, headers, cookies);
-
-            Socket.Send(writeBuffer);
-
-            var (response, firstByteTime) = Socket.ReceiveAll();
-
-            return (ResponseBuilder.BuildProxyResponse(response, ssl, DestinationHost), firstByteTime);
+            return HandleRequestCommand((ssl) =>
+            {
+                var writeBuffer = CommandHelper.GetCommand(DestinationHost, ssl, headers, cookies);
+                Socket.Send(writeBuffer);
+                return Socket.ReceiveAll();
+            }, isSsl);
         }
 
         protected internal override async Task<(ProxyResponse response, float firstByteTime)> SendGetCommandAsync(IDictionary<string, string> headers, IEnumerable<Cookie> cookies, bool isSsl)
         {
-            var ssl = isSsl ? RequestConstants.SSL : RequestConstants.NO_SSL;
-
-            var writeBuffer = CommandHelper.GetCommand(DestinationHost, ssl, headers, cookies);
-
-            await Socket.SendAsync(writeBuffer);
-
-            var (response, firstByteTime) = await Socket.ReceiveAllAsync();
-
-            return (ResponseBuilder.BuildProxyResponse(response, ssl, DestinationHost), firstByteTime);
+            return await HandleRequestCommandAsync(async (ssl) =>
+            {
+                var writeBuffer = CommandHelper.GetCommand(DestinationHost, ssl, headers, cookies);
+                await Socket.SendAsync(writeBuffer);
+                return await Socket.ReceiveAllAsync();
+            }, isSsl);
         }
 
         protected internal override (ProxyResponse response, float firstByteTime) SendPostCommand(string body, IDictionary<string, string> headers, IEnumerable<Cookie> cookies, bool isSsl)
         {
-            var ssl = isSsl ? RequestConstants.SSL : RequestConstants.NO_SSL;
-
-            var writeBuffer = CommandHelper.PostCommand(DestinationHost, body, ssl, headers, cookies);
-
-            Socket.Send(writeBuffer);
-
-            var (response, firstByteTime) = Socket.ReceiveAll();
-
-            return (ResponseBuilder.BuildProxyResponse(response, ssl, DestinationHost), firstByteTime);
+            return HandleRequestCommand((ssl) =>
+            {
+                var writeBuffer = CommandHelper.PostCommand(DestinationHost, body, ssl, headers, cookies);
+                Socket.Send(writeBuffer);
+                return Socket.ReceiveAll();
+            }, isSsl);
         }
 
         protected internal override async Task<(ProxyResponse response, float firstByteTime)> SendPostCommandAsync(string body, IDictionary<string, string> headers, IEnumerable<Cookie> cookies, bool isSsl)
         {
+            return await HandleRequestCommandAsync(async (ssl) =>
+            {
+                var writeBuffer = CommandHelper.PostCommand(DestinationHost, body, ssl, headers, cookies);
+                await Socket.SendAsync(writeBuffer);
+                return await Socket.ReceiveAllAsync();
+            }, isSsl);
+        }
+
+        #region Private Methods
+        private (ProxyResponse response, float firstByteTime) HandleRequestCommand(Func<string, (string response, float firstByteTime)> fn, bool isSsl)
+        {
             var ssl = isSsl ? RequestConstants.SSL : RequestConstants.NO_SSL;
 
-            var writeBuffer = CommandHelper.PostCommand(DestinationHost, body, ssl, headers, cookies);
-
-            await Socket.SendAsync(writeBuffer);
-
-            var (response, firstByteTime) = await Socket.ReceiveAllAsync();
+            var (response, firstByteTime) = fn(ssl);
 
             return (ResponseBuilder.BuildProxyResponse(response, ssl, DestinationHost), firstByteTime);
         }
+
+        private async Task<(ProxyResponse response, float firstByteTime)> HandleRequestCommandAsync(Func<string, Task<(string response, float firstByteTime)>> fn, bool isSsl)
+        {
+            var ssl = isSsl ? RequestConstants.SSL : RequestConstants.NO_SSL;
+
+            var (response, firstByteTime) = await fn(ssl);
+
+            return (ResponseBuilder.BuildProxyResponse(response, ssl, DestinationHost), firstByteTime);
+        }
+        #endregion
     }
 }
