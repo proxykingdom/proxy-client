@@ -77,10 +77,10 @@ namespace Proxy.Client
         /// <summary>
         /// Handles the given request based on if the proxy client is connected or not.
         /// </summary>
-        /// <param name="notConnectedAtn"></param>
-        /// <param name="connectedFn"></param>
-        /// <param name="destinationHost"></param>
-        /// <param name="destinationPort"></param>
+        /// <param name="notConnectedAtn">Action to be executed when the socket is not connected.</param>
+        /// <param name="connectedFn">Function to be executed when the socket is connected.</param>
+        /// <param name="destinationHost">Host name or IP address of the destination server.</param>
+        /// <param name="destinationPort">Port to be used to connect to the destination server.</param>
         /// <returns>Proxy Response</returns>
         protected internal ProxyResponse HandleRequest(Action notConnectedAtn, Func<(ProxyResponse response, float firstByteTime)> connectedFn,
             string destinationHost, int destinationPort)
@@ -130,10 +130,10 @@ namespace Proxy.Client
         /// <summary>
         /// Asynchronously handles the given request based on if the proxy client is connected or not.
         /// </summary>
-        /// <param name="notConnectedAtn"></param>
-        /// <param name="connectedFn"></param>
-        /// <param name="destinationHost"></param>
-        /// <param name="destinationPort"></param>
+        /// <param name="notConnectedFn">Function to be executed when the socket is not connected.</param>
+        /// <param name="connectedFn">Function to be executed when the socket is connected.</param>
+        /// <param name="destinationHost">Host name or IP address of the destination server.</param>
+        /// <param name="destinationPort">Port to be used to connect to the destination server.</param>
         /// <returns>Proxy Response</returns>
         protected internal async Task<ProxyResponse> HandleRequestAsync(Func<Task> notConnectedFn, Func<Task<(ProxyResponse response, float firstByteTime)>> connectedFn,
             string destinationHost, int destinationPort)
