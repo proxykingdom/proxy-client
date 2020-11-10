@@ -41,8 +41,8 @@ namespace Proxy.Client
         /// </summary>
         /// <param name="destinationHost">Host name or IP address of the destination server.</param>
         /// <param name="destinationPort">Port used to connect to the destination server.</param>
-        /// <param name="headers">Headers to be sent with the POST command.</param>
-        /// <param name="cookies">Cookies to be sent with the POST command.</param>
+        /// <param name="headers">Headers to be sent with the GET command.</param>
+        /// <param name="cookies">Cookies to be sent with the GET command.</param>
         /// <param name="isSsl">Indicates if the request will be http or https.</param>
         /// <returns>Proxy Response</returns>
         ProxyResponse Get(string destinationHost, int destinationPort, IDictionary<string, string> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false);
@@ -52,8 +52,8 @@ namespace Proxy.Client
         /// </summary>
         /// <param name="destinationHost">Host name or IP address of the destination server.</param>
         /// <param name="destinationPort">Port used to connect to the destination server.</param>
-        /// <param name="headers">Headers to be sent with the POST command.</param>
-        /// <param name="cookies">Cookies to be sent with the POST command.</param>
+        /// <param name="headers">Headers to be sent with the GET command.</param>
+        /// <param name="cookies">Cookies to be sent with the GET command.</param>
         /// <param name="isSsl">Indicates if the request will be http or https.</param>
         /// <returns>Proxy Response</returns>
         Task<ProxyResponse> GetAsync(string destinationHost, int destinationPort, IDictionary<string, string> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false);

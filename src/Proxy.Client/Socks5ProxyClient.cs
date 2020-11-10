@@ -95,8 +95,8 @@ namespace Proxy.Client
         /// </summary>
         /// <param name="proxyHost">Host name or IP address of the proxy server.</param>
         /// <param name="proxyPort">Port used to connect to proxy server.</param>
-        /// <param name="proxyUsername">Proxy Username used to connec to the Proxy Server.</param>
-        /// <param name="proxyPassword">Proxy Password used to connec to the Proxy Server.</param>
+        /// <param name="proxyUsername">Proxy Username used to connect to the Proxy Server.</param>
+        /// <param name="proxyPassword">Proxy Password used to connect to the Proxy Server.</param>
         public Socks5ProxyClient(string proxyHost, int proxyPort, string proxyUsername, string proxyPassword)
         {
             if (String.IsNullOrEmpty(proxyHost))
