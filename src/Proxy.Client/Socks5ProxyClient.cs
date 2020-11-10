@@ -300,40 +300,18 @@ namespace Proxy.Client
         private void HandleProxyCommandError(byte[] response)
         {
             var replyCode = response[1];
-
-            string proxyErrorText;
-
-            switch (replyCode)
+            string proxyErrorText = replyCode switch
             {
-                case Socks5Constants.SOCKS5_CMD_REPLY_GENERAL_SOCKS_SERVER_FAILURE:
-                    proxyErrorText = "a general socks destination failure occurred";
-                    break;
-                case Socks5Constants.SOCKS5_CMD_REPLY_CONNECTION_NOT_ALLOWED_BY_RULESET:
-                    proxyErrorText = "the connection is not allowed by proxy destination rule set";
-                    break;
-                case Socks5Constants.SOCKS5_CMD_REPLY_NETWORK_UNREACHABLE:
-                    proxyErrorText = "the network was unreachable";
-                    break;
-                case Socks5Constants.SOCKS5_CMD_REPLY_HOST_UNREACHABLE:
-                    proxyErrorText = "the host was unreachable";
-                    break;
-                case Socks5Constants.SOCKS5_CMD_REPLY_CONNECTION_REFUSED:
-                    proxyErrorText = "the connection was refused by the remote network";
-                    break;
-                case Socks5Constants.SOCKS5_CMD_REPLY_TTL_EXPIRED:
-                    proxyErrorText = "the time to live (TTL) has expired";
-                    break;
-                case Socks5Constants.SOCKS5_CMD_REPLY_COMMAND_NOT_SUPPORTED:
-                    proxyErrorText = "the command issued by the proxy client is not supported by the proxy destination";
-                    break;
-                case Socks5Constants.SOCKS5_CMD_REPLY_ADDRESS_TYPE_NOT_SUPPORTED:
-                    proxyErrorText = "the address type specified is not supported";
-                    break;
-                default:
-                    proxyErrorText = String.Format(CultureInfo.InvariantCulture, "an unknown SOCKS reply with the code value '{0}' was received", replyCode.ToString(CultureInfo.InvariantCulture));
-                    break;
-            }
-
+                Socks5Constants.SOCKS5_CMD_REPLY_GENERAL_SOCKS_SERVER_FAILURE => "a general socks destination failure occurred",
+                Socks5Constants.SOCKS5_CMD_REPLY_CONNECTION_NOT_ALLOWED_BY_RULESET => "the connection is not allowed by proxy destination rule set",
+                Socks5Constants.SOCKS5_CMD_REPLY_NETWORK_UNREACHABLE => "the network was unreachable",
+                Socks5Constants.SOCKS5_CMD_REPLY_HOST_UNREACHABLE => "the host was unreachable",
+                Socks5Constants.SOCKS5_CMD_REPLY_CONNECTION_REFUSED => "the connection was refused by the remote network",
+                Socks5Constants.SOCKS5_CMD_REPLY_TTL_EXPIRED => "the time to live (TTL) has expired",
+                Socks5Constants.SOCKS5_CMD_REPLY_COMMAND_NOT_SUPPORTED => "the command issued by the proxy client is not supported by the proxy destination",
+                Socks5Constants.SOCKS5_CMD_REPLY_ADDRESS_TYPE_NOT_SUPPORTED => "the address type specified is not supported",
+                _ => String.Format(CultureInfo.InvariantCulture, "an unknown SOCKS reply with the code value '{0}' was received", replyCode.ToString(CultureInfo.InvariantCulture)),
+            };
             var responseText = response != null ? response.HexEncode() : string.Empty;
             var exceptionMsg = String.Format(CultureInfo.InvariantCulture, $"Proxy error: {proxyErrorText} for destination host {DestinationHost} port number {DestinationPort}.  Server response (hex): {responseText}.");
 
@@ -429,16 +407,14 @@ namespace Proxy.Client
             if (!result)
                 return Socks5Constants.SOCKS5_ADDRTYPE_DOMAIN_NAME;
 
-            switch(ipAddress.AddressFamily)
+            return ipAddress.AddressFamily switch
             {
-                case AddressFamily.InterNetwork:
-                    return Socks5Constants.SOCKS5_ADDRTYPE_IPV4;
-                case AddressFamily.InterNetworkV6:
-                    return Socks5Constants.SOCKS5_ADDRTYPE_IPV6;
-                default:
-                    throw new Exception(String.Format(CultureInfo.InvariantCulture,
-                        $"The host addess {DestinationHost} of type '{Enum.GetName(typeof(AddressFamily), ipAddress.AddressFamily)}' is not a supported address type.  The supported types are InterNetwork and InterNetworkV6."));
-            }
+                AddressFamily.InterNetwork => Socks5Constants.SOCKS5_ADDRTYPE_IPV4,
+                AddressFamily.InterNetworkV6 => Socks5Constants.SOCKS5_ADDRTYPE_IPV6,
+                _ => throw new Exception(String.Format(CultureInfo.InvariantCulture,
+                            $"The host addess {DestinationHost} of type '{Enum.GetName(typeof(AddressFamily), ipAddress.AddressFamily)}' is not a supported address type. " +
+                            $"The supported types are InterNetwork and InterNetworkV6.")),
+            };
         }
 
         private byte[] GetDestinationAddressBytes(byte addressType)

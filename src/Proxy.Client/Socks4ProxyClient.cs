@@ -288,25 +288,13 @@ namespace Proxy.Client
         private void HandleProxyCommandError(byte[] response)
         {
             var replyCode = response[1];
-
-            string proxyErrorText;
-
-            switch (replyCode)
+            string proxyErrorText = replyCode switch
             {
-                case Socks4Constants.SOCKS4_CMD_REPLY_REQUEST_REJECTED_OR_FAILED:
-                    proxyErrorText = "connection request was rejected or failed";
-                    break;
-                case Socks4Constants.SOCKS4_CMD_REPLY_REQUEST_REJECTED_CANNOT_CONNECT_TO_IDENTD:
-                    proxyErrorText = "connection request was rejected because SOCKS destination cannot connect to identd on the client";
-                    break;
-                case Socks4Constants.SOCKS4_CMD_REPLY_REQUEST_REJECTED_DIFFERENT_IDENTD:
-                    proxyErrorText = "connection request rejected because the client program and identd report different user-ids";
-                    break;
-                default:
-                    proxyErrorText = String.Format(CultureInfo.InvariantCulture, "proxy client received an unknown reply with the code value '{0}' from the proxy destination", replyCode.ToString(CultureInfo.InvariantCulture));
-                    break;
-            }
-
+                Socks4Constants.SOCKS4_CMD_REPLY_REQUEST_REJECTED_OR_FAILED => "connection request was rejected or failed",
+                Socks4Constants.SOCKS4_CMD_REPLY_REQUEST_REJECTED_CANNOT_CONNECT_TO_IDENTD => "connection request was rejected because SOCKS destination cannot connect to identd on the client",
+                Socks4Constants.SOCKS4_CMD_REPLY_REQUEST_REJECTED_DIFFERENT_IDENTD => "connection request rejected because the client program and identd report different user-ids",
+                _ => String.Format(CultureInfo.InvariantCulture, "proxy client received an unknown reply with the code value '{0}' from the proxy destination", replyCode.ToString(CultureInfo.InvariantCulture)),
+            };
             var exceptionMsg = String.Format(CultureInfo.InvariantCulture, $"Proxy error: {proxyErrorText} for destination host {DestinationHost} port number {DestinationPort}.");
 
             throw new ProxyException(exceptionMsg);
