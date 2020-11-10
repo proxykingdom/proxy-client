@@ -16,11 +16,24 @@ using System.Threading.Tasks;
 
 namespace Proxy.Client
 {
+    /// <summary>
+    /// Socks5 connection proxy class. This class implements the Socks5 standard proxy protocol.
+    /// </summary>
     public sealed class Socks5ProxyClient : BaseProxyClient
     {
+        /// <summary>
+        /// Proxy Username used to connec to the Proxy Server.
+        /// </summary>
         public string ProxyUsername { get; }
+
+        /// <summary>
+        /// Proxy Password used to connec to the Proxy Server.
+        /// </summary>
         public string ProxyPassword { get; }
 
+        /// <summary>
+        /// Authentication Request used to negotiate with the Proxy Server.
+        /// </summary>
         private static byte[] AuthRequest =>
             new byte[4]
             {
@@ -29,6 +42,10 @@ namespace Proxy.Client
                 Socks5Constants.SOCKS5_AUTH_METHOD_NO_AUTHENTICATION_REQUIRED,
                 Socks5Constants.SOCKS5_AUTH_METHOD_USERNAME_PASSWORD
             };
+
+        /// <summary>
+        /// Authentication Credentials used to authenticate with the Proxy Server.
+        /// </summary>
         private byte[] AuthCrendetials
         {
             get
@@ -44,9 +61,22 @@ namespace Proxy.Client
                 return credentials;
             }
         }
+
+        /// <summary>
+        /// Type of Authentication.
+        /// </summary>
         private SocksAuthentication _proxyAuthMethod;
+
+        /// <summary>
+        /// Stream used for SSL connections.
+        /// </summary>
         private SslStream _sslStream;
 
+        /// <summary>
+        /// Creates a Socks5 proxy client object.
+        /// </summary>
+        /// <param name="proxyHost">Host name or IP address of the proxy server.</param>
+        /// <param name="proxyPort">Port used to connect to proxy server.</param>
         public Socks5ProxyClient(string proxyHost, int proxyPort)
         {
             if (String.IsNullOrEmpty(proxyHost))
@@ -60,6 +90,13 @@ namespace Proxy.Client
             ProxyPort = proxyPort;
         }
 
+        /// <summary>
+        /// Creates a Socks5 proxy client object.
+        /// </summary>
+        /// <param name="proxyHost">Host name or IP address of the proxy server.</param>
+        /// <param name="proxyPort">Port used to connect to proxy server.</param>
+        /// <param name="proxyUsername">Proxy Username used to connec to the Proxy Server.</param>
+        /// <param name="proxyPassword">Proxy Password used to connec to the Proxy Server.</param>
         public Socks5ProxyClient(string proxyHost, int proxyPort, string proxyUsername, string proxyPassword)
         {
             if (String.IsNullOrEmpty(proxyHost))
@@ -81,6 +118,15 @@ namespace Proxy.Client
             ProxyPassword = proxyPassword;
         }
 
+        /// <summary>
+        /// Connects to the proxy client, sends the GET command to the destination server and returns the response.
+        /// </summary>
+        /// <param name="destinationHost">Host name or IP address of the destination server.</param>
+        /// <param name="destinationPort">Port used to connect to the destination server.</param>
+        /// <param name="headers">Headers to be sent with the GET command.</param>
+        /// <param name="cookies">Cookies to be sent with the GET command.</param>
+        /// <param name="isSsl">Indicates if the request will be http or https.</param>
+        /// <returns>Proxy Response</returns>
         public override ProxyResponse Get(string destinationHost, int destinationPort, IDictionary<string, string> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false)
         {
             return HandleRequest(() =>
@@ -94,6 +140,15 @@ namespace Proxy.Client
             }, destinationHost, destinationPort);
         }
 
+        /// <summary>
+        /// Asynchronously connects to the proxy client, sends the GET command to the destination server and returns the response.
+        /// </summary>
+        /// <param name="destinationHost">Host name or IP address of the destination server.</param>
+        /// <param name="destinationPort">Port used to connect to the destination server.</param>
+        /// <param name="headers">Headers to be sent with the GET command.</param>
+        /// <param name="cookies">Cookies to be sent with the GET command.</param>
+        /// <param name="isSsl">Indicates if the request will be http or https.</param>
+        /// <returns>Proxy Response</returns>
         public override async Task<ProxyResponse> GetAsync(string destinationHost, int destinationPort, IDictionary<string, string> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false)
         {
             return await HandleRequestAsync(async () =>
@@ -107,6 +162,15 @@ namespace Proxy.Client
             }, destinationHost, destinationPort);
         }
 
+        /// <summary>
+        /// Connects to the proxy client, sends the POST command to the destination server and returns the response.
+        /// </summary>
+        /// <param name="destinationHost">Host name or IP address of the destination server.</param>
+        /// <param name="destinationPort">Port used to connect to the destination server.</param>
+        /// <param name="headers">Headers to be sent with the GET command.</param>
+        /// <param name="cookies">Cookies to be sent with the GET command.</param>
+        /// <param name="isSsl">Indicates if the request will be http or https.</param>
+        /// <returns>Proxy Response</returns>
         public override ProxyResponse Post(string destinationHost, int destinationPort, string body, IDictionary<string, string> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false)
         {
             return HandleRequest(() => 
@@ -120,6 +184,15 @@ namespace Proxy.Client
             }, destinationHost, destinationPort);
         }
 
+        /// <summary>
+        /// Asynchornously connects to the proxy client, sends the POST command to the destination server and returns the response.
+        /// </summary>
+        /// <param name="destinationHost">Host name or IP address of the destination server.</param>
+        /// <param name="destinationPort">Port used to connect to the destination server.</param>
+        /// <param name="headers">Headers to be sent with the GET command.</param>
+        /// <param name="cookies">Cookies to be sent with the GET command.</param>
+        /// <param name="isSsl">Indicates if the request will be http or https.</param>
+        /// <returns>Proxy Response</returns>
         public override Task<ProxyResponse> PostAsync(string destinationHost, int destinationPort, string body, IDictionary<string, string> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false)
         {
             return HandleRequestAsync(async () => 
@@ -133,6 +206,13 @@ namespace Proxy.Client
             }, destinationHost, destinationPort);
         }
 
+        /// <summary>
+        /// Sends the GET command to the destination server, and creates the proxy response.
+        /// </summary>
+        /// <param name="headers">Headers to be sent with the GET command.</param>
+        /// <param name="cookies">Cookies to be sent with the GET command.</param>
+        /// <param name="isSsl">Indicates if the request will be http or https.</param>
+        /// <returns>Proxy Response with the time to first byte</returns>
         protected internal override (ProxyResponse response, float firstByteTime) SendGetCommand(IDictionary<string, string> headers, IEnumerable<Cookie> cookies, bool isSsl)
         {
             return HandleRequestCommand((ssl) =>
@@ -149,6 +229,13 @@ namespace Proxy.Client
             }, isSsl);
         }
 
+        /// <summary>
+        /// Asynchronously sends the GET command to the destination server, and creates the proxy response.
+        /// </summary>
+        /// <param name="headers">Headers to be sent with the GET command.</param>
+        /// <param name="cookies">Cookies to be sent with the GET command.</param>
+        /// <param name="isSsl">Indicates if the request will be http or https.</param>
+        /// <returns>Proxy Response with the time to first byte</returns>
         protected internal override async Task<(ProxyResponse response, float firstByteTime)> SendGetCommandAsync(IDictionary<string, string> headers, IEnumerable<Cookie> cookies, bool isSsl)
         {
             return await HandleRequestCommandAsync(async (ssl) =>
@@ -165,6 +252,13 @@ namespace Proxy.Client
             }, isSsl);
         }
 
+        /// <summary>
+        /// Sends the POST command to the destination server, and creates the proxy response.
+        /// </summary>
+        /// <param name="headers">Headers to be sent with the GET command.</param>
+        /// <param name="cookies">Cookies to be sent with the GET command.</param>
+        /// <param name="isSsl">Indicates if the request will be http or https.</param>
+        /// <returns>Proxy Response with the time to first byte</returns>
         protected internal override (ProxyResponse response, float firstByteTime) SendPostCommand(string body, IDictionary<string, string> headers, IEnumerable<Cookie> cookies, bool isSsl)
         {
             return HandleRequestCommand((ssl) =>
@@ -181,6 +275,13 @@ namespace Proxy.Client
             }, isSsl);
         }
 
+        /// <summary>
+        /// Asynchronously sends the POST command to the destination server, and creates the proxy response.
+        /// </summary>
+        /// <param name="headers">Headers to be sent with the GET command.</param>
+        /// <param name="cookies">Cookies to be sent with the GET command.</param>
+        /// <param name="isSsl">Indicates if the request will be http or https.</param>
+        /// <returns>Proxy Response with the time to first byte</returns>
         protected internal override async Task<(ProxyResponse response, float firstByteTime)> SendPostCommandAsync(string body, IDictionary<string, string> headers, IEnumerable<Cookie> cookies, bool isSsl)
         {
             return await HandleRequestCommandAsync(async (ssl) =>

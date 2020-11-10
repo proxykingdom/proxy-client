@@ -136,8 +136,8 @@ namespace Proxy.Client.Utilities.Extensions
         }
 
         #region Content Decoding Methods
-
         #region Content Length Methods
+
         private static string DecodeContentLength(this Socket s, StringBuilder placeHolder, byte[] buffer, string bufferString)
         {
             var (contentLength, totalBytesRead) = ExtractContentLength(placeHolder, bufferString);
@@ -361,7 +361,6 @@ namespace Proxy.Client.Utilities.Extensions
             return (chunkSize, totalBytesRead);
         }
         #endregion
-
         #endregion
 
         #region APM to Task Methods
