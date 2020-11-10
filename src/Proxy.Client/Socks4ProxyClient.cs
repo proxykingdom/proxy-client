@@ -125,46 +125,6 @@ namespace Proxy.Client
             }, destinationHost, destinationPort);
         }
 
-        private void SendConnectCommand(bool isSsl)
-        {
-            var destinationAddressBytes = GetDestinationAddressBytes();
-            var destinationPortBytes = GetDestinationPortBytes();
-            var userIdBytes = Encoding.ASCII.GetBytes(ProxyUserId);
-
-            var request = GetCommandRequest(destinationAddressBytes, destinationPortBytes, userIdBytes);
-
-            Socket.Send(request, SocketFlags.None);
-
-            var response = new byte[8];
-            Socket.Receive(response, SocketFlags.None);
-
-            if (response[1] != Socks4Constants.SOCKS4_CMD_REPLY_REQUEST_GRANTED)
-                HandleProxyCommandError(response);
-
-            if (isSsl)
-                HandleSslHandshake();
-        }
-
-        private async Task SendConnectCommandAsync(bool isSsl)
-        {
-            var destinationAddressBytes = await GetDestinationAddressBytesAsync();
-            var destinationPortBytes = GetDestinationPortBytes();
-            var userIdBytes = Encoding.ASCII.GetBytes(ProxyUserId);
-
-            var request = GetCommandRequest(destinationAddressBytes, destinationPortBytes, userIdBytes);
-
-            await Socket.SendAsync(request);
-
-            var response = new byte[8];
-            await Socket.ReceiveAsync(response, response.Length);
-
-            if (response[1] != Socks4Constants.SOCKS4_CMD_REPLY_REQUEST_GRANTED)
-                HandleProxyCommandError(response);
-
-            if (isSsl)
-                await HandleSslHandshakeAsync();
-        }
-
         protected internal override (ProxyResponse response, float firstByteTime) SendGetCommand(IDictionary<string, string> headers, IEnumerable<Cookie> cookies, bool isSsl)
         {
             return HandleRequestCommand((ssl) => 
@@ -230,6 +190,46 @@ namespace Proxy.Client
         }
 
         #region Private Methods
+        private void SendConnectCommand(bool isSsl)
+        {
+            var destinationAddressBytes = GetDestinationAddressBytes();
+            var destinationPortBytes = GetDestinationPortBytes();
+            var userIdBytes = Encoding.ASCII.GetBytes(ProxyUserId);
+
+            var request = GetCommandRequest(destinationAddressBytes, destinationPortBytes, userIdBytes);
+
+            Socket.Send(request, SocketFlags.None);
+
+            var response = new byte[8];
+            Socket.Receive(response, SocketFlags.None);
+
+            if (response[1] != Socks4Constants.SOCKS4_CMD_REPLY_REQUEST_GRANTED)
+                HandleProxyCommandError(response);
+
+            if (isSsl)
+                HandleSslHandshake();
+        }
+
+        private async Task SendConnectCommandAsync(bool isSsl)
+        {
+            var destinationAddressBytes = await GetDestinationAddressBytesAsync();
+            var destinationPortBytes = GetDestinationPortBytes();
+            var userIdBytes = Encoding.ASCII.GetBytes(ProxyUserId);
+
+            var request = GetCommandRequest(destinationAddressBytes, destinationPortBytes, userIdBytes);
+
+            await Socket.SendAsync(request);
+
+            var response = new byte[8];
+            await Socket.ReceiveAsync(response, response.Length);
+
+            if (response[1] != Socks4Constants.SOCKS4_CMD_REPLY_REQUEST_GRANTED)
+                HandleProxyCommandError(response);
+
+            if (isSsl)
+                await HandleSslHandshakeAsync();
+        }
+
         private void HandleProxyCommandError(byte[] response)
         {
             var replyCode = response[1];

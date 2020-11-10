@@ -133,50 +133,6 @@ namespace Proxy.Client
             }, destinationHost, destinationPort);
         }
 
-        private void SendConnectCommand(bool isSsl)
-        {
-            var addressType = GetDestinationAddressType();
-            var destinationAddressBytes = GetDestinationAddressBytes(addressType);
-            var destinationPortBytes = GetDestinationPortBytes();
-
-            var request = GetCommandRequest(destinationAddressBytes, destinationPortBytes, addressType);
-
-            Socket.Send(request, SocketFlags.None);
-
-            var response = new byte[10];
-            Socket.Receive(response, SocketFlags.None);
-
-            var replyCode = response[1];
-
-            if (replyCode != Socks5Constants.SOCKS5_CMD_REPLY_SUCCEEDED)
-                HandleProxyCommandError(response);
-
-            if (isSsl)
-                HandleSslHandshake();
-        }
-
-        private async Task SendConnectCommandAsync(bool isSsl)
-        {
-            var addressType = GetDestinationAddressType();
-            var destinationAddressBytes = await GetDestinationAddressBytesAsync(addressType);
-            var destinationPortBytes = GetDestinationPortBytes();
-
-            var request = GetCommandRequest(destinationAddressBytes, destinationPortBytes, addressType);
-
-            await Socket.SendAsync(request);
-
-            var response = new byte[10];
-            await Socket.ReceiveAsync(response, response.Length);
-
-            var replyCode = response[1];
-
-            if (replyCode != Socks5Constants.SOCKS5_CMD_REPLY_SUCCEEDED)
-                HandleProxyCommandError(response);
-
-            if (isSsl)
-                await HandleSslHandshakeAsync();
-        }
-
         protected internal override (ProxyResponse response, float firstByteTime) SendGetCommand(IDictionary<string, string> headers, IEnumerable<Cookie> cookies, bool isSsl)
         {
             return HandleRequestCommand((ssl) =>
@@ -242,6 +198,50 @@ namespace Proxy.Client
         }
 
         #region Private Methods
+        private void SendConnectCommand(bool isSsl)
+        {
+            var addressType = GetDestinationAddressType();
+            var destinationAddressBytes = GetDestinationAddressBytes(addressType);
+            var destinationPortBytes = GetDestinationPortBytes();
+
+            var request = GetCommandRequest(destinationAddressBytes, destinationPortBytes, addressType);
+
+            Socket.Send(request, SocketFlags.None);
+
+            var response = new byte[10];
+            Socket.Receive(response, SocketFlags.None);
+
+            var replyCode = response[1];
+
+            if (replyCode != Socks5Constants.SOCKS5_CMD_REPLY_SUCCEEDED)
+                HandleProxyCommandError(response);
+
+            if (isSsl)
+                HandleSslHandshake();
+        }
+
+        private async Task SendConnectCommandAsync(bool isSsl)
+        {
+            var addressType = GetDestinationAddressType();
+            var destinationAddressBytes = await GetDestinationAddressBytesAsync(addressType);
+            var destinationPortBytes = GetDestinationPortBytes();
+
+            var request = GetCommandRequest(destinationAddressBytes, destinationPortBytes, addressType);
+
+            await Socket.SendAsync(request);
+
+            var response = new byte[10];
+            await Socket.ReceiveAsync(response, response.Length);
+
+            var replyCode = response[1];
+
+            if (replyCode != Socks5Constants.SOCKS5_CMD_REPLY_SUCCEEDED)
+                HandleProxyCommandError(response);
+
+            if (isSsl)
+                await HandleSslHandshakeAsync();
+        }
+
         private void HandleProxyCommandError(byte[] response)
         {
             var replyCode = response[1];
