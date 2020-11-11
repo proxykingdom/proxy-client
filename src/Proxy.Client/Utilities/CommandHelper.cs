@@ -23,13 +23,13 @@ namespace Proxy.Client.Utilities
         {
             return HandleCommand((headerString, cookieString) =>
             {
-                var cmdString = new StringBuilder();
+                var cmd = new StringBuilder();
 
-                cmdString.AppendLine($"GET {ssl}://{destHost}/ HTTP/1.1");
-                cmdString.Append(headerString);
-                cmdString.AppendLine(cookieString);
+                cmd.AppendLine($"GET {ssl}://{destHost}/ HTTP/1.1");
+                cmd.Append(headerString);
+                cmd.AppendLine(cookieString);
 
-                return cmdString.ToString();
+                return cmd.ToString();
             }, headers, cookies);
         }
 
@@ -46,15 +46,40 @@ namespace Proxy.Client.Utilities
         {
             return HandleCommand((headerString, cookieString) =>
             {
-                var cmdString = new StringBuilder();
+                var cmd = new StringBuilder();
 
-                cmdString.AppendLine($"POST {ssl}://{destHost}/ HTTP/1.1");
-                cmdString.AppendLine($"Content-Length: {body.Length}");
-                cmdString.Append(headerString);
-                cmdString.AppendLine(cookieString);
-                cmdString.Append(body);
+                cmd.AppendLine($"POST {ssl}://{destHost}/ HTTP/1.1");
+                cmd.AppendLine($"Content-Length: {body.Length}");
+                cmd.Append(headerString);
+                cmd.AppendLine(cookieString);
+                cmd.Append(body);
 
-                return cmdString.ToString();
+                return cmd.ToString();
+            }, headers, cookies);
+        }
+
+        /// <summary>
+        /// Creates the raw PUT bytes request.
+        /// </summary>
+        /// <param name="destHost">Host name or IP address of the destination server.</param>
+        /// <param name="body">Request Body to be sent with the PUT command.</param>
+        /// <param name="ssl">Http or Https.</param>
+        /// <param name="headers">Headers to be sent with the PUT command.</param>
+        /// <param name="cookies">Cookies to be sent with the PUT command.</param>
+        /// <returns>Raw PUT bytes request</returns>
+        public static byte[] PutCommand(string destHost, string body, string ssl, IDictionary<string, string> headers, IEnumerable<Cookie> cookies)
+        {
+            return HandleCommand((headerString, cookieString) =>
+            {
+                var cmd = new StringBuilder();
+
+                cmd.AppendLine($"PUT {ssl}://{destHost}/ HTTP/1.1");
+                cmd.AppendLine($"Content-Length: {body.Length}");
+                cmd.Append(headerString);
+                cmd.AppendLine(cookieString);
+                cmd.Append(body);
+
+                return cmd.ToString();
             }, headers, cookies);
         }
 

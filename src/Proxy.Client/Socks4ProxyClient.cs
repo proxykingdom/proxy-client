@@ -156,6 +156,48 @@ namespace Proxy.Client
         }
 
         /// <summary>
+        /// Connects to the proxy client, sends the PUT command to the destination server and returns the response.
+        /// </summary>
+        /// <param name="destinationHost">Host name or IP address of the destination server.</param>
+        /// <param name="destinationPort">Port used to connect to the destination server.</param>
+        /// <param name="body">Body to be sent with the PUT command.</param>
+        /// <param name="headers">Headers to be sent with the PUT command.</param>
+        /// <param name="cookies">Cookies to be sent with the PUT command.</param>
+        /// <param name="isSsl">Indicates if the request will be http or https.</param>
+        /// <returns>Proxy Response</returns>
+        public override ProxyResponse Put(string destinationHost, int destinationPort, string body, IDictionary<string, string> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false)
+        {
+            return HandleRequest(() =>
+            {
+                SendConnectCommand(isSsl);
+            }, () =>
+            {
+                return SendPutCommand(body, headers, cookies, isSsl);
+            }, destinationHost, destinationPort);
+        }
+
+        /// <summary>
+        /// Asynchronously connects to the proxy client, sends the PUT command to the destination server and returns the response.
+        /// </summary>
+        /// <param name="destinationHost">Host name or IP address of the destination server.</param>
+        /// <param name="destinationPort">Port used to connect to the destination server.</param>
+        /// <param name="body">Body to be sent with the PUT request.</param>
+        /// <param name="headers">Headers to be sent with the PUT command.</param>
+        /// <param name="cookies">Cookies to be sent with the PUT command.</param>
+        /// <param name="isSsl">Indicates if the request will be http or https.</param>
+        /// <returns>Proxy Response</returns>
+        public override async Task<ProxyResponse> PutAsync(string destinationHost, int destinationPort, string body, IDictionary<string, string> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false)
+        {
+            return await HandleRequestAsync(async () =>
+            {
+                await SendConnectCommandAsync(isSsl);
+            }, async () =>
+            {
+                return await SendPutCommandAsync(body, headers, cookies, isSsl);
+            }, destinationHost, destinationPort);
+        }
+
+        /// <summary>
         /// Sends the GET command to the destination server, and creates the proxy response.
         /// </summary>
         /// <param name="headers">Headers to be sent with the GET command.</param>
@@ -244,6 +286,54 @@ namespace Proxy.Client
             async (ssl) => 
             {
                 var writeBuffer = CommandHelper.PostCommand(DestinationHost, body, ssl, headers, cookies);
+                await Socket.SendAsync(writeBuffer);
+                return await Socket.ReceiveAllAsync();
+            }, isSsl);
+        }
+
+        /// <summary>
+        /// Sends the PUT command to the destination server, and creates the proxy response.
+        /// </summary>
+        /// <param name="body">Body to be sent with the PUT command.</param>
+        /// <param name="headers">Headers to be sent with the PUT command.</param>
+        /// <param name="cookies">Cookies to be sent with the PUT command.</param>
+        /// <param name="isSsl">Indicates if the request will be http or https.</param>
+        /// <returns>Proxy Response with the time to first byte</returns>
+        protected internal override (ProxyResponse response, float firstByteTime) SendPutCommand(string body, IDictionary<string, string> headers, IEnumerable<Cookie> cookies, bool isSsl)
+        {
+            return HandleRequestCommand((ssl) =>
+            {
+                var writeBuffer = CommandHelper.PutCommand(DestinationHost, body, ssl, headers, cookies);
+                _sslStream.Write(writeBuffer);
+                return _sslStream.ReceiveAll();
+            },
+           (ssl) =>
+           {
+               var writeBuffer = CommandHelper.PutCommand(DestinationHost, body, ssl, headers, cookies);
+               Socket.Send(writeBuffer);
+               return Socket.ReceiveAll();
+           }, isSsl);
+        }
+
+        /// <summary>
+        /// Asynchronously sends the PUT command to the destination server, and creates the proxy response.
+        /// </summary>
+        /// <param name="body">Body to be sent with the PUT command.</param>
+        /// <param name="headers">Headers to be sent with the PUT command.</param>
+        /// <param name="cookies">Cookies to be sent with the PUT command.</param>
+        /// <param name="isSsl">Indicates if the request will be http or https.</param>
+        /// <returns>Proxy Response with the time to first byte</returns>
+        protected internal override async Task<(ProxyResponse response, float firstByteTime)> SendPutCommandAsync(string body, IDictionary<string, string> headers, IEnumerable<Cookie> cookies, bool isSsl)
+        {
+            return await HandleRequestCommandAsync(async (ssl) =>
+            {
+                var writeBuffer = CommandHelper.PutCommand(DestinationHost, body, ssl, headers, cookies);
+                await _sslStream.WriteAsync(writeBuffer, 0, writeBuffer.Length);
+                return await _sslStream.ReceiveAllAsync();
+            },
+            async (ssl) =>
+            {
+                var writeBuffer = CommandHelper.PutCommand(DestinationHost, body, ssl, headers, cookies);
                 await Socket.SendAsync(writeBuffer);
                 return await Socket.ReceiveAllAsync();
             }, isSsl);

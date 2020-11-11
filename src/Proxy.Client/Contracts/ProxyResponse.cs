@@ -41,6 +41,15 @@ namespace Proxy.Client.Contracts
             Content = content;
         }
 
+        /// <summary>
+        /// Factory Create method that creates a proxy response object instance.
+        /// </summary>
+        /// <param name="statusCode"></param>
+        /// <param name="headers"></param>
+        /// <param name="cookies"></param>
+        /// <param name="content"></param>
+        /// <returns>Proxy Response without Timings</returns>
+        /// <remarks>Timings is not in the Create method as it is assigned at a later stage when this is invoked.</remarks>
         public static ProxyResponse Create(HttpStatusCode statusCode, IDictionary<string, string> headers, IEnumerable<Cookie> cookies, string content)
         {
             return new ProxyResponse(statusCode, headers, cookies, content);
