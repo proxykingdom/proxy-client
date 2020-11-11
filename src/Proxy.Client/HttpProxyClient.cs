@@ -65,10 +65,9 @@ namespace Proxy.Client
             return HandleRequestAsync(() => 
             {
                 return Task.CompletedTask; 
-            },
-            async () =>
+            }, () =>
             {
-                return await SendGetCommandAsync(headers, cookies, isSsl);
+                return SendGetCommandAsync(headers, cookies, isSsl);
             }, destinationHost, destinationPort);
         }
 
@@ -106,10 +105,9 @@ namespace Proxy.Client
             return HandleRequestAsync(() =>
             {
                 return Task.CompletedTask;
-            },
-            async () =>
+            }, () =>
             {
-                return await SendPostCommandAsync(body, headers, cookies, isSsl);
+                return SendPostCommandAsync(body, headers, cookies, isSsl);
             }, destinationHost, destinationPort);
         }
 
@@ -147,10 +145,9 @@ namespace Proxy.Client
             return HandleRequestAsync(() =>
             {
                 return Task.CompletedTask;
-            },
-            async () =>
+            }, () =>
             {
-                return await SendPutCommandAsync(body, headers, cookies, isSsl);
+                return SendPutCommandAsync(body, headers, cookies, isSsl);
             }, destinationHost, destinationPort);
         }
 

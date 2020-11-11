@@ -104,12 +104,12 @@ namespace Proxy.Client
         /// <returns>Proxy Response</returns>
         public override Task<ProxyResponse> GetAsync(string destinationHost, int destinationPort, IDictionary<string, string> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false)
         {
-            return HandleRequestAsync(async () =>
+            return HandleRequestAsync(() =>
             {
-                await SendConnectCommandAsync(isSsl);
-            }, async () =>
+                return SendConnectCommandAsync(isSsl);
+            }, () =>
             {
-                return await SendGetCommandAsync(headers, cookies, isSsl);
+                return SendGetCommandAsync(headers, cookies, isSsl);
             }, destinationHost, destinationPort);
         }
 
@@ -146,12 +146,12 @@ namespace Proxy.Client
         /// <returns>Proxy Response</returns>
         public override Task<ProxyResponse> PostAsync(string destinationHost, int destinationPort, string body, IDictionary<string, string> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false)
         {
-            return HandleRequestAsync(async () =>
+            return HandleRequestAsync(() =>
             {
-                await SendConnectCommandAsync(isSsl);
-            }, async () =>
+                return SendConnectCommandAsync(isSsl);
+            }, () =>
             {
-                return await SendPostCommandAsync(body, headers, cookies, isSsl);
+                return SendPostCommandAsync(body, headers, cookies, isSsl);
             }, destinationHost, destinationPort);
         }
 
@@ -188,12 +188,12 @@ namespace Proxy.Client
         /// <returns>Proxy Response</returns>
         public override Task<ProxyResponse> PutAsync(string destinationHost, int destinationPort, string body, IDictionary<string, string> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false)
         {
-            return HandleRequestAsync(async () =>
+            return HandleRequestAsync(() =>
             {
-                await SendConnectCommandAsync(isSsl);
-            }, async () =>
+                return SendConnectCommandAsync(isSsl);
+            }, () =>
             {
-                return await SendPutCommandAsync(body, headers, cookies, isSsl);
+                return SendPutCommandAsync(body, headers, cookies, isSsl);
             }, destinationHost, destinationPort);
         }
 
