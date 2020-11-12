@@ -417,7 +417,7 @@ namespace Proxy.Client.Utilities.Extensions
             {
                 endChunkStringIndex = chunkSize + (chunkSizeString.Length + 4);
                 foundNewLine = newContentLine.IndexOf(Environment.NewLine, endChunkStringIndex);
-                chunkSizeString = newContentLine[endChunkStringIndex..foundNewLine];
+                chunkSizeString = newContentLine.Substring(endChunkStringIndex, foundNewLine - endChunkStringIndex);
                 chunkSize = int.Parse(chunkSizeString, NumberStyles.HexNumber);
             }
 
