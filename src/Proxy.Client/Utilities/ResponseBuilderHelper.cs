@@ -33,7 +33,7 @@ namespace Proxy.Client.Utilities
             var status = (HttpStatusCode)statusNumber;
 
             var destinationUri = new Uri($"{ssl}://{destinationHost}");
-            var headerDict = new Dictionary<string, string>();
+            var headerList = new List<ProxyHeader>();
             var cookieContainer = new CookieContainer();
 
             var headerArray = statusWithHeaders.Skip(1);
@@ -48,10 +48,10 @@ namespace Proxy.Client.Utilities
                     continue;
                 }
 
-                headerDict.Add(headerPair[0], headerPair[1]);
+                headerList.Add(ProxyHeader.Create(headerPair[0], headerPair[1]));
             }
 
-            return ProxyResponse.Create(status, headerDict, cookieContainer.GetCookies(destinationUri) as IEnumerable<Cookie>, splitResponse[1]);
+            return ProxyResponse.Create(status, headerList, cookieContainer.GetCookies(destinationUri) as IEnumerable<Cookie>, splitResponse[1]);
         }
     }
 }

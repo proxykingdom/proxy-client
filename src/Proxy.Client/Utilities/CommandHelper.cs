@@ -1,4 +1,5 @@
-﻿using Proxy.Client.Utilities.Extensions;
+﻿using Proxy.Client.Contracts;
+using Proxy.Client.Utilities.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -19,7 +20,7 @@ namespace Proxy.Client.Utilities
         /// <param name="headers">Headers to be sent with the GET command.</param>
         /// <param name="cookies">Cookies to be send with the GET command.</param>
         /// <returns>Raw GET bytes request</returns>
-        public static byte[] GetCommand(string destHost, string ssl, IDictionary<string, string> headers, IEnumerable<Cookie> cookies)
+        public static byte[] GetCommand(string destHost, string ssl, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies)
         {
             return HandleCommand((headerString, cookieString) =>
             {
@@ -42,7 +43,7 @@ namespace Proxy.Client.Utilities
         /// <param name="headers">Headers to be sent with the POST command.</param>
         /// <param name="cookies">Cookies to be sent with the POST command.</param>
         /// <returns>Raw POST bytes request</returns>
-        public static byte[] PostCommand(string destHost, string body, string ssl, IDictionary<string, string> headers, IEnumerable<Cookie> cookies)
+        public static byte[] PostCommand(string destHost, string body, string ssl, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies)
         {
             return HandleCommand((headerString, cookieString) =>
             {
@@ -67,7 +68,7 @@ namespace Proxy.Client.Utilities
         /// <param name="headers">Headers to be sent with the PUT command.</param>
         /// <param name="cookies">Cookies to be sent with the PUT command.</param>
         /// <returns>Raw PUT bytes request</returns>
-        public static byte[] PutCommand(string destHost, string body, string ssl, IDictionary<string, string> headers, IEnumerable<Cookie> cookies)
+        public static byte[] PutCommand(string destHost, string body, string ssl, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies)
         {
             return HandleCommand((headerString, cookieString) =>
             {
@@ -83,7 +84,7 @@ namespace Proxy.Client.Utilities
             }, headers, cookies);
         }
 
-        private static byte[] HandleCommand(Func<string, string, string> fn, IDictionary<string, string> headers, IEnumerable<Cookie> cookies)
+        private static byte[] HandleCommand(Func<string, string, string> fn, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies)
         {
             var headerString = headers != null
                 ? headers.ConcatenateHeaders()

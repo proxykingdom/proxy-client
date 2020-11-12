@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Proxy.Client.Contracts;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
@@ -15,13 +16,13 @@ namespace Proxy.Client.Utilities.Extensions
         /// </summary>
         /// <param name="dict">Header dictionary.</param>
         /// <returns>Concatenated header string</returns>
-        public static string ConcatenateHeaders(this IDictionary<string, string> dict)
+        public static string ConcatenateHeaders(this IEnumerable<ProxyHeader> headers)
         {
             var headerString = new StringBuilder();
 
-            foreach (var item in dict)
+            foreach (var header in headers)
             {
-                headerString.Append($"{item.Key}: {item.Value}{Environment.NewLine}");
+                headerString.Append($"{header.Name}: {header.Value}{Environment.NewLine}");
             }
 
             return headerString.ToString();

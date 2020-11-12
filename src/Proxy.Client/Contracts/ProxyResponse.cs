@@ -16,7 +16,7 @@ namespace Proxy.Client.Contracts
         /// <summary>
         /// Response headers.
         /// </summary>
-        public IDictionary<string, string> Headers { get; }
+        public IEnumerable<ProxyHeader> Headers { get; }
         
         /// <summary>
         /// Response cookies.
@@ -33,7 +33,7 @@ namespace Proxy.Client.Contracts
         /// </summary>
         public Timings Timings { get; internal set; }
 
-        private ProxyResponse(HttpStatusCode statusCode, IDictionary<string, string> headers, IEnumerable<Cookie> cookies, string content)
+        private ProxyResponse(HttpStatusCode statusCode, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies, string content)
         {
             StatusCode = statusCode;
             Headers = headers;
@@ -50,7 +50,7 @@ namespace Proxy.Client.Contracts
         /// <param name="content"></param>
         /// <returns>Proxy Response without Timings</returns>
         /// <remarks>Timings is not in the Create method as it is assigned at a later stage when this is invoked.</remarks>
-        public static ProxyResponse Create(HttpStatusCode statusCode, IDictionary<string, string> headers, IEnumerable<Cookie> cookies, string content)
+        public static ProxyResponse Create(HttpStatusCode statusCode, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies, string content)
         {
             return new ProxyResponse(statusCode, headers, cookies, content);
         }
