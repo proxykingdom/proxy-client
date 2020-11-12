@@ -408,11 +408,22 @@ namespace Proxy.Client.Utilities.Extensions
             if (foundNewLine == -1)
                 return (0, 0);
 
+            int endChunkStringIndex = 0;
             var chunkSizeString = newContentLine.Substring(0, foundNewLine);
             var chunkSize = int.Parse(chunkSizeString, NumberStyles.HexNumber);
-            var totalBytesRead = newContentLine.Length - (foundNewLine + 4);
+            var totalBytesRead = newContentLine.Length - (chunkSizeString.Length + 4);
 
-            return (chunkSize, totalBytesRead);
+            while (totalBytesRead > chunkSize)
+            {
+                endChunkStringIndex = chunkSize + (chunkSizeString.Length + 4);
+                foundNewLine = newContentLine.IndexOf(Environment.NewLine, endChunkStringIndex);
+                chunkSizeString = newContentLine[endChunkStringIndex..foundNewLine];
+                chunkSize = int.Parse(chunkSizeString, NumberStyles.HexNumber);
+            }
+
+            var totalChunkBytesRead = totalBytesRead - endChunkStringIndex;
+
+            return (chunkSize, totalChunkBytesRead);
         }
         #endregion
         #endregion
