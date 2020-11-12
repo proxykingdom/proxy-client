@@ -265,13 +265,13 @@ namespace Proxy.Client.Utilities.Extensions
             {
                 var peekBytesRead = s.Receive(buffer, PeekBufferSize, SocketFlags.None);
                 bufferString = Encoding.ASCII.GetString(buffer, 0, peekBytesRead);
+                placeHolder.Append(bufferString);
             }
             else
             {
                 bufferString = splitBuffer[1];
             }
 
-            placeHolder.Append(bufferString);
             var (chunkSize, totalBytesRead) = ExtractChunkSize(bufferString);
 
             while (chunkSize != 0)
@@ -301,13 +301,13 @@ namespace Proxy.Client.Utilities.Extensions
             {
                 var peekBytesRead = await s.ReceiveAsync(buffer, PeekBufferSize);
                 bufferString = Encoding.ASCII.GetString(buffer, 0, peekBytesRead);
+                placeHolder.Append(bufferString);
             }
             else
             {
                 bufferString = splitBuffer[1];
             }
 
-            placeHolder.Append(bufferString);
             var (chunkSize, totalBytesRead) = ExtractChunkSize(bufferString);
 
             while (chunkSize != 0)
@@ -337,13 +337,13 @@ namespace Proxy.Client.Utilities.Extensions
             {
                 var peekBytesRead = ss.Read(buffer, 0, PeekBufferSize);
                 bufferString = Encoding.ASCII.GetString(buffer, 0, peekBytesRead);
+                placeHolder.Append(bufferString);
             }
             else
             {
                 bufferString = splitBuffer[1];
             }
 
-            placeHolder.Append(bufferString);
             var (chunkSize, totalBytesRead) = ExtractChunkSize(bufferString);
 
             while (chunkSize != 0)
@@ -373,13 +373,13 @@ namespace Proxy.Client.Utilities.Extensions
             {
                 var peekBytesRead = await ss.ReadAsync(buffer, 0, PeekBufferSize);
                 bufferString = Encoding.ASCII.GetString(buffer, 0, peekBytesRead);
+                placeHolder.Append(bufferString);
             }
             else
             {
                 bufferString = splitBuffer[1];
             }
 
-            placeHolder.Append(bufferString);
             var (chunkSize, totalBytesRead) = ExtractChunkSize(bufferString);
 
             while (chunkSize != 0)

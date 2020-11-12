@@ -42,7 +42,7 @@ namespace Proxy.Client.Utilities
             {
                 var headerPair = header.Split(new[] { ": " }, 2, StringSplitOptions.None);
 
-                if (headerPair[0].Contains(RequestConstants.SET_COOKIE_HEADER))
+                if (headerPair[0].ToLower().Contains(RequestConstants.SET_COOKIE_HEADER))
                 {
                     cookieContainer.SetCookies(destinationUri, headerPair[1]);
                     continue;
