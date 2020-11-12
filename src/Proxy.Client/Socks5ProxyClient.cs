@@ -255,6 +255,15 @@ namespace Proxy.Client
         }
 
         /// <summary>
+        /// Disposes the socket dependencies.
+        /// </summary>
+        public override void Dispose()
+        {
+            base.Dispose();
+            _sslStream?.Dispose();
+        }
+
+        /// <summary>
         /// Sends the GET command to the destination server, and creates the proxy response.
         /// </summary>
         /// <param name="headers">Headers to be sent with the GET command.</param>
@@ -712,11 +721,5 @@ namespace Proxy.Client
 
         #endregion
         #endregion
-
-        public override void Dispose()
-        {
-            base.Dispose();
-            _sslStream?.Dispose();
-        }
     }
 }

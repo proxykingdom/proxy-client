@@ -116,6 +116,14 @@ namespace Proxy.Client
         public abstract Task<ProxyResponse> PutAsync(string destinationHost, int destinationPort, string body, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false);
 
         /// <summary>
+        /// Disposes the socket dependencies.
+        /// </summary>
+        public virtual void Dispose()
+        {
+            Socket?.Close();
+        }
+
+        /// <summary>
         /// Sends the GET command to the destination server, and creates the proxy response.
         /// </summary>
         /// <param name="headers">Headers to be sent with the GET command.</param>
@@ -176,13 +184,13 @@ namespace Proxy.Client
         /// <summary>
         /// Handles the given request based on if the proxy client is connected or not.
         /// </summary>
-        /// <param name="notConnectedAtn">Action to be executed when the socket is not connected.</param>
-        /// <param name="connectedFn">Function to be executed when the socket is connected.</param>
+        /// <param name="connectNegotiationFn">Performs connection negotations with the destination server.</param>
+        /// <param name="requestFn">Sends the request on the underlying socket.</param>
         /// <param name="destinationHost">Host name or IP address of the destination server.</param>
         /// <param name="destinationPort">Port to be used to connect to the destination server.</param>
         /// <returns>Proxy Response</returns>
-        protected internal ProxyResponse HandleRequest(Action notConnectedAtn, Func<(ProxyResponse response, float firstByteTime)> connectedFn,
-            string destinationHost, int destinationPort)
+        protected internal ProxyResponse HandleRequest(Action connectNegotiationFn,
+            Func<(ProxyResponse response, float firstByteTime)> requestFn, string destinationHost, int destinationPort)
         {
             try
             {
@@ -195,27 +203,27 @@ namespace Proxy.Client
 
                 float connectTime = 0;
 
-                if (!IsConnected)
+                var previousDestinationHost = DestinationHost;
+
+                DestinationHost = destinationHost;
+                DestinationPort = destinationPort;
+
+                if (Socket == null)
                 {
-                    DestinationHost = destinationHost;
-                    DestinationPort = destinationPort;
-
-                    connectTime = TimingHelper.Measure(() =>
-                    {
-                        Socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-                        Socket.Connect(ProxyHost, ProxyPort);
-                        notConnectedAtn();
-                    });
-
-                    IsConnected = true;
+                    connectTime = CreateSocket();
+                }
+                else if (!Socket.Connected || !previousDestinationHost.Equals(destinationHost))
+                {
+                    Dispose();
+                    connectTime = CreateSocket();
                 }
 
-                var (time, innerResult) = TimingHelper.Measure(() =>
+                var (requestTime, innerResult) = TimingHelper.Measure(() =>
                 {
-                    return connectedFn();
+                    return requestFn();
                 });
 
-                innerResult.response.Timings = Timings.Create(connectTime, connectTime + time, connectTime + innerResult.firstByteTime);
+                innerResult.response.Timings = Timings.Create(connectTime, connectTime + requestTime, connectTime + innerResult.firstByteTime);
 
                 return innerResult.response;
             }
@@ -224,18 +232,28 @@ namespace Proxy.Client
                 throw new ProxyException(String.Format(CultureInfo.InvariantCulture,
                     $"Connection to proxy host {ProxyHost} on port {ProxyPort} failed."));
             }
+
+            float CreateSocket()
+            {
+                return TimingHelper.Measure(() =>
+                {
+                    Socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                    Socket.Connect(ProxyHost, ProxyPort);
+                    connectNegotiationFn();
+                });
+            }
         }
 
         /// <summary>
         /// Asynchronously handles the given request based on if the proxy client is connected or not.
         /// </summary>
-        /// <param name="notConnectedFn">Function to be executed when the socket is not connected.</param>
-        /// <param name="connectedFn">Function to be executed when the socket is connected.</param>
+        /// <param name="connectNegotiationFn">Performs connection negotations with the destination server.</param>
+        /// <param name="requestedFn">Sends the request on the underlying socket.</param>
         /// <param name="destinationHost">Host name or IP address of the destination server.</param>
         /// <param name="destinationPort">Port to be used to connect to the destination server.</param>
         /// <returns>Proxy Response</returns>
-        protected internal async Task<ProxyResponse> HandleRequestAsync(Func<Task> notConnectedFn, Func<Task<(ProxyResponse response, float firstByteTime)>> connectedFn,
-            string destinationHost, int destinationPort)
+        protected internal async Task<ProxyResponse> HandleRequestAsync(Func<Task> connectNegotiationFn, 
+            Func<Task<(ProxyResponse response, float firstByteTime)>> requestedFn, string destinationHost, int destinationPort)
         {
             try
             {
@@ -248,27 +266,27 @@ namespace Proxy.Client
 
                 float connectTime = 0;
 
-                if (!IsConnected)
+                var previousDestinationHost = DestinationHost;
+
+                DestinationHost = destinationHost;
+                DestinationPort = destinationPort;
+
+                if (Socket == null)
                 {
-                    DestinationHost = destinationHost;
-                    DestinationPort = destinationPort;
-
-                    connectTime = await TimingHelper.MeasureAsync(async () =>
-                    {
-                        Socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-                        await Socket.ConnectAsync(ProxyHost, ProxyPort);
-                        await notConnectedFn();
-                    });
-
-                    IsConnected = true;
+                    connectTime = await CreateSocketAsync();
+                }
+                else if (!Socket.Connected || !previousDestinationHost.Equals(destinationHost))
+                {
+                    Dispose();
+                    connectTime = await CreateSocketAsync();
                 }
 
-                var (time, innerResult) = await TimingHelper.MeasureAsync(async () =>
+                var (requestTime, innerResult) = await TimingHelper.MeasureAsync(() =>
                 {
-                    return await connectedFn();
+                    return requestedFn();
                 });
 
-                innerResult.response.Timings = Timings.Create(connectTime, connectTime + time, connectTime + innerResult.firstByteTime);
+                innerResult.response.Timings = Timings.Create(connectTime, connectTime + requestTime, connectTime + innerResult.firstByteTime);
 
                 return innerResult.response;
             }
@@ -277,11 +295,16 @@ namespace Proxy.Client
                 throw new ProxyException(String.Format(CultureInfo.InvariantCulture,
                     $"Connection to proxy host {ProxyHost} on port {ProxyPort} failed with Exception: {ex}"));
             }
-        }
 
-        public virtual void Dispose()
-        {
-            Socket?.Close();
+            Task<float> CreateSocketAsync()
+            {
+                return TimingHelper.MeasureAsync(async () =>
+                {
+                    Socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                    await Socket.ConnectAsync(ProxyHost, ProxyPort);
+                    await connectNegotiationFn();
+                });
+            }
         }
     }
 }
