@@ -49,7 +49,7 @@ namespace Proxy.Client
             () =>
             {
                 return SendGetCommand(headers, cookies, isSsl);
-            }, destinationHost, destinationPort);
+            }, destinationHost, destinationPort, isSsl);
         }
 
         /// <summary>
@@ -69,7 +69,7 @@ namespace Proxy.Client
             }, () =>
             {
                 return SendGetCommandAsync(headers, cookies, isSsl);
-            }, destinationHost, destinationPort);
+            }, destinationHost, destinationPort, isSsl);
         }
 
         /// <summary>
@@ -88,7 +88,7 @@ namespace Proxy.Client
             () => 
             {
                 return SendPostCommand(body, headers, cookies, isSsl);
-            }, destinationHost, destinationPort);
+            }, destinationHost, destinationPort, isSsl);
         }
 
         /// <summary>
@@ -109,7 +109,7 @@ namespace Proxy.Client
             }, () =>
             {
                 return SendPostCommandAsync(body, headers, cookies, isSsl);
-            }, destinationHost, destinationPort);
+            }, destinationHost, destinationPort, isSsl);
         }
 
         /// <summary>
@@ -128,7 +128,7 @@ namespace Proxy.Client
             () =>
             {
                 return SendPutCommand(body, headers, cookies, isSsl);
-            }, destinationHost, destinationPort);
+            }, destinationHost, destinationPort, isSsl);
         }
 
         /// <summary>
@@ -149,7 +149,7 @@ namespace Proxy.Client
             }, () =>
             {
                 return SendPutCommandAsync(body, headers, cookies, isSsl);
-            }, destinationHost, destinationPort);
+            }, destinationHost, destinationPort, isSsl);
         }
 
         /// <summary>

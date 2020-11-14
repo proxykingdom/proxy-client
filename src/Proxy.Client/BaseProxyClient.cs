@@ -188,9 +188,10 @@ namespace Proxy.Client
         /// <param name="requestFn">Sends the request on the underlying socket.</param>
         /// <param name="destinationHost">Host name or IP address of the destination server.</param>
         /// <param name="destinationPort">Port to be used to connect to the destination server.</param>
+        /// <param name="isSsl">Indicates if the request will be http or https.</param>
         /// <returns>Proxy Response</returns>
         protected internal ProxyResponse HandleRequest(Action connectNegotiationFn,
-            Func<(ProxyResponse response, float firstByteTime)> requestFn, string destinationHost, int destinationPort)
+            Func<(ProxyResponse response, float firstByteTime)> requestFn, string destinationHost, int destinationPort, bool isSsl)
         {
             try
             {
@@ -212,7 +213,7 @@ namespace Proxy.Client
                 {
                     connectTime = CreateSocket();
                 }
-                else if (IsDispose(previousDestinationHost))
+                else if (IsDispose(previousDestinationHost, isSsl))
                 {
                     Dispose();
                     connectTime = CreateSocket();
@@ -251,9 +252,10 @@ namespace Proxy.Client
         /// <param name="requestedFn">Sends the request on the underlying socket.</param>
         /// <param name="destinationHost">Host name or IP address of the destination server.</param>
         /// <param name="destinationPort">Port to be used to connect to the destination server.</param>
+        /// <param name="isSsl">Indicates if the request will be http or https.</param>
         /// <returns>Proxy Response</returns>
         protected internal async Task<ProxyResponse> HandleRequestAsync(Func<Task> connectNegotiationFn, 
-            Func<Task<(ProxyResponse response, float firstByteTime)>> requestedFn, string destinationHost, int destinationPort)
+            Func<Task<(ProxyResponse response, float firstByteTime)>> requestedFn, string destinationHost, int destinationPort, bool isSsl)
         {
             try
             {
@@ -275,7 +277,7 @@ namespace Proxy.Client
                 {
                     connectTime = await CreateSocketAsync();
                 }
-                else if (IsDispose(previousDestinationHost))
+                else if (IsDispose(previousDestinationHost, isSsl))
                 {
                     Dispose();
                     connectTime = await CreateSocketAsync();
@@ -307,6 +309,7 @@ namespace Proxy.Client
             }
         }
 
-        private bool IsDispose(string previousDestinationHost) => ProxyType != ProxyType.HTTP && (!Socket.Connected || !previousDestinationHost.Equals(DestinationHost));
+        private bool IsDispose(string previousDestinationHost, bool isSsl) 
+            => !Socket.Connected || ((ProxyType != ProxyType.HTTP || isSsl) && !previousDestinationHost.Equals(DestinationHost));
     }
 }
