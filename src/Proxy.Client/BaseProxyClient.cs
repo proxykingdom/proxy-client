@@ -43,7 +43,7 @@ namespace Proxy.Client
         /// <summary>
         /// Underlying socket used to send and receive requests.
         /// </summary>
-        public Socket Socket { get; private set; }
+        protected internal Socket Socket { get; private set; }
 
         /// <summary>
         /// Connects to the proxy client, sends the GET command to the destination server and returns the response.

@@ -38,11 +38,6 @@ namespace Proxy.Client
         int DestinationPort { get; }
 
         /// <summary>
-        /// Underlying socket used to send and receive requests.
-        /// </summary>
-        Socket Socket { get; }
-
-        /// <summary>
         /// Connects to the proxy client, sends the GET command to the destination server and returns the response.
         /// </summary>
         /// <param name="destinationHost">Host name or IP address of the destination server.</param>
