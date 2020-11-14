@@ -30,7 +30,7 @@ namespace Proxy.Client.Utilities
                 cmd.Append(headerString);
                 cmd.AppendLine(cookieString);
 
-                return cmd.ToString();
+                return $"GET {ssl}://{destHost}/ HTTP/1.1\r\nConnection: keep-alive\r\n\r\n";
             }, headers, cookies);
         }
 

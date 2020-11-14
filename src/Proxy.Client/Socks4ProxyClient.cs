@@ -48,6 +48,7 @@ namespace Proxy.Client
             ProxyHost = proxyHost;
             ProxyPort = proxyPort;
             ProxyUserId = string.Empty;
+            ProxyType = ProxyType.SOCKS4;
         }
 
         /// <summary>
@@ -71,6 +72,7 @@ namespace Proxy.Client
             ProxyHost = proxyHost;
             ProxyPort = proxyPort;
             ProxyUserId = proxyUserId;
+            ProxyType = ProxyType.SOCKS4;
         }
 
         /// <summary>

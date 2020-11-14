@@ -22,6 +22,11 @@ namespace Proxy.Client
         int ProxyPort { get; }
 
         /// <summary>
+        /// The type of proxy.
+        /// </summary>
+        ProxyType ProxyType { get; }
+
+        /// <summary>
         /// Host name or IP address of the destination server.
         /// </summary>
         string DestinationHost { get; }
@@ -30,11 +35,6 @@ namespace Proxy.Client
         /// Port used to connect to the destination server.
         /// </summary>
         int DestinationPort { get; }
-
-        /// <summary>
-        /// Indicates if the underlying socket is already connected.
-        /// </summary>
-        bool IsConnected { get; }
 
         /// <summary>
         /// Connects to the proxy client, sends the GET command to the destination server and returns the response.

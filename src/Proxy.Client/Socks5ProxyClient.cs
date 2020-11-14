@@ -88,6 +88,7 @@ namespace Proxy.Client
 
             ProxyHost = proxyHost;
             ProxyPort = proxyPort;
+            ProxyType = ProxyType.SOCKS5;
         }
 
         /// <summary>
@@ -116,6 +117,7 @@ namespace Proxy.Client
             ProxyPort = proxyPort;
             ProxyUsername = proxyUsername;
             ProxyPassword = proxyPassword;
+            ProxyType = ProxyType.SOCKS5;
         }
 
         /// <summary>

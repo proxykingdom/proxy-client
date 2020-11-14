@@ -31,6 +31,7 @@ namespace Proxy.Client
 
             ProxyHost = proxyHost;
             ProxyPort = proxyPort;
+            ProxyType = ProxyType.HTTP;
         }
 
         /// <summary>

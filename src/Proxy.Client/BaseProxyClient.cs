@@ -26,6 +26,11 @@ namespace Proxy.Client
         public int ProxyPort { get; protected set; }
 
         /// <summary>
+        /// The type of proxy.
+        /// </summary>
+        public ProxyType ProxyType { get; protected set; }
+
+        /// <summary>
         /// Host name or IP address of the destination server.
         /// </summary>
         public string DestinationHost { get; private set; }
@@ -34,11 +39,6 @@ namespace Proxy.Client
         /// Port used to connect to the destination server.
         /// </summary>
         public int DestinationPort { get; private set; }
-
-        /// <summary>
-        /// Indicates if the underlying socket is already connected.
-        /// </summary>
-        public bool IsConnected { get; private set; }
 
         /// <summary>
         /// Socket used to send and receive requests.
@@ -212,7 +212,7 @@ namespace Proxy.Client
                 {
                     connectTime = CreateSocket();
                 }
-                else if (!Socket.Connected || !previousDestinationHost.Equals(destinationHost))
+                else if (IsDispose(previousDestinationHost))
                 {
                     Dispose();
                     connectTime = CreateSocket();
@@ -275,7 +275,7 @@ namespace Proxy.Client
                 {
                     connectTime = await CreateSocketAsync();
                 }
-                else if (!Socket.Connected || !previousDestinationHost.Equals(destinationHost))
+                else if (IsDispose(previousDestinationHost))
                 {
                     Dispose();
                     connectTime = await CreateSocketAsync();
@@ -306,5 +306,7 @@ namespace Proxy.Client
                 });
             }
         }
+
+        private bool IsDispose(string previousDestinationHost) => ProxyType != ProxyType.HTTP && (!Socket.Connected || !previousDestinationHost.Equals(DestinationHost));
     }
 }
