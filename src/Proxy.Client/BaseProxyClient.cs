@@ -228,10 +228,10 @@ namespace Proxy.Client
 
                 return innerResult.response;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 throw new ProxyException(String.Format(CultureInfo.InvariantCulture,
-                    $"Connection to proxy host {ProxyHost} on port {ProxyPort} failed."));
+                    $"Connection to proxy host {ProxyHost} on port {ProxyPort} failed with Exception: {ex}"));
             }
 
             float CreateSocket()
