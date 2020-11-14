@@ -14,7 +14,7 @@ namespace Proxy.Client.Utilities.Extensions
         /// <summary>
         /// Concatenates a header dictionary into a formatted HTTP request string.
         /// </summary>
-        /// <param name="dict">Header dictionary.</param>
+        /// <param name="headers">Header list.</param>
         /// <returns>Concatenated header string</returns>
         public static string ConcatenateHeaders(this IEnumerable<ProxyHeader> headers)
         {

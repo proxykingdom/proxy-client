@@ -78,125 +78,113 @@ namespace Proxy.Client
         /// <summary>
         /// Connects to the proxy client, sends the GET command to the destination server and returns the response.
         /// </summary>
-        /// <param name="destinationHost">Host name or IP address of the destination server.</param>
-        /// <param name="destinationPort">Port used to connect to the destination server.</param>
+        /// <param name="url">Destination URL.</param>
         /// <param name="headers">Headers to be sent with the GET command.</param>
         /// <param name="cookies">Cookies to be sent with the GET command.</param>
-        /// <param name="isSsl">Indicates if the request will be http or https.</param>
         /// <returns>Proxy Response</returns>
-        public override ProxyResponse Get(string destinationHost, int destinationPort, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false)
+        public override ProxyResponse Get(string url, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null)
         {
             return HandleRequest(() =>
             {
-                SendConnectCommand(isSsl);
+                SendConnectCommand();
             }, () =>
             {
-                return SendGetCommand(headers, cookies, isSsl);
-            }, destinationHost, destinationPort, isSsl);
+                return SendGetCommand(headers, cookies);
+            }, url);
         }
 
         /// <summary>
         /// Asynchronously connects to the proxy client, sends the GET command to the destination server and returns the response.
         /// </summary>
-        /// <param name="destinationHost">Host name or IP address of the destination server.</param>
-        /// <param name="destinationPort">Port used to connect to the destination server.</param>
+        /// <param name="url">Destination URL.</param>
         /// <param name="headers">Headers to be sent with the GET command.</param>
         /// <param name="cookies">Cookies to be sent with the GET command.</param>
-        /// <param name="isSsl">Indicates if the request will be http or https.</param>
         /// <returns>Proxy Response</returns>
-        public override Task<ProxyResponse> GetAsync(string destinationHost, int destinationPort, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false)
+        public override Task<ProxyResponse> GetAsync(string url, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null)
         {
             return HandleRequestAsync(() =>
             {
-                return SendConnectCommandAsync(isSsl);
+                return SendConnectCommandAsync();
             }, () =>
             {
-                return SendGetCommandAsync(headers, cookies, isSsl);
-            }, destinationHost, destinationPort, isSsl);
+                return SendGetCommandAsync(headers, cookies);
+            }, url);
         }
 
         /// <summary>
         /// Connects to the proxy client, sends the POST command to the destination server and returns the response.
         /// </summary>
-        /// <param name="destinationHost">Host name or IP address of the destination server.</param>
-        /// <param name="destinationPort">Port used to connect to the destination server.</param>
+        /// <param name="url">Destination URL.</param>
         /// <param name="body">Body to be sent with the POST command.</param>
         /// <param name="headers">Headers to be sent with the POST command.</param>
         /// <param name="cookies">Cookies to be sent with the POST command.</param>
-        /// <param name="isSsl">Indicates if the request will be http or https.</param>
         /// <returns>Proxy Response</returns>
-        public override ProxyResponse Post(string destinationHost, int destinationPort, string body, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false)
+        public override ProxyResponse Post(string url, string body, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null)
         {
             return HandleRequest(() =>
             {
-                SendConnectCommand(isSsl);
+                SendConnectCommand();
             }, () =>
             {
-                return SendPostCommand(body, headers, cookies, isSsl);
-            }, destinationHost, destinationPort, isSsl);
+                return SendPostCommand(body, headers, cookies);
+            }, url);
         }
 
         /// <summary>
         /// Asynchronously connects to the proxy client, sends the POST command to the destination server and returns the response.
         /// </summary>
-        /// <param name="destinationHost">Host name or IP address of the destination server.</param>
-        /// <param name="destinationPort">Port used to connect to the destination server.</param>
+        /// <param name="url">Destination URL.</param>
         /// <param name="body">Body to be sent with the POST request.</param>
         /// <param name="headers">Headers to be sent with the POST command.</param>
         /// <param name="cookies">Cookies to be sent with the POST command.</param>
-        /// <param name="isSsl">Indicates if the request will be http or https.</param>
         /// <returns>Proxy Response</returns>
-        public override Task<ProxyResponse> PostAsync(string destinationHost, int destinationPort, string body, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false)
+        public override Task<ProxyResponse> PostAsync(string url, string body, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null)
         {
             return HandleRequestAsync(() =>
             {
-                return SendConnectCommandAsync(isSsl);
+                return SendConnectCommandAsync();
             }, () =>
             {
-                return SendPostCommandAsync(body, headers, cookies, isSsl);
-            }, destinationHost, destinationPort, isSsl);
+                return SendPostCommandAsync(body, headers, cookies);
+            }, url);
         }
 
         /// <summary>
         /// Connects to the proxy client, sends the PUT command to the destination server and returns the response.
         /// </summary>
-        /// <param name="destinationHost">Host name or IP address of the destination server.</param>
-        /// <param name="destinationPort">Port used to connect to the destination server.</param>
+        /// <param name="url">Destination URL.</param>
         /// <param name="body">Body to be sent with the PUT command.</param>
         /// <param name="headers">Headers to be sent with the PUT command.</param>
         /// <param name="cookies">Cookies to be sent with the PUT command.</param>
-        /// <param name="isSsl">Indicates if the request will be http or https.</param>
         /// <returns>Proxy Response</returns>
-        public override ProxyResponse Put(string destinationHost, int destinationPort, string body, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false)
+        public override ProxyResponse Put(string url, string body, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null)
         {
             return HandleRequest(() =>
             {
-                SendConnectCommand(isSsl);
+                SendConnectCommand();
             }, () =>
             {
-                return SendPutCommand(body, headers, cookies, isSsl);
-            }, destinationHost, destinationPort, isSsl);
+                return SendPutCommand(body, headers, cookies);
+            }, url);
         }
 
         /// <summary>
         /// Asynchronously connects to the proxy client, sends the PUT command to the destination server and returns the response.
         /// </summary>
-        /// <param name="destinationHost">Host name or IP address of the destination server.</param>
-        /// <param name="destinationPort">Port used to connect to the destination server.</param>
+        /// <param name="url">Destination URL.</param>
         /// <param name="body">Body to be sent with the PUT request.</param>
         /// <param name="headers">Headers to be sent with the PUT command.</param>
         /// <param name="cookies">Cookies to be sent with the PUT command.</param>
-        /// <param name="isSsl">Indicates if the request will be http or https.</param>
         /// <returns>Proxy Response</returns>
-        public override Task<ProxyResponse> PutAsync(string destinationHost, int destinationPort, string body, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false)
+        public override Task<ProxyResponse> PutAsync(string url, string body, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null)
         {
             return HandleRequestAsync(() =>
             {
-                return SendConnectCommandAsync(isSsl);
+                return SendConnectCommandAsync();
             }, () =>
             {
-                return SendPutCommandAsync(body, headers, cookies, isSsl);
-            }, destinationHost, destinationPort, isSsl);
+                return SendPutCommandAsync(body, headers, cookies);
+            }, url);
         }
 
         /// <summary>
@@ -213,22 +201,21 @@ namespace Proxy.Client
         /// </summary>
         /// <param name="headers">Headers to be sent with the GET command.</param>
         /// <param name="cookies">Cookies to be sent with the GET command.</param>
-        /// <param name="isSsl">Indicates if the request will be http or https.</param>
         /// <returns>Proxy Response with the time to first byte</returns>
-        protected internal override (ProxyResponse response, float firstByteTime) SendGetCommand(IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies, bool isSsl)
+        protected internal override (ProxyResponse response, float firstByteTime) SendGetCommand(IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies)
         {
             return HandleRequestCommand((ssl) => 
             {
-                var writeBuffer = CommandHelper.GetCommand(DestinationHost, ssl, headers, cookies);
+                var writeBuffer = CommandHelper.GetCommand(DestinationUri.AbsoluteUri, headers, cookies);
                 _sslStream.Write(writeBuffer);
                return _sslStream.ReceiveAll();
             },
             (ssl) => 
             {
-                var writeBuffer = CommandHelper.GetCommand(DestinationHost, ssl, headers, cookies);
+                var writeBuffer = CommandHelper.GetCommand(DestinationUri.AbsoluteUri, headers, cookies);
                 Socket.Send(writeBuffer);
                 return Socket.ReceiveAll();
-            }, isSsl);
+            });
         }
 
         /// <summary>
@@ -236,22 +223,21 @@ namespace Proxy.Client
         /// </summary>
         /// <param name="headers">Headers to be sent with the GET command.</param>
         /// <param name="cookies">Cookies to be sent with the GET command.</param>
-        /// <param name="isSsl">Indicates if the request will be http or https.</param>
         /// <returns>Proxy Response with the time to first byte</returns>
-        protected internal override Task<(ProxyResponse response, float firstByteTime)> SendGetCommandAsync(IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies, bool isSsl)
+        protected internal override Task<(ProxyResponse response, float firstByteTime)> SendGetCommandAsync(IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies)
         {
             return HandleRequestCommandAsync(async (ssl) =>
             {
-                var writeBuffer = CommandHelper.GetCommand(DestinationHost, ssl, headers, cookies);
+                var writeBuffer = CommandHelper.GetCommand(DestinationUri.AbsoluteUri, headers, cookies);
                 await _sslStream.WriteAsync(writeBuffer, 0, writeBuffer.Length);
                 return await _sslStream.ReceiveAllAsync();
             },
             async (ssl) =>
             {
-                var writeBuffer = CommandHelper.GetCommand(DestinationHost, RequestConstants.NO_SSL, headers, cookies);
+                var writeBuffer = CommandHelper.GetCommand(DestinationUri.AbsoluteUri, headers, cookies);
                 await Socket.SendAsync(writeBuffer);
                 return await Socket.ReceiveAllAsync();
-            }, isSsl);
+            });
         }
 
         /// <summary>
@@ -260,22 +246,21 @@ namespace Proxy.Client
         /// <param name="body">Body to be sent with the POST command.</param>
         /// <param name="headers">Headers to be sent with the POST command.</param>
         /// <param name="cookies">Cookies to be sent with the POST command.</param>
-        /// <param name="isSsl">Indicates if the request will be http or https.</param>
         /// <returns>Proxy Response with the time to first byte</returns>
-        protected internal override (ProxyResponse response, float firstByteTime) SendPostCommand(string body, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies, bool isSsl)
+        protected internal override (ProxyResponse response, float firstByteTime) SendPostCommand(string body, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies)
         {
             return HandleRequestCommand((ssl) =>
             {
-                var writeBuffer = CommandHelper.PostCommand(DestinationHost, body, ssl, headers, cookies);
+                var writeBuffer = CommandHelper.PostCommand(DestinationUri.AbsoluteUri, body, headers, cookies);
                 _sslStream.Write(writeBuffer);
                 return _sslStream.ReceiveAll();
             },
             (ssl) =>
             {
-                var writeBuffer = CommandHelper.PostCommand(DestinationHost, body, ssl, headers, cookies);
+                var writeBuffer = CommandHelper.PostCommand(DestinationUri.AbsoluteUri, body, headers, cookies);
                 Socket.Send(writeBuffer);
                 return Socket.ReceiveAll();
-            }, isSsl);
+            });
         }
 
         /// <summary>
@@ -284,22 +269,21 @@ namespace Proxy.Client
         /// <param name="body">Body to be sent with the POST command.</param>
         /// <param name="headers">Headers to be sent with the POST command.</param>
         /// <param name="cookies">Cookies to be sent with the POST command.</param>
-        /// <param name="isSsl">Indicates if the request will be http or https.</param>
         /// <returns>Proxy Response with the time to first byte</returns>
-        protected internal override Task<(ProxyResponse response, float firstByteTime)> SendPostCommandAsync(string body, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies, bool isSsl)
+        protected internal override Task<(ProxyResponse response, float firstByteTime)> SendPostCommandAsync(string body, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies)
         {
             return HandleRequestCommandAsync(async (ssl) =>
             {
-                var writeBuffer = CommandHelper.PostCommand(DestinationHost, body, ssl, headers, cookies);
+                var writeBuffer = CommandHelper.PostCommand(DestinationUri.AbsoluteUri, body, headers, cookies);
                 await _sslStream.WriteAsync(writeBuffer, 0, writeBuffer.Length);
                 return await _sslStream.ReceiveAllAsync();
             },
             async (ssl) => 
             {
-                var writeBuffer = CommandHelper.PostCommand(DestinationHost, body, ssl, headers, cookies);
+                var writeBuffer = CommandHelper.PostCommand(DestinationUri.AbsoluteUri, body, headers, cookies);
                 await Socket.SendAsync(writeBuffer);
                 return await Socket.ReceiveAllAsync();
-            }, isSsl);
+            });
         }
 
         /// <summary>
@@ -308,22 +292,21 @@ namespace Proxy.Client
         /// <param name="body">Body to be sent with the PUT command.</param>
         /// <param name="headers">Headers to be sent with the PUT command.</param>
         /// <param name="cookies">Cookies to be sent with the PUT command.</param>
-        /// <param name="isSsl">Indicates if the request will be http or https.</param>
         /// <returns>Proxy Response with the time to first byte</returns>
-        protected internal override (ProxyResponse response, float firstByteTime) SendPutCommand(string body, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies, bool isSsl)
+        protected internal override (ProxyResponse response, float firstByteTime) SendPutCommand(string body, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies)
         {
             return HandleRequestCommand((ssl) =>
             {
-                var writeBuffer = CommandHelper.PutCommand(DestinationHost, body, ssl, headers, cookies);
+                var writeBuffer = CommandHelper.PutCommand(DestinationUri.AbsoluteUri, body, headers, cookies);
                 _sslStream.Write(writeBuffer);
                 return _sslStream.ReceiveAll();
             },
            (ssl) =>
            {
-               var writeBuffer = CommandHelper.PutCommand(DestinationHost, body, ssl, headers, cookies);
+               var writeBuffer = CommandHelper.PutCommand(DestinationUri.AbsoluteUri, body, headers, cookies);
                Socket.Send(writeBuffer);
                return Socket.ReceiveAll();
-           }, isSsl);
+           });
         }
 
         /// <summary>
@@ -332,26 +315,25 @@ namespace Proxy.Client
         /// <param name="body">Body to be sent with the PUT command.</param>
         /// <param name="headers">Headers to be sent with the PUT command.</param>
         /// <param name="cookies">Cookies to be sent with the PUT command.</param>
-        /// <param name="isSsl">Indicates if the request will be http or https.</param>
         /// <returns>Proxy Response with the time to first byte</returns>
-        protected internal override Task<(ProxyResponse response, float firstByteTime)> SendPutCommandAsync(string body, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies, bool isSsl)
+        protected internal override Task<(ProxyResponse response, float firstByteTime)> SendPutCommandAsync(string body, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies)
         {
             return HandleRequestCommandAsync(async (ssl) =>
             {
-                var writeBuffer = CommandHelper.PutCommand(DestinationHost, body, ssl, headers, cookies);
+                var writeBuffer = CommandHelper.PutCommand(DestinationUri.AbsoluteUri, body, headers, cookies);
                 await _sslStream.WriteAsync(writeBuffer, 0, writeBuffer.Length);
                 return await _sslStream.ReceiveAllAsync();
             },
             async (ssl) =>
             {
-                var writeBuffer = CommandHelper.PutCommand(DestinationHost, body, ssl, headers, cookies);
+                var writeBuffer = CommandHelper.PutCommand(DestinationUri.AbsoluteUri, body, headers, cookies);
                 await Socket.SendAsync(writeBuffer);
                 return await Socket.ReceiveAllAsync();
-            }, isSsl);
+            });
         }
 
         #region Private Methods
-        private void SendConnectCommand(bool isSsl)
+        private void SendConnectCommand()
         {
             var destinationAddressBytes = GetDestinationAddressBytes();
             var destinationPortBytes = GetDestinationPortBytes();
@@ -367,11 +349,11 @@ namespace Proxy.Client
             if (response[1] != Socks4Constants.SOCKS4_CMD_REPLY_REQUEST_GRANTED)
                 HandleProxyCommandError(response);
 
-            if (isSsl)
+            if (Scheme == ProxyScheme.HTTPS)
                 HandleSslHandshake();
         }
 
-        private async Task SendConnectCommandAsync(bool isSsl)
+        private async Task SendConnectCommandAsync()
         {
             var destinationAddressBytes = await GetDestinationAddressBytesAsync();
             var destinationPortBytes = GetDestinationPortBytes();
@@ -387,7 +369,7 @@ namespace Proxy.Client
             if (response[1] != Socks4Constants.SOCKS4_CMD_REPLY_REQUEST_GRANTED)
                 HandleProxyCommandError(response);
 
-            if (isSsl)
+            if (Scheme == ProxyScheme.HTTPS)
                 await HandleSslHandshakeAsync();
         }
 
@@ -453,44 +435,22 @@ namespace Proxy.Client
             return request;
         }
 
-        private (ProxyResponse response, float firstByteTime) HandleRequestCommand(Func<string, (string response, float firstByteTime)> sslFn, Func<string, (string response, float firstByteTime)> noSslFn, bool isSsl)
+        private (ProxyResponse response, float firstByteTime) HandleRequestCommand(Func<string, (string response, float firstByteTime)> sslFn, Func<string, (string response, float firstByteTime)> noSslFn)
         {
-            string ssl;
-            string response;
-            float firstByteTime;
+            var (response, firstByteTime) = Scheme == ProxyScheme.HTTPS
+                ? sslFn(DestinationUri.Scheme)
+                : noSslFn(DestinationUri.Scheme);
 
-            if (isSsl)
-            {
-                ssl = RequestConstants.SSL;
-                (response, firstByteTime) = sslFn(ssl);
-            }
-            else
-            {
-                ssl = RequestConstants.NO_SSL;
-                (response, firstByteTime) = noSslFn(ssl);
-            }
-
-            return (ResponseBuilderHelper.BuildProxyResponse(response, ssl, DestinationHost), firstByteTime);
+            return (ResponseBuilderHelper.BuildProxyResponse(response, DestinationUri), firstByteTime);
         }
 
-        private async Task<(ProxyResponse response, float firstByteTime)> HandleRequestCommandAsync(Func<string, Task<(string response, float firstByteTime)>> sslFn, Func<string, Task<(string response, float firstByteTime)>> noSslFn, bool isSsl)
+        private async Task<(ProxyResponse response, float firstByteTime)> HandleRequestCommandAsync(Func<string, Task<(string response, float firstByteTime)>> sslFn, Func<string, Task<(string response, float firstByteTime)>> noSslFn)
         {
-            string ssl;
-            string response;
-            float firstByteTime;
+            var (response, firstByteTime) = Scheme == ProxyScheme.HTTPS
+                ? await sslFn(DestinationUri.Scheme)
+                : await noSslFn(DestinationUri.Scheme);
 
-            if (isSsl)
-            {
-                ssl = RequestConstants.SSL;
-                (response, firstByteTime) = await sslFn(ssl);
-            }
-            else
-            {
-                ssl = RequestConstants.NO_SSL;
-                (response, firstByteTime) = await noSslFn(ssl);
-            }
-
-            return (ResponseBuilderHelper.BuildProxyResponse(response, ssl, DestinationHost), firstByteTime);
+            return (ResponseBuilderHelper.BuildProxyResponse(response, DestinationUri), firstByteTime);
         }
 
         #region Ssl Methods
@@ -510,8 +470,7 @@ namespace Proxy.Client
             await _sslStream.AuthenticateAsClientAsync(DestinationHost);
         }
 
-        private static bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain,
-                                                  SslPolicyErrors sslPolicyErrors) => sslPolicyErrors == SslPolicyErrors.None ? true : false;
+        private static bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) => sslPolicyErrors == SslPolicyErrors.None;
         #endregion
         #endregion
     }

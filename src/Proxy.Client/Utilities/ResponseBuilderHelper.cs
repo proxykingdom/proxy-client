@@ -18,10 +18,9 @@ namespace Proxy.Client.Utilities
         /// Parses the raw response into a proxy response object.
         /// </summary>
         /// <param name="response">Raw response returned by the destionation server.</param>
-        /// <param name="ssl">Http or Https.</param>
-        /// <param name="destinationHost">Host name or IP address of the destination server.</param>
+        /// <param name="destinationUri">Destination URI object.</param>
         /// <returns>Proxy Response</returns>
-        public static ProxyResponse BuildProxyResponse(string response, string ssl, string destinationHost)
+        public static ProxyResponse BuildProxyResponse(string response, Uri destinationUri)
         {
             var splitResponse = response.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.None);
 
@@ -32,7 +31,6 @@ namespace Proxy.Client.Utilities
             var statusNumber = Convert.ToInt32(Regex.Match(statusHtml, RequestConstants.STATUS_CODE_PATTERN).Value, CultureInfo.InvariantCulture);
             var status = (HttpStatusCode)statusNumber;
 
-            var destinationUri = new Uri($"{ssl}://{destinationHost}");
             var headerList = new List<ProxyHeader>();
             var cookieContainer = new CookieContainer();
 

@@ -31,6 +31,11 @@ namespace Proxy.Client
         public ProxyType ProxyType { get; protected set; }
 
         /// <summary>
+        /// The type of proxy.
+        /// </summary>
+        public ProxyScheme Scheme { get; private set; }
+
+        /// <summary>
         /// Host name or IP address of the destination server.
         /// </summary>
         public string DestinationHost { get; private set; }
@@ -41,79 +46,77 @@ namespace Proxy.Client
         public int DestinationPort { get; private set; }
 
         /// <summary>
+        /// URL Query.
+        /// </summary>
+        public string UrlQuery { get; private set; }
+
+        /// <summary>
         /// Underlying socket used to send and receive requests.
         /// </summary>
         protected internal Socket Socket { get; private set; }
 
         /// <summary>
+        /// Destination URI object.
+        /// </summary>
+        protected internal Uri DestinationUri { get; private set; }
+
+        /// <summary>
         /// Connects to the proxy client, sends the GET command to the destination server and returns the response.
         /// </summary>
-        /// <param name="destinationHost">Host name or IP address of the destination server.</param>
-        /// <param name="destinationPort">Port used to connect to the destination server.</param>
+        /// <param name="url">Destination URL.</param>
         /// <param name="headers">Headers to be sent with the GET command.</param>
         /// <param name="cookies">Cookies to be sent with the GET command.</param>
-        /// <param name="isSsl">Indicates if the request will be http or https.</param>
         /// <returns>Proxy Response</returns>
-        public abstract ProxyResponse Get(string destinationHost, int destinationPort, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false);
+        public abstract ProxyResponse Get(string url, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null);
 
         /// <summary>
         /// Asynchronously connects to the proxy client, sends the GET command to the destination server and returns the response.
         /// </summary>
-        /// <param name="destinationHost">Host name or IP address of the destination server.</param>
-        /// <param name="destinationPort">Port used to connect to the destination server.</param>
+        /// <param name="url">Destination URL.</param>
         /// <param name="headers">Headers to be sent with the GET command.</param>
         /// <param name="cookies">Cookies to be sent with the GET command.</param>
-        /// <param name="isSsl">Indicates if the request will be http or https.</param>
         /// <returns>Proxy Response</returns>
-        public abstract Task<ProxyResponse> GetAsync(string destinationHost, int destinationPort, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false);
+        public abstract Task<ProxyResponse> GetAsync(string url, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null);
 
         /// <summary>
         /// Connects to the proxy client, sends the POST command to the destination server and returns the response.
         /// </summary>
-        /// <param name="destinationHost">Host name or IP address of the destination server.</param>
-        /// <param name="destinationPort">Port used to connect to the destination server.</param>
+        /// <param name="url">Destination URL.</param>
         /// <param name="body">Body to be sent with the POST command.</param>
         /// <param name="headers">Headers to be sent with the POST command.</param>
         /// <param name="cookies">Cookies to be sent with the POST command.</param>
-        /// <param name="isSsl">Indicates if the request will be http or https.</param>
         /// <returns>Proxy Response</returns>
-        public abstract ProxyResponse Post(string destinationHost, int destinationPort, string body, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false);
+        public abstract ProxyResponse Post(string url, string body, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null);
 
         /// <summary>
         /// Asynchronously connects to the proxy client, sends the POST command to the destination server and returns the response.
         /// </summary>
-        /// <param name="destinationHost">Host name or IP address of the destination server.</param>
-        /// <param name="destinationPort">Port used to connect to the destination server.</param>
+        /// <param name="url">Destination URL.</param>
         /// <param name="body">Body to be sent with the POST request.</param>
         /// <param name="headers">Headers to be sent with the POST command.</param>
         /// <param name="cookies">Cookies to be sent with the POST command.</param>
-        /// <param name="isSsl">Indicates if the request will be http or https.</param>
         /// <returns>Proxy Response</returns>
-        public abstract Task<ProxyResponse> PostAsync(string destinationHost, int destinationPort, string body, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false);
+        public abstract Task<ProxyResponse> PostAsync(string url, string body, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null);
 
         /// <summary>
         /// Connects to the proxy client, sends the PUT command to the destination server and returns the response.
         /// </summary>
-        /// <param name="destinationHost">Host name or IP address of the destination server.</param>
-        /// <param name="destinationPort">Port used to connect to the destination server.</param>
+        /// <param name="url">Destination URL.</param>
         /// <param name="body">Body to be sent with the PUT command.</param>
         /// <param name="headers">Headers to be sent with the PUT command.</param>
         /// <param name="cookies">Cookies to be sent with the PUT command.</param>
-        /// <param name="isSsl">Indicates if the request will be http or https.</param>
         /// <returns>Proxy Response</returns>
-        public abstract ProxyResponse Put(string destinationHost, int destinationPort, string body, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false);
+        public abstract ProxyResponse Put(string url, string body, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null);
 
         /// <summary>
         /// Asynchronously connects to the proxy client, sends the PUT command to the destination server and returns the response.
         /// </summary>
-        /// <param name="destinationHost">Host name or IP address of the destination server.</param>
-        /// <param name="destinationPort">Port used to connect to the destination server.</param>
+        /// <param name="url">Destination URL.</param>
         /// <param name="body">Body to be sent with the PUT request.</param>
         /// <param name="headers">Headers to be sent with the PUT command.</param>
         /// <param name="cookies">Cookies to be sent with the PUT command.</param>
-        /// <param name="isSsl">Indicates if the request will be http or https.</param>
         /// <returns>Proxy Response</returns>
-        public abstract Task<ProxyResponse> PutAsync(string destinationHost, int destinationPort, string body, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false);
+        public abstract Task<ProxyResponse> PutAsync(string url, string body, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null);
 
         /// <summary>
         /// Disposes the socket dependencies.
@@ -128,18 +131,16 @@ namespace Proxy.Client
         /// </summary>
         /// <param name="headers">Headers to be sent with the GET command.</param>
         /// <param name="cookies">Cookies to be sent with the GET command.</param>
-        /// <param name="isSsl">Indicates if the request will be http or https.</param>
         /// <returns>Proxy Response with the time to first byte</returns>
-        protected internal abstract (ProxyResponse response, float firstByteTime) SendGetCommand(IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies, bool isSsl);
+        protected internal abstract (ProxyResponse response, float firstByteTime) SendGetCommand(IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies);
 
         /// <summary>
         /// Asynchronously sends the GET command to the destination server, and creates the proxy response.
         /// </summary>
         /// <param name="headers">Headers to be sent with the GET command.</param>
         /// <param name="cookies">Cookies to be sent with the GET command.</param>
-        /// <param name="isSsl">Indicates if the request will be http or https.</param>
         /// <returns>Proxy Response with the time to first byte</returns>
-        protected internal abstract Task<(ProxyResponse response, float firstByteTime)> SendGetCommandAsync(IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies, bool isSsl);
+        protected internal abstract Task<(ProxyResponse response, float firstByteTime)> SendGetCommandAsync(IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies);
 
         /// <summary>
         /// Sends the POST command to the destination server, and creates the proxy response.
@@ -147,9 +148,8 @@ namespace Proxy.Client
         /// <param name="body">Body to be sent with the POST command.</param>
         /// <param name="headers">Headers to be sent with the POST command.</param>
         /// <param name="cookies">Cookies to be sent with the POST command.</param>
-        /// <param name="isSsl">Indicates if the request will be http or https.</param>
         /// <returns>Proxy Response with the time to first byte</returns>
-        protected internal abstract (ProxyResponse response, float firstByteTime) SendPostCommand(string body, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies, bool isSsl);
+        protected internal abstract (ProxyResponse response, float firstByteTime) SendPostCommand(string body, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies);
 
         /// <summary>
         /// Asynchronously sends the POST command to the destination server, and creates the proxy response.
@@ -157,9 +157,8 @@ namespace Proxy.Client
         /// <param name="body">Body to be sent with the POST command.</param>
         /// <param name="headers">Headers to be sent with the POST command.</param>
         /// <param name="cookies">Cookies to be sent with the POST command.</param>
-        /// <param name="isSsl">Indicates if the request will be http or https.</param>
         /// <returns>Proxy Response with the time to first byte</returns>
-        protected internal abstract Task<(ProxyResponse response, float firstByteTime)> SendPostCommandAsync(string body, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies, bool isSsl);
+        protected internal abstract Task<(ProxyResponse response, float firstByteTime)> SendPostCommandAsync(string body, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies);
 
         /// <summary>
         /// Sends the PUT command to the destination server, and creates the proxy response.
@@ -167,9 +166,8 @@ namespace Proxy.Client
         /// <param name="body">Body to be sent with the PUT command.</param>
         /// <param name="headers">Headers to be sent with the PUT command.</param>
         /// <param name="cookies">Cookies to be sent with the PUT command.</param>
-        /// <param name="isSsl">Indicates if the request will be http or https.</param>
         /// <returns>Proxy Response with the time to first byte</returns>
-        protected internal abstract (ProxyResponse response, float firstByteTime) SendPutCommand(string body, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies, bool isSsl);
+        protected internal abstract (ProxyResponse response, float firstByteTime) SendPutCommand(string body, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies);
 
         /// <summary>
         /// Asynchronously sends the PUT command to the destination server, and creates the proxy response.
@@ -177,43 +175,29 @@ namespace Proxy.Client
         /// <param name="body">Body to be sent with the PUT command.</param>
         /// <param name="headers">Headers to be sent with the PUT command.</param>
         /// <param name="cookies">Cookies to be sent with the PUT command.</param>
-        /// <param name="isSsl">Indicates if the request will be http or https.</param>
         /// <returns>Proxy Response with the time to first byte</returns>
-        protected internal abstract Task<(ProxyResponse response, float firstByteTime)> SendPutCommandAsync(string body, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies, bool isSsl);
+        protected internal abstract Task<(ProxyResponse response, float firstByteTime)> SendPutCommandAsync(string body, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies);
 
         /// <summary>
         /// Handles the given request based on if the proxy client is connected or not.
         /// </summary>
         /// <param name="connectNegotiationFn">Performs connection negotations with the destination server.</param>
         /// <param name="requestFn">Sends the request on the underlying socket.</param>
-        /// <param name="destinationHost">Host name or IP address of the destination server.</param>
-        /// <param name="destinationPort">Port to be used to connect to the destination server.</param>
-        /// <param name="isSsl">Indicates if the request will be http or https.</param>
+        /// <param name="url">Destination Url.</param>
         /// <returns>Proxy Response</returns>
         protected internal ProxyResponse HandleRequest(Action connectNegotiationFn,
-            Func<(ProxyResponse response, float firstByteTime)> requestFn, string destinationHost, int destinationPort, bool isSsl)
+            Func<(ProxyResponse response, float firstByteTime)> requestFn, string url)
         {
             try
             {
-                if (String.IsNullOrEmpty(destinationHost))
-                    throw new ArgumentNullException(nameof(destinationHost));
-
-                if (destinationPort <= 0 || destinationPort > 65535)
-                    throw new ArgumentOutOfRangeException(nameof(destinationPort),
-                        "Destination port must be greater than zero and less than 65535");
-
+                var cachedDestinationHost = ParseAndReturnCachedUrl(url);
                 float connectTime = 0;
-
-                var previousDestinationHost = DestinationHost;
-
-                DestinationHost = destinationHost;
-                DestinationPort = destinationPort;
 
                 if (Socket == null)
                 {
                     connectTime = CreateSocket();
                 }
-                else if (IsDispose(previousDestinationHost, isSsl))
+                else if (IsDispose(cachedDestinationHost))
                 {
                     Dispose();
                     connectTime = CreateSocket();
@@ -250,34 +234,21 @@ namespace Proxy.Client
         /// </summary>
         /// <param name="connectNegotiationFn">Performs connection negotations with the destination server.</param>
         /// <param name="requestedFn">Sends the request on the underlying socket.</param>
-        /// <param name="destinationHost">Host name or IP address of the destination server.</param>
-        /// <param name="destinationPort">Port to be used to connect to the destination server.</param>
-        /// <param name="isSsl">Indicates if the request will be http or https.</param>
+        /// <param name="url">Destination Url.</param>
         /// <returns>Proxy Response</returns>
         protected internal async Task<ProxyResponse> HandleRequestAsync(Func<Task> connectNegotiationFn, 
-            Func<Task<(ProxyResponse response, float firstByteTime)>> requestedFn, string destinationHost, int destinationPort, bool isSsl)
+            Func<Task<(ProxyResponse response, float firstByteTime)>> requestedFn, string url)
         {
             try
             {
-                if (String.IsNullOrEmpty(destinationHost))
-                    throw new ArgumentNullException(nameof(destinationHost));
-
-                if (destinationPort <= 0 || destinationPort > 65535)
-                    throw new ArgumentOutOfRangeException(nameof(destinationPort),
-                        "Destination port must be greater than zero and less than 65535");
-
+                var cachedDestinationHost = ParseAndReturnCachedUrl(url);
                 float connectTime = 0;
-
-                var previousDestinationHost = DestinationHost;
-
-                DestinationHost = destinationHost;
-                DestinationPort = destinationPort;
 
                 if (Socket == null)
                 {
                     connectTime = await CreateSocketAsync();
                 }
-                else if (IsDispose(previousDestinationHost, isSsl))
+                else if (IsDispose(cachedDestinationHost))
                 {
                     Dispose();
                     connectTime = await CreateSocketAsync();
@@ -309,7 +280,29 @@ namespace Proxy.Client
             }
         }
 
-        private bool IsDispose(string previousDestinationHost, bool isSsl) 
-            => !Socket.Connected || ((ProxyType != ProxyType.HTTP || isSsl) && !previousDestinationHost.Equals(DestinationHost));
+        private string ParseAndReturnCachedUrl(string url)
+        {
+            if (String.IsNullOrEmpty(url))
+                throw new ArgumentNullException(nameof(url));
+
+            bool result = Uri.TryCreate(url, UriKind.Absolute, out Uri uriResult) && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+
+            if (!result)
+                throw new ProxyException($"Invalid URL provided: {url}");
+
+            var cachedDestinationHost = DestinationHost;
+
+            DestinationUri = uriResult;
+
+            Scheme = (ProxyScheme)Enum.Parse(typeof(ProxyScheme), uriResult.Scheme, true);
+            UrlQuery = uriResult.PathAndQuery;
+            DestinationHost = uriResult.Host;
+            DestinationPort = uriResult.Port;
+
+            return cachedDestinationHost;
+        }
+
+        private bool IsDispose(string previousDestinationHost) 
+            => !Socket.Connected || ((ProxyType != ProxyType.HTTP || Scheme == ProxyScheme.HTTPS) && !previousDestinationHost.Equals(DestinationHost));   
     }
 }

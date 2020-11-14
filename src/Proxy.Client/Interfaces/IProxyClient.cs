@@ -28,6 +28,11 @@ namespace Proxy.Client
         ProxyType ProxyType { get; }
 
         /// <summary>
+        /// Proxy Protocol.
+        /// </summary>
+        ProxyScheme Scheme { get; }
+
+        /// <summary>
         /// Host name or IP address of the destination server.
         /// </summary>
         string DestinationHost { get; }
@@ -38,73 +43,66 @@ namespace Proxy.Client
         int DestinationPort { get; }
 
         /// <summary>
+        /// URL Query.
+        /// </summary>
+        string UrlQuery { get; }
+
+        /// <summary>
         /// Connects to the proxy client, sends the GET command to the destination server and returns the response.
         /// </summary>
-        /// <param name="destinationHost">Host name or IP address of the destination server.</param>
-        /// <param name="destinationPort">Port used to connect to the destination server.</param>
+        /// <param name="url">Destination URL.</param>
         /// <param name="headers">Headers to be sent with the GET command.</param>
         /// <param name="cookies">Cookies to be sent with the GET command.</param>
-        /// <param name="isSsl">Indicates if the request will be http or https.</param>
         /// <returns>Proxy Response</returns>
-        ProxyResponse Get(string destinationHost, int destinationPort, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false);
+        ProxyResponse Get(string url, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null);
 
         /// <summary>
         /// Asynchronously connects to the proxy client, sends the GET command to the destination server and returns the response.
         /// </summary>
-        /// <param name="destinationHost">Host name or IP address of the destination server.</param>
-        /// <param name="destinationPort">Port used to connect to the destination server.</param>
+        /// <param name="url">Destination URL.</param>
         /// <param name="headers">Headers to be sent with the GET command.</param>
         /// <param name="cookies">Cookies to be sent with the GET command.</param>
-        /// <param name="isSsl">Indicates if the request will be http or https.</param>
         /// <returns>Proxy Response</returns>
-        Task<ProxyResponse> GetAsync(string destinationHost, int destinationPort, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false);
+        Task<ProxyResponse> GetAsync(string url, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null);
 
         /// <summary>
         /// Connects to the proxy client, sends the POST command to the destination server and returns the response.
         /// </summary>
-        /// <param name="destinationHost">Host name or IP address of the destination server.</param>
-        /// <param name="destinationPort">Port used to connect to the destination server.</param>
+        /// <param name="url">Destination URL.</param>
         /// <param name="body">Body to be sent with the POST command.</param>
         /// <param name="headers">Headers to be sent with the POST command.</param>
         /// <param name="cookies">Cookies to be sent with the POST command.</param>
-        /// <param name="isSsl">Indicates if the request will be http or https.</param>
         /// <returns>Proxy Response</returns>
-        ProxyResponse Post(string destinationHost, int destinationPort, string body, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false);
+        ProxyResponse Post(string url, string body, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null);
 
         /// <summary>
         /// Asynchronously connects to the proxy client, sends the POST command to the destination server and returns the response.
         /// </summary>
-        /// <param name="destinationHost">Host name or IP address of the destination server.</param>
-        /// <param name="destinationPort">Port used to connect to the destination server.</param>
+        /// <param name="url">Destination URL.</param>
         /// <param name="body">Body to be sent with the POST request.</param>
         /// <param name="headers">Headers to be sent with the POST command.</param>
         /// <param name="cookies">Cookies to be sent with the POST command.</param>
-        /// <param name="isSsl">Indicates if the request will be http or https.</param>
         /// <returns>Proxy Response</returns>
-        Task<ProxyResponse> PostAsync(string destinationHost, int destinationPort, string body, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false);
+        Task<ProxyResponse> PostAsync(string url, string body, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null);
 
         /// <summary>
         /// Connects to the proxy client, sends the PUT command to the destination server and returns the response.
         /// </summary>
-        /// <param name="destinationHost">Host name or IP address of the destination server.</param>
-        /// <param name="destinationPort">Port used to connect to the destination server.</param>
+        /// <param name="url">Destination URL.</param>
         /// <param name="body">Body to be sent with the PUT command.</param>
         /// <param name="headers">Headers to be sent with the PUT command.</param>
         /// <param name="cookies">Cookies to be sent with the PUT command.</param>
-        /// <param name="isSsl">Indicates if the request will be http or https.</param>
         /// <returns>Proxy Response</returns>
-        ProxyResponse Put(string destinationHost, int destinationPort, string body, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false);
+        ProxyResponse Put(string url, string body, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null);
 
         /// <summary>
         /// Asynchronously connects to the proxy client, sends the PUT command to the destination server and returns the response.
         /// </summary>
-        /// <param name="destinationHost">Host name or IP address of the destination server.</param>
-        /// <param name="destinationPort">Port used to connect to the destination server.</param>
+        /// <param name="url">Destination URL.</param>
         /// <param name="body">Body to be sent with the PUT request.</param>
         /// <param name="headers">Headers to be sent with the PUT command.</param>
         /// <param name="cookies">Cookies to be sent with the PUT command.</param>
-        /// <param name="isSsl">Indicates if the request will be http or https.</param>
         /// <returns>Proxy Response</returns>
-        Task<ProxyResponse> PutAsync(string destinationHost, int destinationPort, string body, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null, bool isSsl = false);
+        Task<ProxyResponse> PutAsync(string url, string body, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null);
     }
 }

@@ -11,7 +11,5 @@
         internal const string CONTENT_LENGTH_PATTERN = "(?<=Content-Length: )[0-9]*";
         internal const string SET_COOKIE_HEADER = "set-cookie";
         internal const string STATUS_CODE_PATTERN = "\\d\\d\\d";
-        internal const string NO_SSL = "http";
-        internal const string SSL = "https";
     }
 }

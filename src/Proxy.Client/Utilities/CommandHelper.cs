@@ -15,41 +15,39 @@ namespace Proxy.Client.Utilities
         /// <summary>
         /// Creates the raw GET bytes request.
         /// </summary>
-        /// <param name="destHost">Host name or IP address of the destination server.</param>
-        /// <param name="ssl">Http or Https.</param>
+        /// <param name="absoluteUri">Full destination request URL</param>
         /// <param name="headers">Headers to be sent with the GET command.</param>
         /// <param name="cookies">Cookies to be send with the GET command.</param>
         /// <returns>Raw GET bytes request</returns>
-        public static byte[] GetCommand(string destHost, string ssl, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies)
+        public static byte[] GetCommand(string absoluteUri, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies)
         {
             return HandleCommand((headerString, cookieString) =>
             {
                 var cmd = new StringBuilder();
 
-                cmd.AppendLine($"GET {ssl}://{destHost}/ HTTP/1.1");
+                cmd.AppendLine($"GET {absoluteUri} HTTP/1.1");
                 cmd.Append(headerString);
                 cmd.AppendLine(cookieString);
 
-                return $"GET {ssl}://{destHost}/ HTTP/1.1\r\nConnection: keep-alive\r\n\r\n";
+                return cmd.ToString();
             }, headers, cookies);
         }
 
         /// <summary>
         /// Creates the raw POST bytes request.
         /// </summary>
-        /// <param name="destHost">Host name or IP address of the destination server.</param>
+        /// <param name="absoluteUri">Full destination request URL</param>
         /// <param name="body">Request Body to be sent with the POST command.</param>
-        /// <param name="ssl">Http or Https.</param>
         /// <param name="headers">Headers to be sent with the POST command.</param>
         /// <param name="cookies">Cookies to be sent with the POST command.</param>
         /// <returns>Raw POST bytes request</returns>
-        public static byte[] PostCommand(string destHost, string body, string ssl, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies)
+        public static byte[] PostCommand(string absoluteUri, string body, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies)
         {
             return HandleCommand((headerString, cookieString) =>
             {
                 var cmd = new StringBuilder();
 
-                cmd.AppendLine($"POST {ssl}://{destHost}/ HTTP/1.1");
+                cmd.AppendLine($"POST {absoluteUri} HTTP/1.1");
                 cmd.AppendLine($"Content-Length: {body.Length}");
                 cmd.Append(headerString);
                 cmd.AppendLine(cookieString);
@@ -62,19 +60,18 @@ namespace Proxy.Client.Utilities
         /// <summary>
         /// Creates the raw PUT bytes request.
         /// </summary>
-        /// <param name="destHost">Host name or IP address of the destination server.</param>
+        /// <param name="absoluteUri">Full destination request URL</param>
         /// <param name="body">Request Body to be sent with the PUT command.</param>
-        /// <param name="ssl">Http or Https.</param>
         /// <param name="headers">Headers to be sent with the PUT command.</param>
         /// <param name="cookies">Cookies to be sent with the PUT command.</param>
         /// <returns>Raw PUT bytes request</returns>
-        public static byte[] PutCommand(string destHost, string body, string ssl, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies)
+        public static byte[] PutCommand(string absoluteUri, string body, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies)
         {
             return HandleCommand((headerString, cookieString) =>
             {
                 var cmd = new StringBuilder();
 
-                cmd.AppendLine($"PUT {ssl}://{destHost}/ HTTP/1.1");
+                cmd.AppendLine($"PUT {absoluteUri} HTTP/1.1");
                 cmd.AppendLine($"Content-Length: {body.Length}");
                 cmd.Append(headerString);
                 cmd.AppendLine(cookieString);
