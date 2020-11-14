@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 
 namespace Proxy.Client
@@ -35,6 +36,11 @@ namespace Proxy.Client
         /// Port used to connect to the destination server.
         /// </summary>
         int DestinationPort { get; }
+
+        /// <summary>
+        /// Underlying socket used to send and receive requests.
+        /// </summary>
+        Socket Socket { get; }
 
         /// <summary>
         /// Connects to the proxy client, sends the GET command to the destination server and returns the response.

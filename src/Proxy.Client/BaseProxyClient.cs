@@ -41,9 +41,9 @@ namespace Proxy.Client
         public int DestinationPort { get; private set; }
 
         /// <summary>
-        /// Socket used to send and receive requests.
+        /// Underlying socket used to send and receive requests.
         /// </summary>
-        protected internal Socket Socket { get; private set; }
+        public Socket Socket { get; private set; }
 
         /// <summary>
         /// Connects to the proxy client, sends the GET command to the destination server and returns the response.
