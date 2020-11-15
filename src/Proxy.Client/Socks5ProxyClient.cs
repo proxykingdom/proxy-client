@@ -68,11 +68,6 @@ namespace Proxy.Client
         private Socks5Authentication _proxyAuthMethod;
 
         /// <summary>
-        /// Stream used for SSL connections.
-        /// </summary>
-        private SslStream _sslStream;
-
-        /// <summary>
         /// Creates a Socks5 proxy client object.
         /// </summary>
         /// <param name="proxyHost">Host name or IP address of the proxy server.</param>
@@ -245,152 +240,9 @@ namespace Proxy.Client
         }
 
         /// <summary>
-        /// Disposes the socket dependencies.
+        /// Connects to the Destination Server.
         /// </summary>
-        public override void Dispose()
-        {
-            base.Dispose();
-            _sslStream?.Dispose();
-        }
-
-        /// <summary>
-        /// Sends the GET command to the destination server, and creates the proxy response.
-        /// </summary>
-        /// <param name="headers">Headers to be sent with the GET command.</param>
-        /// <param name="cookies">Cookies to be sent with the GET command.</param>
-        /// <returns>Proxy Response with the time to first byte</returns>
-        protected internal override (ProxyResponse response, float firstByteTime) SendGetCommand(IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies)
-        {
-            return HandleRequestCommand((ssl) =>
-            {
-                var writeBuffer = CommandHelper.GetCommand(DestinationUri.AbsoluteUri, headers, cookies);
-                _sslStream.Write(writeBuffer);
-                return _sslStream.ReceiveAll();
-            },
-            (ssl) =>
-            {
-                var writeBuffer = CommandHelper.GetCommand(DestinationUri.AbsoluteUri, headers, cookies);
-                Socket.Send(writeBuffer);
-                return Socket.ReceiveAll();
-            });
-        }
-
-        /// <summary>
-        /// Asynchronously sends the GET command to the destination server, and creates the proxy response.
-        /// </summary>
-        /// <param name="headers">Headers to be sent with the GET command.</param>
-        /// <param name="cookies">Cookies to be sent with the GET command.</param>
-        /// <returns>Proxy Response with the time to first byte</returns>
-        protected internal override Task<(ProxyResponse response, float firstByteTime)> SendGetCommandAsync(IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies)
-        {
-            return HandleRequestCommandAsync(async (ssl) =>
-            {
-                var writeBuffer = CommandHelper.GetCommand(DestinationUri.AbsoluteUri, headers, cookies);
-                await _sslStream.WriteAsync(writeBuffer, 0, writeBuffer.Length);
-                return await _sslStream.ReceiveAllAsync();
-            },
-            async (ssl) =>
-            {
-                var writeBuffer = CommandHelper.GetCommand(DestinationUri.AbsoluteUri, headers, cookies);
-                await Socket.SendAsync(writeBuffer);
-                return await Socket.ReceiveAllAsync();
-            });
-        }
-
-        /// <summary>
-        /// Sends the POST command to the destination server, and creates the proxy response.
-        /// </summary>
-        /// <param name="body">Body to be sent with the POST command.</param>
-        /// <param name="headers">Headers to be sent with the POST command.</param>
-        /// <param name="cookies">Cookies to be sent with the POST command.</param>
-        /// <returns>Proxy Response with the time to first byte</returns>
-        protected internal override (ProxyResponse response, float firstByteTime) SendPostCommand(string body, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies)
-        {
-            return HandleRequestCommand((ssl) =>
-            {
-                var writeBuffer = CommandHelper.PostCommand(DestinationUri.AbsoluteUri, body, headers, cookies);
-                _sslStream.Write(writeBuffer);
-                return _sslStream.ReceiveAll();
-            },
-            (ssl) =>
-            {
-                var writeBuffer = CommandHelper.PostCommand(DestinationUri.AbsoluteUri, body, headers, cookies);
-                Socket.Send(writeBuffer);
-                return Socket.ReceiveAll();
-            });
-        }
-
-        /// <summary>
-        /// Asynchronously sends the POST command to the destination server, and creates the proxy response.
-        /// </summary>
-        /// <param name="body">Body to be sent with the POST command.</param>
-        /// <param name="headers">Headers to be sent with the POST command.</param>
-        /// <param name="cookies">Cookies to be sent with the POST command.</param>
-        /// <returns>Proxy Response with the time to first byte</returns>
-        protected internal override Task<(ProxyResponse response, float firstByteTime)> SendPostCommandAsync(string body, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies)
-        {
-            return HandleRequestCommandAsync(async (ssl) =>
-            {
-                var writeBuffer = CommandHelper.PostCommand(DestinationUri.AbsoluteUri, body, headers, cookies);
-                await _sslStream.WriteAsync(writeBuffer, 0, writeBuffer.Length);
-                return await _sslStream.ReceiveAllAsync();
-            },
-            async (ssl) =>
-            {
-                var writeBuffer = CommandHelper.PostCommand(DestinationUri.AbsoluteUri, body, headers, cookies);
-                await Socket.SendAsync(writeBuffer);
-                return await Socket.ReceiveAllAsync();
-            });
-        }
-
-        /// <summary>
-        /// Sends the PUT command to the destination server, and creates the proxy response.
-        /// </summary>
-        /// <param name="body">Body to be sent with the PUT command.</param>
-        /// <param name="headers">Headers to be sent with the PUT command.</param>
-        /// <param name="cookies">Cookies to be sent with the PUT command.</param>
-        /// <returns>Proxy Response with the time to first byte</returns>
-        protected internal override (ProxyResponse response, float firstByteTime) SendPutCommand(string body, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies)
-        {
-            return HandleRequestCommand((ssl) =>
-            {
-                var writeBuffer = CommandHelper.PutCommand(DestinationUri.AbsoluteUri, body, headers, cookies);
-                _sslStream.Write(writeBuffer);
-                return _sslStream.ReceiveAll();
-            },
-            (ssl) =>
-            {
-                var writeBuffer = CommandHelper.PutCommand(DestinationUri.AbsoluteUri, body, headers, cookies);
-                Socket.Send(writeBuffer);
-                return Socket.ReceiveAll();
-            });
-        }
-
-        /// <summary>
-        /// Asynchronously sends the PUT command to the destination server, and creates the proxy response.
-        /// </summary>
-        /// <param name="body">Body to be sent with the PUT command.</param>
-        /// <param name="headers">Headers to be sent with the PUT command.</param>
-        /// <param name="cookies">Cookies to be sent with the PUT command.</param>
-        /// <returns>Proxy Response with the time to first byte</returns>
-        protected internal override Task<(ProxyResponse response, float firstByteTime)> SendPutCommandAsync(string body, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies)
-        {
-            return HandleRequestCommandAsync(async (ssl) =>
-            {
-                var writeBuffer = CommandHelper.PutCommand(DestinationUri.AbsoluteUri, body, headers, cookies);
-                await _sslStream.WriteAsync(writeBuffer, 0, writeBuffer.Length);
-                return await _sslStream.ReceiveAllAsync();
-            },
-           async (ssl) =>
-           {
-               var writeBuffer = CommandHelper.PutCommand(DestinationUri.AbsoluteUri, body, headers, cookies);
-               await Socket.SendAsync(writeBuffer);
-               return await Socket.ReceiveAllAsync();
-           });
-        }
-
-        #region Private Methods
-        private void SendConnectCommand()
+        protected internal override void SendConnectCommand()
         {
             var addressType = GetDestinationAddressType();
             var destinationAddressBytes = GetDestinationAddressBytes(addressType);
@@ -412,7 +264,10 @@ namespace Proxy.Client
                 HandleSslHandshake();
         }
 
-        private async Task SendConnectCommandAsync()
+        /// <summary>
+        /// Asynchronously connects to the Destination Server.
+        /// </summary>
+        protected internal override async Task SendConnectCommandAsync()
         {
             var addressType = GetDestinationAddressType();
             var destinationAddressBytes = await GetDestinationAddressBytesAsync(addressType);
@@ -434,6 +289,7 @@ namespace Proxy.Client
                 await HandleSslHandshakeAsync();
         }
 
+        #region Private Methods
         private void HandleProxyCommandError(byte[] response)
         {
             var replyCode = response[1];
@@ -453,24 +309,6 @@ namespace Proxy.Client
             var exceptionMsg = String.Format(CultureInfo.InvariantCulture, $"Proxy error: {proxyErrorText} for destination host {DestinationHost} port number {DestinationPort}.  Server response (hex): {responseText}.");
 
             throw new ProxyException(exceptionMsg);
-        }
-
-        private (ProxyResponse response, float firstByteTime) HandleRequestCommand(Func<string, (string response, float firstByteTime)> sslFn, Func<string, (string response, float firstByteTime)> noSslFn)
-        {
-            var (response, firstByteTime) = Scheme == ProxyScheme.HTTPS
-                ? sslFn(DestinationUri.Scheme)
-                : noSslFn(DestinationUri.Scheme);
-
-            return (ResponseBuilderHelper.BuildProxyResponse(response, DestinationUri), firstByteTime);
-        }
-
-        private async Task<(ProxyResponse response, float firstByteTime)> HandleRequestCommandAsync(Func<string, Task<(string response, float firstByteTime)>> sslFn, Func<string, Task<(string response, float firstByteTime)>> noSslFn)
-        {
-            var (response, firstByteTime) = Scheme == ProxyScheme.HTTPS
-                ? await sslFn(DestinationUri.Scheme)
-                : await noSslFn(DestinationUri.Scheme);
-
-            return (ResponseBuilderHelper.BuildProxyResponse(response, DestinationUri), firstByteTime);
         }
 
         private void DetermineClientAuthMethod() =>
@@ -659,27 +497,6 @@ namespace Proxy.Client
 
             return request;
         }
-        #endregion
-
-        #region Ssl Methods
-        private void HandleSslHandshake()
-        {
-            var networkStream = new NetworkStream(Socket);
-            _sslStream = new SslStream(networkStream, false, new RemoteCertificateValidationCallback(ValidateServerCertificate), null);
-
-            _sslStream.AuthenticateAsClient(DestinationHost);
-        }
-
-        private async Task HandleSslHandshakeAsync()
-        {
-            var networkStream = new NetworkStream(Socket);
-            _sslStream = new SslStream(networkStream, false, new RemoteCertificateValidationCallback(ValidateServerCertificate), null);
-
-            await _sslStream.AuthenticateAsClientAsync(DestinationHost);
-        }
-
-        private static bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) => sslPolicyErrors == SslPolicyErrors.None;
-
         #endregion
         #endregion
     }

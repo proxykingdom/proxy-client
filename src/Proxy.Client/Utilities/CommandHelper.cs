@@ -33,6 +33,19 @@ namespace Proxy.Client.Utilities
             }, headers, cookies);
         }
 
+        public static byte[] ConnectCommand(string host)
+        {
+            var cmd = $"CONNECT {host}:443 HTTP/1.1\r\nHost: {host}:443\r\n\r\n";
+            return Encoding.ASCII.GetBytes(cmd);
+        }
+
+        public static byte[] ConnectProxyAuthCommand(string host, string proxyUsername, string proxyPassword)
+        {
+            var base64Credentials = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{proxyUsername}:{proxyPassword}"));
+            var cmd = $"CONNECT {host}:443 HTTP/1.1\r\nHost: {host}:443\r\nProxy-Authorization: Basic {base64Credentials}\r\n\r\n";
+            return Encoding.ASCII.GetBytes(cmd);
+        }
+
         /// <summary>
         /// Creates the raw POST bytes request.
         /// </summary>

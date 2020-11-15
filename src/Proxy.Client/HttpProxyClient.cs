@@ -1,11 +1,17 @@
 ﻿using Proxy.Client.Contracts;
 using Proxy.Client.Contracts.Constants;
+using Proxy.Client.Exceptions;
 using Proxy.Client.Utilities;
 using Proxy.Client.Utilities.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Net;
+using System.Net.Security;
 using System.Net.Sockets;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Proxy.Client
@@ -15,6 +21,16 @@ namespace Proxy.Client
     /// </summary>
     public sealed class HttpProxyClient : BaseProxyClient
     {
+        /// <summary>
+        /// Proxy Username used to connect to the Proxy Server.
+        /// </summary>
+        public string ProxyUsername { get; }
+
+        /// <summary>
+        /// Proxy Password used to connect to the Proxy Server.
+        /// </summary>
+        public string ProxyPassword { get; }
+
         /// <summary>
         /// Creates a Http proxy client object.
         /// </summary>
@@ -35,6 +51,35 @@ namespace Proxy.Client
         }
 
         /// <summary>
+        /// Creates a Http proxy client object.
+        /// </summary>
+        /// <param name="proxyHost">Host name or IP address of the proxy server.</param>
+        /// <param name="proxyPort">Port used to connect to proxy server.</param>
+        /// <param name="proxyUsername">Proxy Username used to connect to the Proxy Server.</param>
+        /// <param name="proxyPassword">Proxy Password used to connect to the Proxy Server.</param>
+        public HttpProxyClient(string proxyHost, int proxyPort, string proxyUsername, string proxyPassword)
+        {
+            if (String.IsNullOrEmpty(proxyHost))
+                throw new ArgumentNullException(nameof(proxyHost));
+
+            if (proxyPort <= 0 || proxyPort > 65535)
+                throw new ArgumentOutOfRangeException(nameof(proxyPort),
+                    "Proxy port must be greater than zero and less than 65535");
+
+            if (String.IsNullOrEmpty(proxyUsername))
+                throw new ArgumentNullException("proxyUsername");
+
+            if (proxyPassword == null)
+                throw new ArgumentNullException("proxyPassword");
+
+            ProxyHost = proxyHost;
+            ProxyPort = proxyPort;
+            ProxyUsername = proxyUsername;
+            ProxyPassword = proxyPassword;
+            ProxyType = ProxyType.HTTP;
+        }
+
+        /// <summary>
         /// Connects to the proxy client, sends the GET command to the destination server and returns the response.
         /// </summary>
         /// <param name="url">Destination URL.</param>
@@ -43,7 +88,10 @@ namespace Proxy.Client
         /// <returns>Proxy Response</returns>
         public override ProxyResponse Get(string url, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null)
         {
-            return HandleRequest(() => { },
+            return HandleRequest(() => 
+            {
+                SendConnectCommand();
+            },
             () =>
             {
                 return SendGetCommand(headers, cookies);
@@ -141,103 +189,67 @@ namespace Proxy.Client
         }
 
         /// <summary>
-        /// Sends the GET command to the destination server, and creates the proxy response.
+        /// Connects to the Destination Host.
         /// </summary>
-        /// <param name="headers">Headers to be sent with the GET command.</param>
-        /// <param name="cookies">Cookies to be sent with the GET command.</param>
-        /// <returns>Proxy Response with the time to first byte</returns>
-        protected internal override (ProxyResponse response, float firstByteTime) SendGetCommand(IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies)
+        protected internal override void SendConnectCommand()
         {
-            var writeBuffer = CommandHelper.GetCommand(DestinationUri.AbsoluteUri, headers, cookies);
+            if (Scheme == ProxyScheme.HTTP)
+                return;
 
-            Socket.SendAsync(writeBuffer);
-            var (response, firstByteTime) = Socket.ReceiveAll();
+            var writeBuffer = String.IsNullOrEmpty(ProxyUsername)
+                ? CommandHelper.ConnectCommand(DestinationUri.Host)
+                : CommandHelper.ConnectProxyAuthCommand(DestinationUri.Host, ProxyUsername, ProxyPassword);
 
-            return (ResponseBuilderHelper.BuildProxyResponse(response, DestinationUri), firstByteTime);
+            Socket.Send(writeBuffer);
+
+            var readBuffer = new byte[50];
+            Socket.Receive(readBuffer);
+
+            var readString = Encoding.ASCII.GetString(readBuffer);
+            var statusRegexMatch = Regex.Match(readString, RequestConstants.STATUS_CODE_PATTERN).Value;
+
+            if (String.IsNullOrEmpty(statusRegexMatch))
+                throw new ProxyException("Connect command failed.");
+
+            var statusNumber = Convert.ToInt32(statusRegexMatch, CultureInfo.InvariantCulture);
+            var status = (HttpStatusCode)statusNumber;
+
+            if (status != HttpStatusCode.OK)
+                throw new ProxyException($"Connect command to Destination Server returned {status}");
+
+            HandleSslHandshake();
         }
 
         /// <summary>
-        /// Asynchronously sends the GET command to the destination server, and creates the proxy response.
+        /// Asynchronously connects to the Destination Host.
         /// </summary>
-        /// <param name="headers">Headers to be sent with the GET command.</param>
-        /// <param name="cookies">Cookies to be sent with the GET command.</param>
-        /// <returns>Proxy Response with the time to first byte</returns>
-        protected internal override async Task<(ProxyResponse response, float firstByteTime)> SendGetCommandAsync(IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies)
+        protected internal override async Task SendConnectCommandAsync()
         {
-            var writeBuffer = CommandHelper.GetCommand(DestinationUri.AbsoluteUri, headers, cookies);
+            if (Scheme == ProxyScheme.HTTP)
+                return;
+
+            var writeBuffer = String.IsNullOrEmpty(ProxyUsername)
+                ? CommandHelper.ConnectCommand(DestinationUri.Host)
+                : CommandHelper.ConnectProxyAuthCommand(DestinationUri.Host, ProxyUsername, ProxyPassword);
 
             await Socket.SendAsync(writeBuffer);
-            var (response, firstByteTime) = await Socket.ReceiveAllAsync();
 
-            return (ResponseBuilderHelper.BuildProxyResponse(response, DestinationUri), firstByteTime);
-        }
+            var readBuffer = new byte[10];
+            await Socket.ReceiveAsync(readBuffer, readBuffer.Length);
 
-        /// <summary>
-        /// Sends the POST command to the destination server, and creates the proxy response.
-        /// </summary>
-        /// <param name="body">Body to be sent with the POST command.</param>
-        /// <param name="headers">Headers to be sent with the POST command.</param>
-        /// <param name="cookies">Cookies to be sent with the POST command.</param>
-        /// <returns>Proxy Response with the time to first byte</returns>
-        protected internal override (ProxyResponse response, float firstByteTime) SendPostCommand(string body, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies)
-        {
-            var writeBuffer = CommandHelper.PostCommand(DestinationUri.AbsoluteUri, body, headers, cookies);
+            var readString = Encoding.ASCII.GetString(readBuffer);
+            var statusRegexMatch = Regex.Match(readString, RequestConstants.STATUS_CODE_PATTERN).Value;
 
-            Socket.SendAsync(writeBuffer);
-            var (response, firstByteTime) = Socket.ReceiveAll();
+            if (String.IsNullOrEmpty(statusRegexMatch))
+                throw new ProxyException("Connect command failed.");
 
-            return (ResponseBuilderHelper.BuildProxyResponse(response, DestinationUri), firstByteTime);
-        }
+            var statusNumber = Convert.ToInt32(statusRegexMatch, CultureInfo.InvariantCulture);
+            var status = (HttpStatusCode)statusNumber;
 
-        /// <summary>
-        /// Asynchronously sends the POST command to the destination server, and creates the proxy response.
-        /// </summary>
-        /// <param name="body">Body to be sent with the POST command.</param>
-        /// <param name="headers">Headers to be sent with the POST command.</param>
-        /// <param name="cookies">Cookies to be sent with the POST command.</param>
-        /// <returns>Proxy Response with the time to first byte</returns>
-        protected internal override async Task<(ProxyResponse response, float firstByteTime)> SendPostCommandAsync(string body, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies)
-        {
-            var writeBuffer = CommandHelper.PostCommand(DestinationUri.AbsoluteUri, body, headers, cookies);
+            if (status != HttpStatusCode.OK)
+                throw new ProxyException($"Connect command to Destination Server returned {status}");
 
-            await Socket.SendAsync(writeBuffer);
-            var (response, firstByteTime) = await Socket.ReceiveAllAsync();
-
-            return (ResponseBuilderHelper.BuildProxyResponse(response, DestinationUri), firstByteTime);
-        }
-
-        /// <summary>
-        /// Sends the PUT command to the destination server, and creates the proxy response.
-        /// </summary>
-        /// <param name="body">Body to be sent with the PUT command.</param>
-        /// <param name="headers">Headers to be sent with the PUT command.</param>
-        /// <param name="cookies">Cookies to be sent with the PUT command.</param>
-        /// <returns>Proxy Response with the time to first byte</returns>
-        protected internal override (ProxyResponse response, float firstByteTime) SendPutCommand(string body, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies)
-        {
-            var writeBuffer = CommandHelper.PutCommand(DestinationUri.AbsoluteUri, body, headers, cookies);
-
-            Socket.SendAsync(writeBuffer);
-            var (response, firstByteTime) = Socket.ReceiveAll();
-
-            return (ResponseBuilderHelper.BuildProxyResponse(response, DestinationUri), firstByteTime);
-        }
-
-        /// <summary>
-        /// Asynchronously sends the PUT command to the destination server, and creates the proxy response.
-        /// </summary>
-        /// <param name="body">Body to be sent with the PUT command.</param>
-        /// <param name="headers">Headers to be sent with the PUT command.</param>
-        /// <param name="cookies">Cookies to be sent with the PUT command.</param>
-        /// <returns>Proxy Response with the time to first byte</returns>
-        protected internal override async Task<(ProxyResponse response, float firstByteTime)> SendPutCommandAsync(string body, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies)
-        {
-            var writeBuffer = CommandHelper.PutCommand(DestinationUri.AbsoluteUri, body, headers, cookies);
-
-            await Socket.SendAsync(writeBuffer);
-            var(response, firstByteTime) = await Socket.ReceiveAllAsync();
-
-            return (ResponseBuilderHelper.BuildProxyResponse(response, DestinationUri), firstByteTime);
+            await HandleSslHandshakeAsync();
         }
     }
 }
