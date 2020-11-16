@@ -311,10 +311,9 @@ namespace Proxy.Client
                 Socks5Constants.SOCKS5_CMD_REPLY_ADDRESS_TYPE_NOT_SUPPORTED => "the address type specified is not supported",
                 _ => String.Format(CultureInfo.InvariantCulture, "an unknown SOCKS reply with the code value '{0}' was received", replyCode.ToString(CultureInfo.InvariantCulture)),
             };
-            var responseText = response != null ? HexEncode(response) : string.Empty;
-            var exceptionMsg = String.Format(CultureInfo.InvariantCulture, $"Proxy error: {proxyErrorText} for destination host {DestinationHost} port number {DestinationPort}.  Server response (hex): {responseText}.");
 
-            throw new ProxyException(exceptionMsg);
+            var responseText = response != null ? HexEncode(response) : string.Empty;
+            throw new ProxyException(String.Format(CultureInfo.InvariantCulture, $"Proxy error: {proxyErrorText} for destination host {DestinationHost} port number {DestinationPort}.  Server response (hex): {responseText}."));
         }
 
         private void DetermineClientAuthMethod() =>
@@ -388,8 +387,6 @@ namespace Proxy.Client
                 var crResponse = new byte[2];
                 await Socket.ReceiveAsync(crResponse, crResponse.Length);
 
-                Console.WriteLine("SOCKS5_AUTH_METHOD_USERNAME_PASSWORD");
-
                 if (crResponse[1] != 0)
                 {
                     Socket.Close();
@@ -429,7 +426,7 @@ namespace Proxy.Client
                     }
                     catch (Exception)
                     {
-                        throw new ProxyException($"No such known host for: {DestinationHost}");
+                        throw new ProxyException($"No such known host for: {DestinationHost}.");
                     }
                 case Socks5Constants.SOCKS5_ADDRTYPE_DOMAIN_NAME:
                     byte[] bytes = new byte[DestinationHost.Length + 1];
@@ -454,7 +451,7 @@ namespace Proxy.Client
                     }
                     catch (Exception)
                     {
-                        throw new ProxyException($"No such known host for: {DestinationHost}");
+                        throw new ProxyException($"No such known host for: {DestinationHost}.");
                     }
                 case Socks5Constants.SOCKS5_ADDRTYPE_DOMAIN_NAME:
                     byte[] bytes = new byte[DestinationHost.Length + 1];

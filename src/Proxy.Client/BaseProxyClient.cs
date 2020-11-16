@@ -198,7 +198,7 @@ namespace Proxy.Client
             catch (Exception ex)
             {
                 throw new ProxyException(String.Format(CultureInfo.InvariantCulture,
-                    $"Connection to proxy host {ProxyHost} on port {ProxyPort} failed with Exception: {ex}"));
+                    $"Connection to proxy host {ProxyHost} on port {ProxyPort} failed."), ex);
             }
 
             float CreateSocket()
@@ -252,7 +252,7 @@ namespace Proxy.Client
             catch (Exception ex)
             {
                 throw new ProxyException(String.Format(CultureInfo.InvariantCulture,
-                    $"Connection to proxy host {ProxyHost} on port {ProxyPort} failed with Exception: {ex}"));
+                    $"Connection to proxy host {ProxyHost} on port {ProxyPort} failed."), ex);
             }
 
             Task<float> CreateSocketAsync()
@@ -419,7 +419,7 @@ namespace Proxy.Client
             bool result = Uri.TryCreate(url, UriKind.Absolute, out Uri uriResult) && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
 
             if (!result)
-                throw new ProxyException($"Invalid URL provided: {url}");
+                throw new ProxyException($"Invalid URL provided: {url}.");
 
             var cachedDestinationHost = DestinationHost;
             var cachedScheme = DestinationUri?.Scheme;

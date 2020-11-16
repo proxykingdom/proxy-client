@@ -221,7 +221,7 @@ namespace Proxy.Client
             var status = (HttpStatusCode)statusNumber;
 
             if (status != HttpStatusCode.OK)
-                throw new ProxyException($"Connect command to Destination Server returned {status}");
+                throw new ProxyException($"Connect command to Destination Server returned {status}.");
 
             HandleSslHandshake();
         }
@@ -253,7 +253,7 @@ namespace Proxy.Client
             var status = (HttpStatusCode)statusNumber;
 
             if (status != HttpStatusCode.OK)
-                throw new ProxyException($"Connect command to Destination Server returned {status}");
+                throw new ProxyException($"Connect command to Destination Server returned {status}.");
 
             await HandleSslHandshakeAsync();
         }

@@ -244,7 +244,7 @@ namespace Proxy.Client
             }
             catch (Exception)
             {
-                throw new ProxyException($"No such known host for: {DestinationHost}");
+                throw new ProxyException($"No such known host for: {DestinationHost}.");
             }
         }
 
@@ -257,7 +257,7 @@ namespace Proxy.Client
             }
             catch (Exception)
             {
-                throw new ProxyException($"No such known host for: {DestinationHost}");
+                throw new ProxyException($"No such known host for: {DestinationHost}.");
             }
         }
 
@@ -292,9 +292,8 @@ namespace Proxy.Client
                 Socks4Constants.SOCKS4_CMD_REPLY_REQUEST_REJECTED_DIFFERENT_IDENTD => "connection request rejected because the client program and identd report different user-ids",
                 _ => String.Format(CultureInfo.InvariantCulture, "proxy client received an unknown reply with the code value '{0}' from the proxy destination", replyCode.ToString(CultureInfo.InvariantCulture)),
             };
-            var exceptionMsg = String.Format(CultureInfo.InvariantCulture, $"Proxy error: {proxyErrorText} for destination host {DestinationHost} port number {DestinationPort}.");
 
-            throw new ProxyException(exceptionMsg);
+            throw new ProxyException(String.Format(CultureInfo.InvariantCulture, $"Proxy error: {proxyErrorText} for destination host {DestinationHost} port number {DestinationPort}."));
         }
         #endregion
     }
