@@ -83,10 +83,11 @@ namespace Proxy.Client
         /// Connects to the proxy client, sends the GET command to the destination server and returns the response.
         /// </summary>
         /// <param name="url">Destination URL.</param>
+        /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
         /// <param name="headers">Headers to be sent with the GET command.</param>
         /// <param name="cookies">Cookies to be sent with the GET command.</param>
         /// <returns>Proxy Response</returns>
-        public override ProxyResponse Get(string url, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null)
+        public override ProxyResponse Get(string url, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null)
         {
             return HandleRequest(() => 
             {
@@ -94,26 +95,27 @@ namespace Proxy.Client
             },
             () =>
             {
-                return SendGetCommand(headers, cookies);
-            }, url);
+                return SendGetCommand(isKeepAlive, headers, cookies);
+            }, url, isKeepAlive);
         }
 
         /// <summary>
         /// Asynchronously connects to the proxy client, sends the GET command to the destination server and returns the response.
         /// </summary>
         /// <param name="url">Destination URL.</param>
+        /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
         /// <param name="headers">Headers to be sent with the GET command.</param>
         /// <param name="cookies">Cookies to be sent with the GET command.</param>
         /// <returns>Proxy Response</returns>
-        public override Task<ProxyResponse> GetAsync(string url, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null)
+        public override Task<ProxyResponse> GetAsync(string url, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null)
         {
             return HandleRequestAsync(() => 
             {
                 return Task.CompletedTask; 
             }, () =>
             {
-                return SendGetCommandAsync(headers, cookies);
-            }, url);
+                return SendGetCommandAsync(isKeepAlive, headers, cookies);
+            }, url, isKeepAlive);
         }
 
         /// <summary>
@@ -121,16 +123,17 @@ namespace Proxy.Client
         /// </summary>
         /// <param name="url">Destination URL.</param>
         /// <param name="body">Body to be sent with the POST command.</param>
+        /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
         /// <param name="headers">Headers to be sent with the POST command.</param>
         /// <param name="cookies">Cookies to be sent with the POST command.</param>
         /// <returns>Proxy Response</returns>
-        public override ProxyResponse Post(string url, string body, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null)
+        public override ProxyResponse Post(string url, string body, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null)
         {
             return HandleRequest(() => { },
             () => 
             {
-                return SendPostCommand(body, headers, cookies);
-            }, url);
+                return SendPostCommand(body, isKeepAlive, headers, cookies);
+            }, url, isKeepAlive);
         }
 
         /// <summary>
@@ -138,18 +141,19 @@ namespace Proxy.Client
         /// </summary>
         /// <param name="url">Destination URL.</param>
         /// <param name="body">Body to be sent with the POST command.</param>
+        /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
         /// <param name="headers">Headers to be sent with the POST command.</param>
         /// <param name="cookies">Cookies to be sent with the POST command.</param>
         /// <returns>Proxy Response</returns>
-        public override Task<ProxyResponse> PostAsync(string url, string body, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null)
+        public override Task<ProxyResponse> PostAsync(string url, string body, bool isKeepAlive =true,IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null)
         {
             return HandleRequestAsync(() =>
             {
                 return Task.CompletedTask;
             }, () =>
             {
-                return SendPostCommandAsync(body, headers, cookies);
-            }, url);
+                return SendPostCommandAsync(body, isKeepAlive, headers, cookies);
+            }, url, isKeepAlive);
         }
 
         /// <summary>
@@ -157,16 +161,17 @@ namespace Proxy.Client
         /// </summary>
         /// <param name="url">Destination URL.</param>
         /// <param name="body">Body to be sent with the PUT command.</param>
+        /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
         /// <param name="headers">Headers to be sent with the PUT command.</param>
         /// <param name="cookies">Cookies to be sent with the PUT command.</param>
         /// <returns>Proxy Response</returns>
-        public override ProxyResponse Put(string url, string body, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null)
+        public override ProxyResponse Put(string url, string body, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null)
         {
             return HandleRequest(() => { },
             () =>
             {
-                return SendPutCommand(body, headers, cookies);
-            }, url);
+                return SendPutCommand(body, isKeepAlive, headers, cookies);
+            }, url, isKeepAlive);
         }
 
         /// <summary>
@@ -174,18 +179,19 @@ namespace Proxy.Client
         /// </summary>
         /// <param name="url">Destination URL.</param>
         /// <param name="body">Body to be sent with the PUT command.</param>
+        /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
         /// <param name="headers">Headers to be sent with the PUT command.</param>
         /// <param name="cookies">Cookies to be sent with the PUT command.</param>
         /// <returns>Proxy Response</returns>
-        public override Task<ProxyResponse> PutAsync(string url, string body, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null)
+        public override Task<ProxyResponse> PutAsync(string url, string body, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null)
         {
             return HandleRequestAsync(() =>
             {
                 return Task.CompletedTask;
             }, () =>
             {
-                return SendPutCommandAsync(body, headers, cookies);
-            }, url);
+                return SendPutCommandAsync(body, isKeepAlive, headers, cookies);
+            }, url, isKeepAlive);
         }
 
         /// <summary>

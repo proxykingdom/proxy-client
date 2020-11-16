@@ -51,58 +51,64 @@ namespace Proxy.Client
         /// Connects to the proxy client, sends the GET command to the destination server and returns the response.
         /// </summary>
         /// <param name="url">Destination URL.</param>
+        /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
         /// <param name="headers">Headers to be sent with the GET command.</param>
         /// <param name="cookies">Cookies to be sent with the GET command.</param>
         /// <returns>Proxy Response</returns>
-        ProxyResponse Get(string url, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null);
+        ProxyResponse Get(string url, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null);
 
         /// <summary>
         /// Asynchronously connects to the proxy client, sends the GET command to the destination server and returns the response.
         /// </summary>
         /// <param name="url">Destination URL.</param>
+        /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
         /// <param name="headers">Headers to be sent with the GET command.</param>
         /// <param name="cookies">Cookies to be sent with the GET command.</param>
         /// <returns>Proxy Response</returns>
-        Task<ProxyResponse> GetAsync(string url, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null);
+        Task<ProxyResponse> GetAsync(string url, bool isKeepAlive = true, IEnumerable <ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null);
 
         /// <summary>
         /// Connects to the proxy client, sends the POST command to the destination server and returns the response.
         /// </summary>
         /// <param name="url">Destination URL.</param>
         /// <param name="body">Body to be sent with the POST command.</param>
+        /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
         /// <param name="headers">Headers to be sent with the POST command.</param>
         /// <param name="cookies">Cookies to be sent with the POST command.</param>
         /// <returns>Proxy Response</returns>
-        ProxyResponse Post(string url, string body, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null);
+        ProxyResponse Post(string url, string body, bool isKeepAlive = true, IEnumerable <ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null);
 
         /// <summary>
         /// Asynchronously connects to the proxy client, sends the POST command to the destination server and returns the response.
         /// </summary>
         /// <param name="url">Destination URL.</param>
         /// <param name="body">Body to be sent with the POST request.</param>
+        /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
         /// <param name="headers">Headers to be sent with the POST command.</param>
         /// <param name="cookies">Cookies to be sent with the POST command.</param>
         /// <returns>Proxy Response</returns>
-        Task<ProxyResponse> PostAsync(string url, string body, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null);
+        Task<ProxyResponse> PostAsync(string url, string body, bool isKeepAlive = true, IEnumerable <ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null);
 
         /// <summary>
         /// Connects to the proxy client, sends the PUT command to the destination server and returns the response.
         /// </summary>
         /// <param name="url">Destination URL.</param>
         /// <param name="body">Body to be sent with the PUT command.</param>
+        /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
         /// <param name="headers">Headers to be sent with the PUT command.</param>
         /// <param name="cookies">Cookies to be sent with the PUT command.</param>
         /// <returns>Proxy Response</returns>
-        ProxyResponse Put(string url, string body, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null);
+        ProxyResponse Put(string url, string body, bool isKeepAlive = true, IEnumerable <ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null);
 
         /// <summary>
         /// Asynchronously connects to the proxy client, sends the PUT command to the destination server and returns the response.
         /// </summary>
         /// <param name="url">Destination URL.</param>
         /// <param name="body">Body to be sent with the PUT request.</param>
+        /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
         /// <param name="headers">Headers to be sent with the PUT command.</param>
         /// <param name="cookies">Cookies to be sent with the PUT command.</param>
         /// <returns>Proxy Response</returns>
-        Task<ProxyResponse> PutAsync(string url, string body, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null);
+        Task<ProxyResponse> PutAsync(string url, string body, bool isKeepAlive = true, IEnumerable <ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null);
     }
 }
