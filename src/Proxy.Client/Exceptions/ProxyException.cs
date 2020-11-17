@@ -5,7 +5,7 @@ namespace Proxy.Client.Exceptions
     /// <summary>
     /// Proxy Exception class.
     /// </summary>
-    internal class ProxyException : Exception
+    public class ProxyException : Exception
     {
         /// <summary>
         /// Creates a proxy exception given an error message.

@@ -1,16 +1,13 @@
 ﻿using Proxy.Client.Contracts;
 using Proxy.Client.Contracts.Constants;
 using Proxy.Client.Exceptions;
-using Proxy.Client.Utilities;
 using Proxy.Client.Utilities.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net;
-using System.Net.Security;
 using System.Net.Sockets;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
