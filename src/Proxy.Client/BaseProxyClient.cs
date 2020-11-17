@@ -450,36 +450,5 @@ namespace Proxy.Client
                 IsConnectionClosed = !connectionHeader.Value.ToLower().Equals("keep-alive");
             }
         }
-
-        
-        /*
-        private bool IsDDispose(string cachedDestHost, string cachedScheme, bool isKeepAlive)
-        {
-            if (IsConnectionClosed || !isKeepAlive)
-            {
-                return true;
-            }
-
-            if (ProxyType == ProxyType.HTTP)
-            {
-                if (Scheme == ProxyScheme.HTTP)
-                {
-                    return !cachedScheme.Equals(DestinationUri.Scheme);
-                }
-                else
-                {
-                    return !cachedDestHost.Equals(DestinationHost) || !cachedScheme.Equals(DestinationUri.Scheme);
-                }
-            }
-            else
-            {
-                if (!cachedDestHost.Equals(DestinationHost) || !cachedScheme.Equals(DestinationUri.Scheme))
-                {
-                    return true;
-                }
-                return false;
-            }
-        }
-        */
     }
 }
