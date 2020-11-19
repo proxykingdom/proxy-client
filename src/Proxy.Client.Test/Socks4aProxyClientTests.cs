@@ -7,25 +7,21 @@ using System.Threading.Tasks;
 
 namespace Proxy.Client.Test
 {
-    /// <summary>
-    /// Test Fixture for the SOCKS5 Proxy Client.
-    /// A proxy server supporting SOCKS5 must be running on the local host for the unit tests to work.
-    /// </summary>
     [TestFixture]
-    internal sealed class Socks5ProxyClientTests
+    internal sealed class Socks4aProxyClientTests
     {
-        private Socks5ProxyClient _socks5ProxyClient;
+        private Socks4aProxyClient _socks4aProxyClient;
 
         [SetUp]
         public void SetUp()
         {
-            _socks5ProxyClient = new Socks5ProxyClient("localhost", 1083);
+            _socks4aProxyClient = new Socks4aProxyClient("localhost", 1082);
         }
 
         [Test]
         public void Get_Successful()
         {
-            var response = _socks5ProxyClient.Get("http://www.example.com/");
+            var response = _socks4aProxyClient.Get("http://www.example.com/");
 
             Assert.IsNotNull(response);
             Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
@@ -34,7 +30,7 @@ namespace Proxy.Client.Test
         [Test]
         public async Task GetAsync_Successful()
         {
-            var response = await _socks5ProxyClient.GetAsync("http://www.example.com/");
+            var response = await _socks4aProxyClient.GetAsync("http://www.example.com/");
 
             Assert.IsNotNull(response);
             Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
@@ -43,7 +39,7 @@ namespace Proxy.Client.Test
         [Test]
         public void Get_WithSsl_Successful()
         {
-            var response = _socks5ProxyClient.Get("https://www.example.com/");
+            var response = _socks4aProxyClient.Get("https://www.example.com/");
 
             Assert.IsNotNull(response);
             Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
@@ -52,7 +48,7 @@ namespace Proxy.Client.Test
         [Test]
         public async Task GetAsync_WithSsl_Successful()
         {
-            var response = await _socks5ProxyClient.GetAsync("https://www.example.com/");
+            var response = await _socks4aProxyClient.GetAsync("https://www.example.com/");
 
             Assert.IsNotNull(response);
             Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
@@ -67,7 +63,7 @@ namespace Proxy.Client.Test
                 ProxyHeader.Create("HeaderName2", "HeaderValue2")
             };
 
-            var response = _socks5ProxyClient.Get("http://www.example.com/", headers: headers);
+            var response = _socks4aProxyClient.Get("http://www.example.com/", headers: headers);
 
             Assert.IsNotNull(response);
             Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
@@ -82,7 +78,7 @@ namespace Proxy.Client.Test
                 ProxyHeader.Create("HeaderName2", "HeaderValue2")
             };
 
-            var response = await _socks5ProxyClient.GetAsync("http://www.example.com/", headers: headers);
+            var response = await _socks4aProxyClient.GetAsync("http://www.example.com/", headers: headers);
 
             Assert.IsNotNull(response);
             Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
@@ -97,7 +93,7 @@ namespace Proxy.Client.Test
                 new Cookie("CookieName2", "CookieValue2")
             };
 
-            var response = _socks5ProxyClient.Get("http://www.example.com/", cookies: cookies);
+            var response = _socks4aProxyClient.Get("http://www.example.com/", cookies: cookies);
 
             Assert.IsNotNull(response);
             Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
@@ -112,7 +108,7 @@ namespace Proxy.Client.Test
                 new Cookie("CookieName2", "CookieValue2")
             };
 
-            var response = await _socks5ProxyClient.GetAsync("http://www.example.com/", cookies: cookies);
+            var response = await _socks4aProxyClient.GetAsync("http://www.example.com/", cookies: cookies);
 
             Assert.IsNotNull(response);
             Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
@@ -121,8 +117,8 @@ namespace Proxy.Client.Test
         [Test]
         public void Get_WithoutKeepAlive_Successful()
         {
-            var response = _socks5ProxyClient.Get("http://www.example.com/", isKeepAlive: false);
-            var response2 = _socks5ProxyClient.Get("http://www.example.com/");
+            var response = _socks4aProxyClient.Get("http://www.example.com/", isKeepAlive: false);
+            var response2 = _socks4aProxyClient.Get("http://www.example.com/");
 
             Assert.Multiple(() =>
             {
@@ -138,8 +134,8 @@ namespace Proxy.Client.Test
         [Test]
         public async Task GetAsync_WithoutKeepAlive_Successful()
         {
-            var response = await _socks5ProxyClient.GetAsync("http://www.example.com/", isKeepAlive: false);
-            var response2 = await _socks5ProxyClient.GetAsync("http://www.example.com/");
+            var response = await _socks4aProxyClient.GetAsync("http://www.example.com/", isKeepAlive: false);
+            var response2 = await _socks4aProxyClient.GetAsync("http://www.example.com/");
 
             Assert.Multiple(() =>
             {
@@ -155,8 +151,8 @@ namespace Proxy.Client.Test
         [Test]
         public void Get_WithKeepAlive_Successful()
         {
-            var response = _socks5ProxyClient.Get("http://www.example.com/", isKeepAlive: true);
-            var response2 = _socks5ProxyClient.Get("http://www.example.com/");
+            var response = _socks4aProxyClient.Get("http://www.example.com/", isKeepAlive: true);
+            var response2 = _socks4aProxyClient.Get("http://www.example.com/");
 
             Assert.Multiple(() =>
             {
@@ -172,8 +168,8 @@ namespace Proxy.Client.Test
         [Test]
         public async Task GetAsync_WithKeepAlive_Successful()
         {
-            var response = await _socks5ProxyClient.GetAsync("http://www.example.com/", isKeepAlive: true);
-            var response2 = await _socks5ProxyClient.GetAsync("http://www.example.com/");
+            var response = await _socks4aProxyClient.GetAsync("http://www.example.com/", isKeepAlive: true);
+            var response2 = await _socks4aProxyClient.GetAsync("http://www.example.com/");
 
             Assert.Multiple(() =>
             {
@@ -189,19 +185,19 @@ namespace Proxy.Client.Test
         [Test]
         public void Get_InvalidUrl_Failed()
         {
-            Assert.Throws<ProxyException>(() => _socks5ProxyClient.Get("http:wrongurl"));
+            Assert.Throws<ProxyException>(() => _socks4aProxyClient.Get("http:wrongurl"));
         }
 
         [Test]
         public void GetAsync_InvalidUrl_Failed()
         {
-            Assert.ThrowsAsync<ProxyException>(async () => await _socks5ProxyClient.GetAsync("http:wrongurl"));
+            Assert.ThrowsAsync<ProxyException>(async () => await _socks4aProxyClient.GetAsync("http:wrongurl"));
         }
 
         [TearDown]
         public void TearDown()
         {
-            _socks5ProxyClient.Dispose();
+            _socks4aProxyClient.Dispose();
         }
     }
 }

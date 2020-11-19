@@ -16,7 +16,7 @@ namespace Proxy.Client
     /// <summary>
     /// Socks4 connection proxy class. This class implements the Socks4 standard proxy protocol.
     /// </summary>
-    public sealed class Socks4ProxyClient : BaseProxyClient
+    public class Socks4ProxyClient : BaseProxyClient
     {
         /// <summary>
         /// Proxy user identification information.
@@ -231,6 +231,35 @@ namespace Proxy.Client
                 await HandleSslHandshakeAsync();
         }
 
+        /// <summary>
+        /// Gets the Destination Port in bytes.
+        /// </summary>
+        /// <returns>Destination Port Bytes</returns>
+        protected byte[] GetDestinationPortBytes() =>
+           new byte[2]
+           {
+                Convert.ToByte(DestinationPort / 256),
+                Convert.ToByte(DestinationPort % 256)
+           };
+
+        /// <summary>
+        /// Handles the command request response error.
+        /// </summary>
+        /// <param name="response">Command Request Response</param>
+        protected void HandleProxyCommandError(byte[] response)
+        {
+            var replyCode = response[1];
+            string proxyErrorText = replyCode switch
+            {
+                Socks4Constants.SOCKS4_CMD_REPLY_REQUEST_REJECTED_OR_FAILED => "connection request was rejected or failed",
+                Socks4Constants.SOCKS4_CMD_REPLY_REQUEST_REJECTED_CANNOT_CONNECT_TO_IDENTD => "connection request was rejected because SOCKS destination cannot connect to identd on the client",
+                Socks4Constants.SOCKS4_CMD_REPLY_REQUEST_REJECTED_DIFFERENT_IDENTD => "connection request rejected because the client program and identd report different user-ids",
+                _ => String.Format(CultureInfo.InvariantCulture, "proxy client received an unknown reply with the code value '{0}' from the proxy destination", replyCode.ToString(CultureInfo.InvariantCulture)),
+            };
+
+            throw new ProxyException(String.Format(CultureInfo.InvariantCulture, $"Proxy error: {proxyErrorText} for destination host {DestinationHost} port number {DestinationPort}."));
+        }
+
         #region Private Methods
         private byte[] GetDestinationAddressBytes()
         {
@@ -258,13 +287,6 @@ namespace Proxy.Client
             }
         }
 
-        private byte[] GetDestinationPortBytes() =>
-            new byte[2]
-            {
-                Convert.ToByte(DestinationPort / 256),
-                Convert.ToByte(DestinationPort % 256)
-            };
-
         private byte[] GetCommandRequest(byte[] destinationAddressBytes, byte[] destinationPortBytes, byte[] userIdBytes)
         {
             var request = new byte[9 + userIdBytes.Length];
@@ -277,20 +299,6 @@ namespace Proxy.Client
             request[8 + userIdBytes.Length] = 0x00;
 
             return request;
-        }
-
-        private void HandleProxyCommandError(byte[] response)
-        {
-            var replyCode = response[1];
-            string proxyErrorText = replyCode switch
-            {
-                Socks4Constants.SOCKS4_CMD_REPLY_REQUEST_REJECTED_OR_FAILED => "connection request was rejected or failed",
-                Socks4Constants.SOCKS4_CMD_REPLY_REQUEST_REJECTED_CANNOT_CONNECT_TO_IDENTD => "connection request was rejected because SOCKS destination cannot connect to identd on the client",
-                Socks4Constants.SOCKS4_CMD_REPLY_REQUEST_REJECTED_DIFFERENT_IDENTD => "connection request rejected because the client program and identd report different user-ids",
-                _ => String.Format(CultureInfo.InvariantCulture, "proxy client received an unknown reply with the code value '{0}' from the proxy destination", replyCode.ToString(CultureInfo.InvariantCulture)),
-            };
-
-            throw new ProxyException(String.Format(CultureInfo.InvariantCulture, $"Proxy error: {proxyErrorText} for destination host {DestinationHost} port number {DestinationPort}."));
         }
         #endregion
     }

@@ -16,8 +16,13 @@
         SOCKS4 = 1,
 
         /// <summary>
+        /// SOCKS4A Proxy Type.
+        /// </summary>
+        SOCKS4A = 2,
+
+        /// <summary>
         /// SOCKS5 Proxy Type.
         /// </summary>
-        SOCKS5 = 2
+        SOCKS5 = 3
     }
 }
