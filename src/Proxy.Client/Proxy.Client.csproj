@@ -4,6 +4,14 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>8.0</LangVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageId>Proxy.Client</PackageId>
+    <Version>1.0.3</Version>
+    <Authors>Daniel Buckle</Authors>
+    <Description>The Proxy Client library allows the user to send and receive requests over an Http, Socks4/4a/5 proxies.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageTags>http;socks4;socks4a;socks5;proxy;socket;sockets;</PackageTags>
+    <PackageIconUrl>https://i.imgur.com/5HM1SLu.png</PackageIconUrl>
+    <RepositoryUrl>https://github.com/bokklu/proxy-client</RepositoryUrl>
   </PropertyGroup>
 
 </Project>
