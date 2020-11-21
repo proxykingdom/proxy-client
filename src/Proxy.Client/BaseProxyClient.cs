@@ -211,7 +211,7 @@ namespace Proxy.Client
 
                 innerResult.response.Timings = Timings.Create(connectTime, connectTime + requestTime, connectTime + innerResult.firstByteTime);
 
-                CheckConnectionHeader(innerResult.response.Headers);
+                CheckConnectionClosed(innerResult.response.Headers);
 
                 return innerResult.response;
             }
@@ -265,7 +265,7 @@ namespace Proxy.Client
 
                 innerResult.response.Timings = Timings.Create(connectTime, connectTime + requestTime, connectTime + innerResult.firstByteTime);
 
-                CheckConnectionHeader(innerResult.response.Headers);
+                CheckConnectionClosed(innerResult.response.Headers);
 
                 return innerResult.response;
             }
@@ -487,8 +487,13 @@ namespace Proxy.Client
                 : !cachedDestHost.Equals(DestinationHost) || !cachedScheme.Equals(DestinationUri.Scheme));
         }
 
-        private void CheckConnectionHeader(IEnumerable<ProxyHeader> headers)
+        private void CheckConnectionClosed(IEnumerable<ProxyHeader> headers)
         {
+            if (!headers.Any())
+            {
+                IsConnectionClosed = true;
+            }
+
             var connectionHeader = headers.Where(x => x.Name.Equals(RequestConstants.CONNECTION_HEADER) || x.Name.Equals(RequestConstants.PROXY_CONNECTION_HEADER)).SingleOrDefault();
 
             if (connectionHeader != null)
