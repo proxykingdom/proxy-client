@@ -1,6 +1,6 @@
 ![Proxy.Client](https://i.imgur.com/5HM1SLu.png)
 
-# Proxy.Client
+# Proxy.Client ![Build](https://github.com/bokklu/proxy-client/workflows/Build/badge.svg)
 
 The Proxy Client library allows the user to send and receive requests over Http, Socks4/4a/5 proxies.
 
