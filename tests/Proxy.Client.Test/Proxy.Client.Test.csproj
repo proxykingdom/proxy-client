@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Proxy.Client\Proxy.Client.csproj" />
+    <ProjectReference Include="..\..\src\Proxy.Client\Proxy.Client.csproj" />
   </ItemGroup>
 
 </Project>
