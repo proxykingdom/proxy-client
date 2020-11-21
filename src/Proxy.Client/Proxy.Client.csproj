@@ -5,7 +5,7 @@
     <LangVersion>8.0</LangVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageId>Proxy.Client</PackageId>
-    <Version>1.0.4</Version>
+    <Version>1.0.5</Version>
     <Authors>Daniel Buckle</Authors>
     <Description>The Proxy Client library allows the user to send and receive requests over Http, Socks4/4a/5 proxies.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
