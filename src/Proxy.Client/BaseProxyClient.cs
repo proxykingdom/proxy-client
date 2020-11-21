@@ -140,6 +140,26 @@ namespace Proxy.Client
         public abstract Task<ProxyResponse> PutAsync(string url, string body, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null);
 
         /// <summary>
+        /// Connects to the proxy client, sends the DELETE command to the destination server and returns the response.
+        /// </summary>
+        /// <param name="url">Destination URL.</param>
+        /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
+        /// <param name="headers">Headers to be sent with the DELETE command.</param>
+        /// <param name="cookies">Cookies to be sent with the DELETE command.</param>
+        /// <returns>Proxy Response</returns>
+        public abstract ProxyResponse Delete(string url, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null);
+
+        /// <summary>
+        /// Asynchronously connects to the proxy client, sends the DELETE command to the destination server and returns the response.
+        /// </summary>
+        /// <param name="url">Destination URL.</param>
+        /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
+        /// <param name="headers">Headers to be sent with the DELETE command.</param>
+        /// <param name="cookies">Cookies to be sent with the DELETE command.</param>
+        /// <returns>Proxy Response</returns>
+        public abstract Task<ProxyResponse> DeleteAsync(string url, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null);
+
+        /// <summary>
         /// Disposes the socket dependencies.
         /// </summary>
         public virtual void Dispose()
@@ -345,6 +365,33 @@ namespace Proxy.Client
         protected internal Task<(ProxyResponse response, float firstByteTime)> SendPutCommandAsync(string body, bool isKeepAlive, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies)
         {
             var writeBuffer = CommandHelper.PutCommand(DestinationUri.AbsoluteUri, DestinationUri.Authority, body, isKeepAlive, headers, cookies);
+            return HandleRequestCommandAsync(writeBuffer);
+        }
+
+        /// <summary>
+        /// Sends the DELETE command to the destination server, and creates the proxy response.
+        /// </summary>
+        /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
+        /// <param name="headers">Headers to be sent with the DELETE command.</param>
+        /// <param name="cookies">Cookies to be sent with the DELETE command.</param>
+        /// <returns>Proxy Response with the time to first byte</returns>
+        protected internal (ProxyResponse response, float firstByteTime) SendDeleteCommand(bool isKeepAlive, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies)
+        {
+            var writeBuffer = CommandHelper.DeleteCommand(DestinationUri.AbsoluteUri, DestinationUri.Authority, isKeepAlive, headers, cookies);
+            return HandleRequestCommand(writeBuffer);
+        }
+
+        /// <summary>
+        /// Asynchronously sends the DELETE command to the destination server, and creates the proxy response.
+        /// </summary>
+        /// <param name="body">Body to be sent with the DELETE command.</param>
+        /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
+        /// <param name="headers">Headers to be sent with the DELETE command.</param>
+        /// <param name="cookies">Cookies to be sent with the DELETE command.</param>
+        /// <returns>Proxy Response with the time to first byte</returns>
+        protected internal Task<(ProxyResponse response, float firstByteTime)> SendDeleteCommandAsync(bool isKeepAlive, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies)
+        {
+            var writeBuffer = CommandHelper.DeleteCommand(DestinationUri.AbsoluteUri, DestinationUri.Authority, isKeepAlive, headers, cookies);
             return HandleRequestCommandAsync(writeBuffer);
         }
 

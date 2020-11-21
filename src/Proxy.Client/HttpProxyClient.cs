@@ -107,9 +107,9 @@ namespace Proxy.Client
         /// <returns>Proxy Response</returns>
         public override Task<ProxyResponse> GetAsync(string url, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null)
         {
-            return HandleRequestAsync(() => 
+            return HandleRequestAsync(() =>
             {
-                return Task.CompletedTask; 
+                return SendConnectCommandAsync(); 
             }, () =>
             {
                 return SendGetCommandAsync(isKeepAlive, headers, cookies);
@@ -127,8 +127,10 @@ namespace Proxy.Client
         /// <returns>Proxy Response</returns>
         public override ProxyResponse Post(string url, string body, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null)
         {
-            return HandleRequest(() => { },
-            () => 
+            return HandleRequest(() => 
+            {
+                SendConnectCommand();
+            }, () => 
             {
                 return SendPostCommand(body, isKeepAlive, headers, cookies);
             }, url, isKeepAlive);
@@ -147,7 +149,7 @@ namespace Proxy.Client
         {
             return HandleRequestAsync(() =>
             {
-                return Task.CompletedTask;
+                return SendConnectCommandAsync();
             }, () =>
             {
                 return SendPostCommandAsync(body, isKeepAlive, headers, cookies);
@@ -165,8 +167,10 @@ namespace Proxy.Client
         /// <returns>Proxy Response</returns>
         public override ProxyResponse Put(string url, string body, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null)
         {
-            return HandleRequest(() => { },
-            () =>
+            return HandleRequest(() => 
+            {
+                SendConnectCommand();
+            }, () =>
             {
                 return SendPutCommand(body, isKeepAlive, headers, cookies);
             }, url, isKeepAlive);
@@ -185,10 +189,48 @@ namespace Proxy.Client
         {
             return HandleRequestAsync(() =>
             {
-                return Task.CompletedTask;
+                return SendConnectCommandAsync();
             }, () =>
             {
                 return SendPutCommandAsync(body, isKeepAlive, headers, cookies);
+            }, url, isKeepAlive);
+        }
+
+        /// <summary>
+        /// Connects to the proxy client, sends the DELETE command to the destination server and returns the response.
+        /// </summary>
+        /// <param name="url">Destination URL.</param>
+        /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
+        /// <param name="headers">Headers to be sent with the DELETE command.</param>
+        /// <param name="cookies">Cookies to be sent with the DELETE command.</param>
+        /// <returns>Proxy Response</returns>
+        public override ProxyResponse Delete(string url, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null)
+        {
+            return HandleRequest(() => 
+            {
+                SendConnectCommand();
+            }, () =>
+            {
+                return SendDeleteCommand(isKeepAlive, headers, cookies);
+            }, url, isKeepAlive);
+        }
+
+        /// <summary>
+        /// Asynchronously connects to the proxy client, sends the DELETE command to the destination server and returns the response.
+        /// </summary>
+        /// <param name="url">Destination URL.</param>
+        /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
+        /// <param name="headers">Headers to be sent with the DELETE command.</param>
+        /// <param name="cookies">Cookies to be sent with the DELETE command.</param>
+        /// <returns>Proxy Response</returns>
+        public override Task<ProxyResponse> DeleteAsync(string url, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null)
+        {
+            return HandleRequestAsync(() =>
+            {
+                return SendConnectCommandAsync();
+            }, () =>
+            {
+                return SendDeleteCommandAsync(isKeepAlive, headers, cookies);
             }, url, isKeepAlive);
         }
 
@@ -238,7 +280,7 @@ namespace Proxy.Client
 
             await Socket.SendAsync(writeBuffer);
 
-            var readBuffer = new byte[10];
+            var readBuffer = new byte[50];
             await Socket.ReceiveAsync(readBuffer, readBuffer.Length);
 
             var readString = Encoding.ASCII.GetString(readBuffer);

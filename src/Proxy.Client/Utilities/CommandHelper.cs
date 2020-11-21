@@ -15,7 +15,7 @@ namespace Proxy.Client.Utilities
         /// <summary>
         /// Creates the raw GET bytes request.
         /// </summary>
-        /// <param name="absoluteUri">Full destination request URL</param>
+        /// <param name="absoluteUri">Full destination request URL.</param>
         /// <param name="host">Destination Host.</param>
         /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
         /// <param name="headers">Headers to be sent with the GET command.</param>
@@ -61,7 +61,7 @@ namespace Proxy.Client.Utilities
         /// <summary>
         /// Creates the raw POST bytes request.
         /// </summary>
-        /// <param name="absoluteUri">Full destination request URL</param>
+        /// <param name="absoluteUri">Full destination request URL.</param>
         /// <param name="host">Destination Host.</param>
         /// <param name="body">Request Body to be sent with the POST command.</param>
         /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
@@ -85,7 +85,7 @@ namespace Proxy.Client.Utilities
         /// <summary>
         /// Creates the raw PUT bytes request.
         /// </summary>
-        /// <param name="absoluteUri">Full destination request URL</param>
+        /// <param name="absoluteUri">Full destination request URL.</param>
         /// <param name="host">Destination Host.</param>
         /// <param name="body">Request Body to be sent with the PUT command.</param>
         /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
@@ -103,6 +103,27 @@ namespace Proxy.Client.Utilities
                        $"{keepAliveString}\r\n" +
                        $"{cookieString}\r\n" +
                        body;
+            }, isKeepAlive, headers, cookies);
+        }
+
+        /// <summary>
+        /// Creates the raw DELETE bytes request.
+        /// </summary>
+        /// <param name="absoluteUri">Full destination request URL.</param>
+        /// <param name="host">Destination Host.</param>
+        /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
+        /// <param name="headers">Headers to be sent with the GET command.</param>
+        /// <param name="cookies">Cookies to be send with the GET command.</param>
+        /// <returns>Raw DELETE bytes request</returns>
+        public static byte[] DeleteCommand(string absoluteUri, string host, bool isKeepAlive, IEnumerable<ProxyHeader> headers, IEnumerable<Cookie> cookies)
+        {
+            return HandleCommand((keepAliveString, headerString, cookieString) =>
+            {
+                return $"DELETE {absoluteUri} HTTP/1.1" +
+                       $"Host: {host}\r\n" +
+                       headerString +
+                       $"{keepAliveString}\r\n" +
+                       $"{cookieString}\r\n";
             }, isKeepAlive, headers, cookies);
         }
 

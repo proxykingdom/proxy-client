@@ -1,6 +1,7 @@
 ﻿using Proxy.Client.Contracts.Constants;
 using Proxy.Client.Exceptions;
 using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.Net.Security;
 using System.Net.Sockets;
@@ -34,13 +35,20 @@ namespace Proxy.Client.Utilities.Extensions
                 bytesRead = socket.Receive(buffer); 
             });
 
+            if (bytesRead == 0)
+                throw new ProxyException("Destination Server has no data to send.");
+
             var bufferString = Encoding.ASCII.GetString(buffer, 0, bytesRead);
             placeHolder.Append(bufferString);
 
             while (!bufferString.Contains(RequestConstants.CONTENT_SEPERATOR))
             {
-                var innerBytesRead = socket.Receive(buffer);
-                bufferString = Encoding.ASCII.GetString(buffer, 0, innerBytesRead);
+                bytesRead = socket.Receive(buffer);
+
+                if (bytesRead == 0)
+                    return (placeHolder.ToString(), firstByteTime);
+
+                bufferString = Encoding.ASCII.GetString(buffer, 0, bytesRead);
                 placeHolder.Append(bufferString);
             }
 
@@ -69,13 +77,20 @@ namespace Proxy.Client.Utilities.Extensions
                 bytesRead = await socket.ReceiveAsync(buffer, buffer.Length);
             });
 
+            if (bytesRead == 0)
+                throw new ProxyException("Destination Server has no data to send.");
+
             var bufferString = Encoding.ASCII.GetString(buffer, 0, bytesRead);
             placeHolder.Append(bufferString);
 
             while (!bufferString.Contains(RequestConstants.CONTENT_SEPERATOR))
             {
-                var innerBytesRead = await socket.ReceiveAsync(buffer, buffer.Length);
-                bufferString = Encoding.ASCII.GetString(buffer, 0, innerBytesRead);
+                bytesRead = await socket.ReceiveAsync(buffer, buffer.Length);
+                
+                if (bytesRead == 0) 
+                    return (placeHolder.ToString(), firstByteTime);
+
+                bufferString = Encoding.ASCII.GetString(buffer, 0, bytesRead);
                 placeHolder.Append(bufferString);
             }
 
@@ -104,13 +119,20 @@ namespace Proxy.Client.Utilities.Extensions
                 bytesRead = sslStream.Read(buffer, 0, buffer.Length); 
             });
 
+            if (bytesRead == 0)
+                throw new ProxyException("Destination Server has no data to send.");
+
             var bufferString = Encoding.ASCII.GetString(buffer, 0, bytesRead);
             placeHolder.Append(bufferString);
 
             while (!bufferString.Contains(RequestConstants.CONTENT_SEPERATOR))
             {
-                var innerBytesRead = sslStream.Read(buffer, 0, buffer.Length);
-                bufferString = Encoding.ASCII.GetString(buffer, 0, innerBytesRead);
+                bytesRead = sslStream.Read(buffer, 0, buffer.Length);
+
+                if (bytesRead == 0) 
+                    return (placeHolder.ToString(), firstByteTime);
+
+                bufferString = Encoding.ASCII.GetString(buffer, 0, bytesRead);
                 placeHolder.Append(bufferString);
             }
 
@@ -139,12 +161,19 @@ namespace Proxy.Client.Utilities.Extensions
                 bytesRead = await sslStream.ReadAsync(buffer, 0, buffer.Length);
             });
 
+            if (bytesRead == 0)
+                throw new ProxyException("Destination Server has no data to send.");
+
             var bufferString = Encoding.ASCII.GetString(buffer, 0, bytesRead);
             placeHolder.Append(bufferString);
 
             while(!bufferString.Contains(RequestConstants.CONTENT_SEPERATOR))
             {
                 bytesRead = await sslStream.ReadAsync(buffer, 0, buffer.Length);
+
+                if (bytesRead == 0) 
+                    return (placeHolder.ToString(), firstByteTime);
+
                 bufferString = Encoding.ASCII.GetString(buffer, 0, bytesRead);
                 placeHolder.Append(bufferString);
             }

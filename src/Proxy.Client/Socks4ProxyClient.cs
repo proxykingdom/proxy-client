@@ -186,6 +186,44 @@ namespace Proxy.Client
         }
 
         /// <summary>
+        /// Connects to the proxy client, sends the DELETE command to the destination server and returns the response.
+        /// </summary>
+        /// <param name="url">Destination URL.</param>
+        /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
+        /// <param name="headers">Headers to be sent with the DELETE command.</param>
+        /// <param name="cookies">Cookies to be sent with the DELETE command.</param>
+        /// <returns>Proxy Response</returns>
+        public override ProxyResponse Delete(string url, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null)
+        {
+            return HandleRequest(() =>
+            {
+                SendConnectCommand();
+            }, () =>
+            {
+                return SendDeleteCommand(isKeepAlive, headers, cookies);
+            }, url, isKeepAlive);
+        }
+
+        /// <summary>
+        /// Asynchronously connects to the proxy client, sends the DELETE command to the destination server and returns the response.
+        /// </summary>
+        /// <param name="url">Destination URL.</param>
+        /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
+        /// <param name="headers">Headers to be sent with the DELETE command.</param>
+        /// <param name="cookies">Cookies to be sent with the DELETE command.</param>
+        /// <returns>Proxy Response</returns>
+        public override Task<ProxyResponse> DeleteAsync(string url, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null)
+        {
+            return HandleRequestAsync(() =>
+            {
+                return SendConnectCommandAsync();
+            }, () =>
+            {
+                return SendDeleteCommandAsync(isKeepAlive, headers, cookies);
+            }, url, isKeepAlive);
+        }
+
+        /// <summary>
         /// Connects to the Destination Server.
         /// </summary>
         protected internal override void SendConnectCommand()
