@@ -384,7 +384,6 @@ namespace Proxy.Client
         /// <summary>
         /// Asynchronously sends the DELETE command to the destination server, and creates the proxy response.
         /// </summary>
-        /// <param name="body">Body to be sent with the DELETE command.</param>
         /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
         /// <param name="headers">Headers to be sent with the DELETE command.</param>
         /// <param name="cookies">Cookies to be sent with the DELETE command.</param>
