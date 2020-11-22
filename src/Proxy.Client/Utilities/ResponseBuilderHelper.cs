@@ -22,7 +22,7 @@ namespace Proxy.Client.Utilities
         /// <returns>Proxy Response</returns>
         public static ProxyResponse BuildProxyResponse(string response, Uri destinationUri)
         {
-            var splitResponse = response.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.RemoveEmptyEntries);
+            var splitResponse = response.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.None);
 
             if (splitResponse.Length == 1)
             {
