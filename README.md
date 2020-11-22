@@ -25,6 +25,40 @@ using(var socks4ProxyClient = new Socks4ProxyClient("212.86.75.9", 4153))
     var response = await socks4ProxyClient.GetAsync("https://www.example.com/");
 }
 ```
-
+### Adding Headers
+```C#
+using(var socks4ProxyClient = new Socks4ProxyClient("212.86.75.9", 4153))
+{
+    var proxyHeaders = var headers = new List<ProxyHeader>
+    {
+        ProxyHeader.Create("User-Agent", "My-UserAgent"),
+        ProxyHeader.Create("Cache-Control", "no-cache")
+    };
+    
+    var response = await socks4ProxyClient.GetAsync("https://www.example.com/", headers: proxyHeaders);
+}
+```
+### Adding Cookies
+```C#
+using(var socks4ProxyClient = new Socks4ProxyClient("212.86.75.9", 4153))
+{
+    var proxyCookies = new List<Cookie>
+    {
+        new Cookie("Id", "a3fWa"),
+        new Cookie("Expires", "Thu, 31 Oct 2021 07:28:00 GMT")
+    };
+    
+    var response = await socks4ProxyClient.GetAsync("https://www.example.com/", cookies: proxyCookies);
+}
+```
+### Keep-Alive Support
+By default, all connections are persistent.
+To force the connection/socket closure, set the isKeepAlive flag to False:
+```C#
+using(var socks4ProxyClient = new Socks4ProxyClient("212.86.75.9", 4153))
+{
+    var response = await socks4ProxyClient.GetAsync("https://www.example.com/", isKeepAlive: False);
+}
+```
 ## Contribution
 Feel free to [open an issue](https://github.com/bokklu/proxy-client/issues) or submit a [pull request](https://github.com/bokklu/Proxy.Client/pulls).
