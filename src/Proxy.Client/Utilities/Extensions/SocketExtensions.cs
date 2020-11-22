@@ -56,7 +56,7 @@ namespace Proxy.Client.Utilities.Extensions
 
             if (readString.Contains(RequestConstants.CONTENT_LENGTH_HEADER)) socket.DecodeContentLength(placeHolder, buffer, bufferString);
             else if (readString.Contains(RequestConstants.TRANSFER_ENCODING_CHUNKED_HEADER)) socket.DecodeChunked(placeHolder, buffer, bufferString);
-            else throw new ProxyException("Unknown Content Encoding provided by Destination Server.");
+            else throw new ProxyException("Unknown Transfer Encoding provided by Destination Server.");
 
             return (placeHolder.ToString(), firstByteTime);
         }
@@ -98,7 +98,7 @@ namespace Proxy.Client.Utilities.Extensions
 
             if (readString.Contains(RequestConstants.CONTENT_LENGTH_HEADER)) await socket.DecodeContentLengthAsync(placeHolder, buffer, bufferString);
             else if (readString.Contains(RequestConstants.TRANSFER_ENCODING_CHUNKED_HEADER)) await socket.DecodeChunkedAsync(placeHolder, buffer, bufferString);
-            else throw new ProxyException("Unknown Content Encoding provided by Destination Server.");
+            else throw new ProxyException("Unknown Transfer Encoding provided by Destination Server.");
 
             return (placeHolder.ToString(), firstByteTime);
         }
@@ -140,7 +140,7 @@ namespace Proxy.Client.Utilities.Extensions
 
             if (readString.Contains(RequestConstants.CONTENT_LENGTH_HEADER)) sslStream.DecodeContentLength(placeHolder, buffer, bufferString);
             else if (readString.Contains(RequestConstants.TRANSFER_ENCODING_CHUNKED_HEADER)) sslStream.DecodeChunked(placeHolder, buffer, bufferString);
-            else throw new ProxyException("Unknown Content Encoding provided by Destination Server.");
+            else throw new ProxyException("Unknown Transfer Encoding provided by Destination Server.");
 
             return (placeHolder.ToString(), firstByteTime);
         }
@@ -182,7 +182,7 @@ namespace Proxy.Client.Utilities.Extensions
 
             if (readString.Contains(RequestConstants.CONTENT_LENGTH_HEADER)) await sslStream.DecodeContentLengthAsync(placeHolder, buffer, bufferString);
             else if (readString.Contains(RequestConstants.TRANSFER_ENCODING_CHUNKED_HEADER)) await sslStream.DecodeChunkedAsync(placeHolder, buffer, bufferString);
-            else throw new ProxyException("Unknown Content Encoding provided by Destination Server.");
+            else throw new ProxyException("Unknown Transfer Encoding provided by Destination Server.");
 
             return (placeHolder.ToString(), firstByteTime);
         }
