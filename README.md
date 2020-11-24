@@ -1,6 +1,6 @@
 ![Proxy.Client](https://i.imgur.com/5HM1SLu.png)
 
-# Proxy.Client [![Build](https://github.com/bokklu/proxy-client/workflows/Build/badge.svg)](https://github.com/bokklu/proxy-client/actions?query=workflow%3ABuild) [![NuGet](https://img.shields.io/nuget/v/Proxy.Client?style=flat-square)](https://www.nuget.org/packages/Proxy.Client/) [![GitHub](https://img.shields.io/github/license/bokklu/proxy-client?style=flat-square)](https://github.com/bokklu/proxy-client/blob/master/LICENSE)
+# Proxy.Client [![Build](https://github.com/bokklu/proxy-client/workflows/Build/badge.svg)](https://github.com/bokklu/proxy-client/actions?query=workflow%3ABuild) [![NuGet](https://img.shields.io/nuget/v/Proxy.Client?style=flat-square)](https://www.nuget.org/packages/Proxy.Client/) [![GitHub](https://img.shields.io/github/license/bokklu/proxy-client?style=flat-square)](https://github.com/bokklu/proxy-client/blob/master/LICENSE) ![Downloads](https://img.shields.io/nuget/dt/Proxy.Client?color=blue&style=flat-square)
 
 The Proxy Client library allows the user to send and receive requests over Http, Socks4/4a/5 proxies.
 
