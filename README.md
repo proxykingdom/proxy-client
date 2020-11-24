@@ -51,6 +51,14 @@ using(var socks4ProxyClient = new Socks4ProxyClient("212.86.75.9", 4153))
     var response = await socks4ProxyClient.GetAsync("https://www.example.com/", cookies: proxyCookies);
 }
 ```
+### Adding Timeout
+Below is an example of a request with a 10 second timeout:
+```C#
+using(var socks4ProxyClient = new Socks4ProxyClient("212.86.75.9", 4153))
+{
+    var response = await socks4ProxyClient.GetAsync("https://www.example.com/", timeout: 10000);
+}
+```
 ### Keep-Alive Support
 By default, all connections are persistent.
 To force the connection/socket closure, set the isKeepAlive flag to False:
