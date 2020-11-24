@@ -1,7 +1,6 @@
 ﻿using Proxy.Client.Contracts.Constants;
 using Proxy.Client.Exceptions;
 using System;
-using System.Diagnostics;
 using System.Globalization;
 using System.Net.Security;
 using System.Net.Sockets;

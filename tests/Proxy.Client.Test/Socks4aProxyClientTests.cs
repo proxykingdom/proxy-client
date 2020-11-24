@@ -1,6 +1,7 @@
 ﻿using NUnit.Framework;
 using Proxy.Client.Contracts;
 using Proxy.Client.Exceptions;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
@@ -184,6 +185,21 @@ namespace Proxy.Client.Test
         }
 
         [Test]
+        public async Task GetAsync_WithTimeout_Successful()
+        {
+            var response = await _socks4aProxyClient.GetAsync("http://www.example.com/", timeout: 10000);
+
+            Assert.IsNotNull(response);
+            Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
+        }
+
+        [Test]
+        public void GetAsync_WithTimeout_TimedOut()
+        {
+            Assert.ThrowsAsync<TimeoutException>(async () => await _socks4aProxyClient.GetAsync("http://www.example.com/", timeout: 0));
+        }
+
+        [Test]
         public void Get_InvalidUrl_Failed()
         {
             Assert.Throws<ProxyException>(() => _socks4aProxyClient.Get("http:wrongurl"));
@@ -359,6 +375,21 @@ namespace Proxy.Client.Test
                 Assert.AreEqual(response2.StatusCode, HttpStatusCode.OK);
                 Assert.IsTrue(response2.Timings.ConnectTime == 0);
             });
+        }
+
+        [Test]
+        public async Task PostAsync_WithTimeout_Successful()
+        {
+            var response = await _socks4aProxyClient.PostAsync("http://www.example.com/", "testContent", timeout: 10000);
+
+            Assert.IsNotNull(response);
+            Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
+        }
+
+        [Test]
+        public void PostAsync_WithTimeout_TimedOut()
+        {
+            Assert.ThrowsAsync<TimeoutException>(async () => await _socks4aProxyClient.PostAsync("http://www.example.com/", "testContent", timeout: 0));
         }
 
         [Test]
@@ -540,6 +571,21 @@ namespace Proxy.Client.Test
         }
 
         [Test]
+        public async Task PutAsync_WithTimeout_Successful()
+        {
+            var response = await _socks4aProxyClient.PutAsync("http://www.example.com/", "testContent", timeout: 10000);
+
+            Assert.IsNotNull(response);
+            Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
+        }
+
+        [Test]
+        public void PutAsync_WithTimeout_TimedOut()
+        {
+            Assert.ThrowsAsync<TimeoutException>(async () => await _socks4aProxyClient.PutAsync("http://www.example.com/", "testContent", timeout: 0));
+        }
+
+        [Test]
         public void Put_InvalidUrl_Failed()
         {
             Assert.Throws<ProxyException>(() => _socks4aProxyClient.Put("http:wrongurl", "testContent"));
@@ -715,6 +761,21 @@ namespace Proxy.Client.Test
                 Assert.AreEqual(response2.StatusCode, HttpStatusCode.OK);
                 Assert.IsTrue(response2.Timings.ConnectTime == 0);
             });
+        }
+
+        [Test]
+        public async Task DeleteAsync_WithTimeout_Successful()
+        {
+            var response = await _socks4aProxyClient.DeleteAsync("http://www.example.com/", timeout: 10000);
+
+            Assert.IsNotNull(response);
+            Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
+        }
+
+        [Test]
+        public void DeleteAsync_WithTimeout_TimedOut()
+        {
+            Assert.ThrowsAsync<TimeoutException>(async () => await _socks4aProxyClient.DeleteAsync("http://www.example.com/", timeout: 0));
         }
 
         [Test]
