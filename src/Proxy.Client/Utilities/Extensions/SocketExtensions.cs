@@ -6,6 +6,7 @@ using System.Net.Security;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Proxy.Client.Utilities.Extensions
@@ -64,8 +65,10 @@ namespace Proxy.Client.Utilities.Extensions
         /// Asynchronously receives the response from the destination server.
         /// </summary>
         /// <param name="socket">Underlying socket.</param>
+        /// <param name="readTimeout">Socket Read Timeout.</param>
+        /// <param name="cancellationTokenSourceManager">Cancellation Token Source manager.</param>
         /// <returns>The raw response and the time to first byte</returns>
-        public static async Task<(string response, float firstByteTime)> ReceiveAllAsync(this Socket socket)
+        public static async Task<(string response, float firstByteTime)> ReceiveAllAsync(this Socket socket, int readTimeout, CancellationTokenSourceManager cancellationTokenSourceManager)
         {
             var buffer = new byte[BufferSize];
             var placeHolder = new StringBuilder();
@@ -73,7 +76,7 @@ namespace Proxy.Client.Utilities.Extensions
 
             var firstByteTime = await TimingHelper.MeasureAsync(async () => 
             {
-                bytesRead = await socket.ReceiveAsync(buffer, buffer.Length);
+                bytesRead = await socket.ReceiveAsync(buffer, readTimeout, cancellationTokenSourceManager);
             });
 
             if (bytesRead == 0)
@@ -84,7 +87,7 @@ namespace Proxy.Client.Utilities.Extensions
 
             while (!bufferString.Contains(RequestConstants.CONTENT_SEPERATOR))
             {
-                bytesRead = await socket.ReceiveAsync(buffer, buffer.Length);
+                bytesRead = await socket.ReceiveAsync(buffer, readTimeout, cancellationTokenSourceManager);
                 
                 if (bytesRead == 0) 
                     return (placeHolder.ToString(), firstByteTime);
@@ -95,8 +98,8 @@ namespace Proxy.Client.Utilities.Extensions
 
             var readString = placeHolder.ToString();
 
-            if (readString.Contains(RequestConstants.CONTENT_LENGTH_HEADER)) await socket.DecodeContentLengthAsync(placeHolder, buffer, bufferString);
-            else if (readString.Contains(RequestConstants.TRANSFER_ENCODING_CHUNKED_HEADER)) await socket.DecodeChunkedAsync(placeHolder, buffer, bufferString);
+            if (readString.Contains(RequestConstants.CONTENT_LENGTH_HEADER)) await socket.DecodeContentLengthAsync(placeHolder, buffer, bufferString, readTimeout, cancellationTokenSourceManager);
+            else if (readString.Contains(RequestConstants.TRANSFER_ENCODING_CHUNKED_HEADER)) await socket.DecodeChunkedAsync(placeHolder, bufferString, readTimeout, cancellationTokenSourceManager);
             else throw new ProxyException("Unknown Transfer Encoding provided by Destination Server.");
 
             return (placeHolder.ToString(), firstByteTime);
@@ -148,8 +151,10 @@ namespace Proxy.Client.Utilities.Extensions
         /// Asynchronously receives the response from the destination server.
         /// </summary>
         /// <param name="sslStream">Underlying SSL encrypted stream.</param>
+        /// <param name="readTimeout">Socket Read Timeout.</param>
+        /// <param name="cancellationTokenSourceManager">Cancellation Token Source manager.</param>
         /// <returns>The raw response and the time to first byte</returns>
-        public static async Task<(string response, float firstByteTime)> ReceiveAllAsync(this SslStream sslStream)
+        public static async Task<(string response, float firstByteTime)> ReceiveAllAsync(this SslStream sslStream, int readTimeout, CancellationTokenSourceManager cancellationTokenSourceManager)
         {
             var buffer = new byte[BufferSize];
             var placeHolder = new StringBuilder();
@@ -157,7 +162,7 @@ namespace Proxy.Client.Utilities.Extensions
 
             var firstByteTime = await TimingHelper.MeasureAsync(async () =>
             {
-                bytesRead = await sslStream.ReadAsync(buffer, 0, buffer.Length);
+                bytesRead = await sslStream.ReadAsync(buffer, buffer.Length, readTimeout, cancellationTokenSourceManager);
             });
 
             if (bytesRead == 0)
@@ -168,7 +173,7 @@ namespace Proxy.Client.Utilities.Extensions
 
             while(!bufferString.Contains(RequestConstants.CONTENT_SEPERATOR))
             {
-                bytesRead = await sslStream.ReadAsync(buffer, 0, buffer.Length);
+                bytesRead = await sslStream.ReadAsync(buffer, buffer.Length, readTimeout, cancellationTokenSourceManager);
 
                 if (bytesRead == 0) 
                     return (placeHolder.ToString(), firstByteTime);
@@ -179,54 +184,114 @@ namespace Proxy.Client.Utilities.Extensions
 
             var readString = placeHolder.ToString();
 
-            if (readString.Contains(RequestConstants.CONTENT_LENGTH_HEADER)) await sslStream.DecodeContentLengthAsync(placeHolder, buffer, bufferString);
-            else if (readString.Contains(RequestConstants.TRANSFER_ENCODING_CHUNKED_HEADER)) await sslStream.DecodeChunkedAsync(placeHolder, buffer, bufferString);
+            if (readString.Contains(RequestConstants.CONTENT_LENGTH_HEADER)) await sslStream.DecodeContentLengthAsync(placeHolder, buffer, bufferString, readTimeout, cancellationTokenSourceManager);
+            else if (readString.Contains(RequestConstants.TRANSFER_ENCODING_CHUNKED_HEADER)) await sslStream.DecodeChunkedAsync(placeHolder, buffer, bufferString, readTimeout, cancellationTokenSourceManager);
             else throw new ProxyException("Unknown Transfer Encoding provided by Destination Server.");
 
             return (placeHolder.ToString(), firstByteTime);
         }
 
-        #region APM to Task Methods
         /// <summary>
-        /// Asynchronously sends the request to the destination server.
+        /// Asynchronously Connects to the Destination Server given a connect timeout.
         /// </summary>
         /// <param name="socket">Underlying socket.</param>
-        /// <param name="buffer">Buffer used to send the request.</param>
-        /// <returns>Number of bytes sent</returns>
-        public static Task<int> SendAsync(this Socket socket, byte[] buffer)
+        /// <param name="host">Destination Host.</param>
+        /// <param name="port">Destination Port.</param>
+        /// <param name="connectTimeout">Socket Connect Timeout.</param>
+        /// <param name="cancellationTokenSourceManager">Cancellation Token Source manager.</param>
+        public static async ValueTask ConnectAsync(this Socket socket, string host, int port, int connectTimeout, CancellationTokenSourceManager cancellationTokenSourceManager)
         {
-            return Task.Factory.FromAsync(
-                socket.BeginSend(buffer, 0, buffer.Length, SocketFlags.None, null, null),
-                socket.EndSend
-            );
+            cancellationTokenSourceManager.Start(connectTimeout);
+
+            await socket.ConnectAsync(host, port, cancellationTokenSourceManager.Token);
+
+            cancellationTokenSourceManager.Stop();
         }
 
         /// <summary>
-        /// Asynchronously received the response from the destination server.
+        /// Asynchronously sends data to the Destination Server given a write timeout.
         /// </summary>
         /// <param name="socket">Underlying socket.</param>
-        /// <param name="buffer">Buffer used to receive the response.</param>
-        /// <param name="count">Buffer count.</param>
-        /// <returns>Number of bytes received</returns>
-        public static Task<int> ReceiveAsync(this Socket socket, byte[] buffer, int count)
+        /// <param name="buffer">Send request byte buffer.</param>
+        /// <param name="writeTimeout">Socket Write Timeout.</param>
+        /// <param name="cancellationTokenSourceManager">Cancellation Token Source manager.</param>
+        /// <returns>Number of sent bytes</returns>
+        public static async ValueTask<int> SendAsync(this Socket socket, byte[] buffer, int writeTimeout, CancellationTokenSourceManager cancellationTokenSourceManager)
         {
-            return Task.Factory.FromAsync(
-                socket.BeginReceive(buffer, 0, count, SocketFlags.None, null, null),
-                socket.EndReceive
-            );
+            cancellationTokenSourceManager.Start(writeTimeout);
+
+            var sentBytes = await socket.SendAsync(buffer, SocketFlags.None, cancellationTokenSourceManager.Token);
+
+            cancellationTokenSourceManager.Stop();
+
+            return sentBytes;
         }
-        #endregion
+
+        /// <summary>
+        /// Asynchronously reads data from the Destination Server given a read timeout.
+        /// </summary>
+        /// <param name="socket">Underlying socket.</param>
+        /// <param name="buffer">Read byte buffer.</param>
+        /// <param name="readTimeout">Socket Read Timeout.</param>
+        /// <param name="cancellationTokenSourceManager">Cancellation Token Source manager.</param>
+        /// <returns>Number of read bytes</returns>
+        public static async ValueTask<int> ReceiveAsync(this Socket socket, byte[] buffer, int readTimeout, CancellationTokenSourceManager cancellationTokenSourceManager)
+        {
+            cancellationTokenSourceManager.Start(readTimeout);
+
+            var readBytes = await socket.ReceiveAsync(buffer, SocketFlags.None, cancellationTokenSourceManager.Token);
+
+            cancellationTokenSourceManager.Stop();
+
+            return readBytes;
+        }
+
+        /// <summary>
+        /// Asynchronously sends data to the Destination Server through an SSL connection given a write timeout.
+        /// </summary>
+        /// <param name="sslStream">Underlying SSL Stream.</param>
+        /// <param name="buffer">Send request byte buffer.</param>
+        /// <param name="writeTimeout">Socket Write Timeout.</param>
+        /// <param name="cancellationTokenSourceManager">Cancellation Token Source manager.</param>
+        public static async ValueTask WriteAsync(this SslStream sslStream, byte[] buffer, int writeTimeout, CancellationTokenSourceManager cancellationTokenSourceManager)
+        {
+            cancellationTokenSourceManager.Start(writeTimeout);
+
+            await sslStream.WriteAsync(buffer, cancellationTokenSourceManager.Token);
+
+            cancellationTokenSourceManager.Stop();
+        }
+
+        /// <summary>
+        /// Asynchronously reads data from the Destination Server through an SSL connection given a read timeout.
+        /// </summary>
+        /// <param name="sslStream">Underlying SSL Stream.</param>
+        /// <param name="buffer">Read byte buffer.</param>
+        /// <param name="count">Maximum number of bytes to read from the stream.</param>
+        /// <param name="readTimeout">Socket Read Timeout.</param>
+        /// <param name="cancellationTokenSourceManager">Cancellation Token Source manager.</param>
+        /// <returns>Number of read bytes</returns>
+        public static async ValueTask<int> ReadAsync(this SslStream sslStream, byte[] buffer, int count, int readTimeout, CancellationTokenSourceManager cancellationTokenSourceManager)
+        {
+            cancellationTokenSourceManager.Start(readTimeout);
+
+            var readBytes = await sslStream.ReadAsync(buffer, 0, count, cancellationTokenSourceManager.Token);
+
+            cancellationTokenSourceManager.Stop();
+
+            return readBytes;
+        }
 
         #region Content Decoding Methods
         #region Content Length Methods
 
-        private static string DecodeContentLength(this Socket s, StringBuilder placeHolder, byte[] buffer, string bufferString)
+        private static string DecodeContentLength(this Socket socket, StringBuilder placeHolder, byte[] buffer, string bufferString)
         {
             var (contentLength, totalBytesRead) = ExtractContentLength(placeHolder, bufferString);
 
             while (totalBytesRead < contentLength)
             {
-                var innerBytesRead = s.Receive(buffer, SocketFlags.None);
+                var innerBytesRead = socket.Receive(buffer, SocketFlags.None);
                 totalBytesRead += innerBytesRead;
                 placeHolder.Append(Encoding.ASCII.GetString(buffer, 0, innerBytesRead));
             }
@@ -234,13 +299,14 @@ namespace Proxy.Client.Utilities.Extensions
             return placeHolder.ToString();
         }
 
-        private static async Task<string> DecodeContentLengthAsync(this Socket s, StringBuilder placeHolder, byte[] buffer, string bufferString)
+        private static async Task<string> DecodeContentLengthAsync(this Socket socket, StringBuilder placeHolder, byte[] buffer, string bufferString,
+            int readTimeout, CancellationTokenSourceManager timeoutCancellationTokenSourceWrapper)
         {
             var (contentLength, totalBytesRead) = ExtractContentLength(placeHolder, bufferString);
 
             while (totalBytesRead < contentLength)
             {
-                var innerBytesRead = await s.ReceiveAsync(buffer, buffer.Length);
+                var innerBytesRead = await socket.ReceiveAsync(buffer, readTimeout, timeoutCancellationTokenSourceWrapper);
                 totalBytesRead += innerBytesRead;
                 placeHolder.Append(Encoding.ASCII.GetString(buffer, 0, innerBytesRead));
             }
@@ -248,25 +314,26 @@ namespace Proxy.Client.Utilities.Extensions
             return placeHolder.ToString();
         }
 
-        private static void DecodeContentLength(this SslStream ss, StringBuilder placeHolder, byte[] buffer, string bufferString)
+        private static void DecodeContentLength(this SslStream sslStream, StringBuilder placeHolder, byte[] buffer, string bufferString)
         {
             var (contentLength, totalBytesRead) = ExtractContentLength(placeHolder, bufferString);
 
             while (totalBytesRead < contentLength)
             {
-                var innerBytesRead = ss.Read(buffer, 0, buffer.Length);
+                var innerBytesRead = sslStream.Read(buffer, 0, buffer.Length);
                 totalBytesRead += innerBytesRead;
                 placeHolder.Append(Encoding.ASCII.GetString(buffer, 0, innerBytesRead));
             }
         }
 
-        private static async Task DecodeContentLengthAsync(this SslStream ss, StringBuilder placeHolder, byte[] buffer, string bufferString)
+        private static async Task DecodeContentLengthAsync(this SslStream sslStream, StringBuilder placeHolder, byte[] buffer, string bufferString, 
+            int readTimeout, CancellationTokenSourceManager timeoutCancellationTokenSourceWrapper)
         {
             var (contentLength, totalBytesRead) = ExtractContentLength(placeHolder, bufferString);
 
             while (totalBytesRead < contentLength)
             {
-                var innerBytesRead = await ss.ReadAsync(buffer, 0, buffer.Length);
+                var innerBytesRead = await sslStream.ReadAsync(buffer, buffer.Length, readTimeout, timeoutCancellationTokenSourceWrapper);
                 totalBytesRead += innerBytesRead;
                 placeHolder.Append(Encoding.ASCII.GetString(buffer, 0, innerBytesRead));
             }
@@ -285,13 +352,13 @@ namespace Proxy.Client.Utilities.Extensions
         #endregion
 
         #region Chunked Methods
-        private static void DecodeChunked(this Socket s, StringBuilder placeHolder, byte[] buffer, string bufferString)
+        private static void DecodeChunked(this Socket socket, StringBuilder placeHolder, byte[] buffer, string bufferString)
         {
             var splitBuffer = bufferString.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.RemoveEmptyEntries);
 
             if (splitBuffer.Length == 1)
             {
-                var peekBytesRead = s.Receive(buffer, PeekBufferSize, SocketFlags.None);
+                var peekBytesRead = socket.Receive(buffer, PeekBufferSize, SocketFlags.None);
                 bufferString = Encoding.ASCII.GetString(buffer, 0, peekBytesRead);
                 placeHolder.Append(bufferString);
             }
@@ -309,26 +376,28 @@ namespace Proxy.Client.Utilities.Extensions
                     var remainingReadSize = chunkSize - totalBytesRead;
                     var readSize = remainingReadSize > BufferSize ? BufferSize : remainingReadSize;
 
-                    var innerBytesRead = s.Receive(buffer, readSize, SocketFlags.None);
+                    var innerBytesRead = socket.Receive(buffer, readSize, SocketFlags.None);
                     totalBytesRead += innerBytesRead;
                     placeHolder.Append(Encoding.ASCII.GetString(buffer, 0, innerBytesRead));
                 }
 
-                var peekBytesRead = s.Receive(buffer, PeekBufferSize, SocketFlags.None);
+                var peekBytesRead = socket.Receive(buffer, PeekBufferSize, SocketFlags.None);
                 bufferString = Encoding.ASCII.GetString(buffer, 0, peekBytesRead);
 
                 (chunkSize, totalBytesRead) = ExtractChunkSize(bufferString);
             }
         }
 
-        private static async Task DecodeChunkedAsync(this Socket s, StringBuilder placeHolder, byte[] buffer, string bufferString)
+        private static async Task DecodeChunkedAsync(this Socket socket, StringBuilder placeHolder, string bufferString, 
+            int readTimeout, CancellationTokenSourceManager timeoutCancellationTokenSourceWrapper)
         {
+            var peekBuffer = new byte[PeekBufferSize];
             var splitBuffer = bufferString.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.RemoveEmptyEntries);
 
             if (splitBuffer.Length == 1)
             {
-                var peekBytesRead = await s.ReceiveAsync(buffer, PeekBufferSize);
-                bufferString = Encoding.ASCII.GetString(buffer, 0, peekBytesRead);
+                var peekBytesRead = await socket.ReceiveAsync(peekBuffer, readTimeout, timeoutCancellationTokenSourceWrapper);
+                bufferString = Encoding.ASCII.GetString(peekBuffer, 0, peekBytesRead);
                 placeHolder.Append(bufferString);
             }
             else
@@ -344,14 +413,15 @@ namespace Proxy.Client.Utilities.Extensions
                 {
                     var remainingReadSize = chunkSize - totalBytesRead;
                     var readSize = remainingReadSize > BufferSize ? BufferSize : remainingReadSize;
+                    var readBuffer = new byte[readSize];
 
-                    var innerBytesRead = await s.ReceiveAsync(buffer, readSize);
+                    var innerBytesRead = await socket.ReceiveAsync(readBuffer, readTimeout, timeoutCancellationTokenSourceWrapper);
                     totalBytesRead += innerBytesRead;
-                    placeHolder.Append(Encoding.ASCII.GetString(buffer, 0, innerBytesRead));
+                    placeHolder.Append(Encoding.ASCII.GetString(readBuffer, 0, innerBytesRead));
                 }
 
-                var peekBytesRead = await s.ReceiveAsync(buffer, PeekBufferSize);
-                bufferString = Encoding.ASCII.GetString(buffer, 0, peekBytesRead);
+                var peekBytesRead = await socket.ReceiveAsync(peekBuffer, readTimeout, timeoutCancellationTokenSourceWrapper);
+                bufferString = Encoding.ASCII.GetString(peekBuffer, 0, peekBytesRead);
 
                 (chunkSize, totalBytesRead) = ExtractChunkSize(bufferString);
             }
@@ -393,13 +463,14 @@ namespace Proxy.Client.Utilities.Extensions
             }
         }
 
-        private static async Task DecodeChunkedAsync(this SslStream ss, StringBuilder placeHolder, byte[] buffer, string bufferString)
+        private static async Task DecodeChunkedAsync(this SslStream sslStream, StringBuilder placeHolder, byte[] buffer, string bufferString, 
+            int readTimeout, CancellationTokenSourceManager timeoutCancellationTokenSourceWrapper)
         {
             var splitBuffer = bufferString.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.RemoveEmptyEntries);
 
             if (splitBuffer.Length == 1)
             {
-                var peekBytesRead = await ss.ReadAsync(buffer, 0, PeekBufferSize);
+                var peekBytesRead = await sslStream.ReadAsync(buffer, PeekBufferSize, readTimeout, timeoutCancellationTokenSourceWrapper);
                 bufferString = Encoding.ASCII.GetString(buffer, 0, peekBytesRead);
                 placeHolder.Append(bufferString);
             }
@@ -417,12 +488,12 @@ namespace Proxy.Client.Utilities.Extensions
                     var remainingReadSize = chunkSize - totalBytesRead;
                     var readSize = remainingReadSize > BufferSize ? BufferSize : remainingReadSize;
 
-                    var innerBytesRead = await ss.ReadAsync(buffer, 0, readSize);
+                    var innerBytesRead = await sslStream.ReadAsync(buffer, readSize, readTimeout, timeoutCancellationTokenSourceWrapper);
                     totalBytesRead += innerBytesRead;
                     placeHolder.Append(Encoding.ASCII.GetString(buffer, 0, innerBytesRead));
                 }
 
-                var peekBytesRead = await ss.ReadAsync(buffer, 0, PeekBufferSize);
+                var peekBytesRead = await sslStream.ReadAsync(buffer, PeekBufferSize, readTimeout, timeoutCancellationTokenSourceWrapper);
                 bufferString = Encoding.ASCII.GetString(buffer, 0, peekBytesRead);
 
                 (chunkSize, totalBytesRead) = ExtractChunkSize(bufferString);

@@ -74,8 +74,11 @@ namespace Proxy.Client
         /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
         /// <param name="headers">Headers to be sent with the GET command.</param>
         /// <param name="cookies">Cookies to be sent with the GET command.</param>
+        /// <param name="readTimeout">Read Timeout in ms.</param>
+        /// <param name="writeTimeout">Write Timeout in ms.</param>
         /// <returns>Proxy Response</returns>
-        public override ProxyResponse Get(string url, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null)
+        public override ProxyResponse Get(string url, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null,
+            int readTimeout = 10000, int writeTimeout = 10000)
         {
             return HandleRequest(() =>
             {
@@ -83,7 +86,8 @@ namespace Proxy.Client
             }, () =>
             {
                 return SendGetCommand(isKeepAlive, headers, cookies);
-            }, url, isKeepAlive);
+            }, 
+            url, isKeepAlive, readTimeout, writeTimeout);
         }
 
         /// <summary>
@@ -93,9 +97,13 @@ namespace Proxy.Client
         /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
         /// <param name="headers">Headers to be sent with the GET command.</param>
         /// <param name="cookies">Cookies to be sent with the GET command.</param>
-        /// <param name="timeout">Request Timeout in ms.</param>
+        /// <param name="totalTimeout">Total Request Timeout in ms.</param>
+        /// <param name="connectTimeout">Connect Timeout in ms.</param>
+        /// <param name="readTimeout">Read Timeout in ms.</param>
+        /// <param name="writeTimeout">Write Timeout in ms.</param>
         /// <returns>Proxy Response</returns>
-        public override Task<ProxyResponse> GetAsync(string url, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null, int timeout = 60000)
+        public override Task<ProxyResponse> GetAsync(string url, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null,
+            int totalTimeout = 60000, int connectTimeout = 45000, int readTimeout = 10000, int writeTimeout = 10000)
         {
             return HandleRequestAsync(() =>
             {
@@ -104,7 +112,7 @@ namespace Proxy.Client
             {
                 return SendGetCommandAsync(isKeepAlive, headers, cookies);
             }, 
-            url, isKeepAlive).ExecuteTaskWithTimeout(this, timeout);
+            url, isKeepAlive, connectTimeout, readTimeout, writeTimeout).ExecuteTaskWithTimeout(this, totalTimeout, CancellationTokenSourceManager);
         }
 
         /// <summary>
@@ -115,8 +123,11 @@ namespace Proxy.Client
         /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
         /// <param name="headers">Headers to be sent with the POST command.</param>
         /// <param name="cookies">Cookies to be sent with the POST command.</param>
+        /// <param name="readTimeout">Read Timeout in ms.</param>
+        /// <param name="writeTimeout">Write Timeout in ms.</param>
         /// <returns>Proxy Response</returns>
-        public override ProxyResponse Post(string url, string body, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null)
+        public override ProxyResponse Post(string url, string body, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null,
+            int readTimeout = 10000, int writeTimeout = 10000)
         {
             return HandleRequest(() =>
             {
@@ -124,7 +135,8 @@ namespace Proxy.Client
             }, () =>
             {
                 return SendPostCommand(body, isKeepAlive, headers, cookies);
-            }, url, isKeepAlive);
+            }, 
+            url, isKeepAlive, readTimeout, writeTimeout);
         }
 
         /// <summary>
@@ -135,9 +147,13 @@ namespace Proxy.Client
         /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
         /// <param name="headers">Headers to be sent with the POST command.</param>
         /// <param name="cookies">Cookies to be sent with the POST command.</param>
-        /// <param name="timeout">Request Timeout in ms.</param>
+        /// <param name="totalTimeout">Total Request Timeout in ms.</param>
+        /// <param name="connectTimeout">Connect Timeout in ms.</param>
+        /// <param name="readTimeout">Read Timeout in ms.</param>
+        /// <param name="writeTimeout">Write Timeout in ms.</param>
         /// <returns>Proxy Response</returns>
-        public override Task<ProxyResponse> PostAsync(string url, string body, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null, int timeout = 60000)
+        public override Task<ProxyResponse> PostAsync(string url, string body, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null,
+            int totalTimeout = 60000, int connectTimeout = 45000, int readTimeout = 10000, int writeTimeout = 10000)
         {
             return HandleRequestAsync(() =>
             {
@@ -146,7 +162,7 @@ namespace Proxy.Client
             {
                 return SendPostCommandAsync(body, isKeepAlive, headers, cookies);
             },
-            url, isKeepAlive).ExecuteTaskWithTimeout(this, timeout);
+            url, isKeepAlive, connectTimeout, readTimeout, writeTimeout).ExecuteTaskWithTimeout(this, totalTimeout, CancellationTokenSourceManager);
         }
 
         /// <summary>
@@ -157,8 +173,11 @@ namespace Proxy.Client
         /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
         /// <param name="headers">Headers to be sent with the PUT command.</param>
         /// <param name="cookies">Cookies to be sent with the PUT command.</param>
+        /// <param name="readTimeout">Read Timeout in ms.</param>
+        /// <param name="writeTimeout">Write Timeout in ms.</param>
         /// <returns>Proxy Response</returns>
-        public override ProxyResponse Put(string url, string body, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null)
+        public override ProxyResponse Put(string url, string body, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null,
+            int readTimeout = 10000, int writeTimeout = 10000)
         {
             return HandleRequest(() =>
             {
@@ -166,7 +185,8 @@ namespace Proxy.Client
             }, () =>
             {
                 return SendPutCommand(body, isKeepAlive, headers, cookies);
-            }, url, isKeepAlive);
+            }, 
+            url, isKeepAlive, readTimeout, writeTimeout);
         }
 
         /// <summary>
@@ -177,9 +197,13 @@ namespace Proxy.Client
         /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
         /// <param name="headers">Headers to be sent with the PUT command.</param>
         /// <param name="cookies">Cookies to be sent with the PUT command.</param>
-        /// <param name="timeout">Request Timeout in ms.</param>
+        /// <param name="totalTimeout">Total Request Timeout in ms.</param>
+        /// <param name="connectTimeout">Connect Timeout in ms.</param>
+        /// <param name="readTimeout">Read Timeout in ms.</param>
+        /// <param name="writeTimeout">Write Timeout in ms.</param>
         /// <returns>Proxy Response</returns>
-        public override Task<ProxyResponse> PutAsync(string url, string body, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null, int timeout = 60000)
+        public override Task<ProxyResponse> PutAsync(string url, string body, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null,
+            int totalTimeout = 60000, int connectTimeout = 45000, int readTimeout = 10000, int writeTimeout = 10000)
         {
             return HandleRequestAsync(() =>
             {
@@ -188,7 +212,7 @@ namespace Proxy.Client
             {
                 return SendPutCommandAsync(body, isKeepAlive, headers, cookies);
             }, 
-            url, isKeepAlive).ExecuteTaskWithTimeout(this, timeout);
+            url, isKeepAlive, connectTimeout, readTimeout, writeTimeout).ExecuteTaskWithTimeout(this, totalTimeout, CancellationTokenSourceManager);
         }
 
         /// <summary>
@@ -198,8 +222,11 @@ namespace Proxy.Client
         /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
         /// <param name="headers">Headers to be sent with the DELETE command.</param>
         /// <param name="cookies">Cookies to be sent with the DELETE command.</param>
+        /// <param name="readTimeout">Read Timeout in ms.</param>
+        /// <param name="writeTimeout">Write Timeout in ms.</param>
         /// <returns>Proxy Response</returns>
-        public override ProxyResponse Delete(string url, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null)
+        public override ProxyResponse Delete(string url, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null,
+            int readTimeout = 10000, int writeTimeout = 10000)
         {
             return HandleRequest(() =>
             {
@@ -207,7 +234,8 @@ namespace Proxy.Client
             }, () =>
             {
                 return SendDeleteCommand(isKeepAlive, headers, cookies);
-            }, url, isKeepAlive);
+            }, 
+            url, isKeepAlive, readTimeout, writeTimeout);
         }
 
         /// <summary>
@@ -217,9 +245,13 @@ namespace Proxy.Client
         /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
         /// <param name="headers">Headers to be sent with the DELETE command.</param>
         /// <param name="cookies">Cookies to be sent with the DELETE command.</param>
-        /// <param name="timeout">Request Timeout in ms.</param>
+        /// <param name="totalTimeout">Total Request Timeout in ms.</param>
+        /// <param name="connectTimeout">Connect Timeout in ms.</param>
+        /// <param name="readTimeout">Read Timeout in ms.</param>
+        /// <param name="writeTimeout">Write Timeout in ms.</param>
         /// <returns>Proxy Response</returns>
-        public override Task<ProxyResponse> DeleteAsync(string url, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null, int timeout = 60000)
+        public override Task<ProxyResponse> DeleteAsync(string url, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null,
+            int totalTimeout = 60000, int connectTimeout = 45000, int readTimeout = 10000, int writeTimeout = 10000)
         {
             return HandleRequestAsync(() =>
             {
@@ -228,7 +260,7 @@ namespace Proxy.Client
             {
                 return SendDeleteCommandAsync(isKeepAlive, headers, cookies);
             },
-            url, isKeepAlive).ExecuteTaskWithTimeout(this, timeout);
+            url, isKeepAlive, connectTimeout, readTimeout, writeTimeout).ExecuteTaskWithTimeout(this, totalTimeout, CancellationTokenSourceManager);
         }
 
         /// <summary>
@@ -265,10 +297,10 @@ namespace Proxy.Client
 
             var request = GetCommandRequest(destinationAddressBytes, destinationPortBytes, userIdBytes);
 
-            await Socket.SendAsync(request);
+            await Socket.SendAsync(request, WriteTimeout, CancellationTokenSourceManager);
 
             var response = new byte[8];
-            await Socket.ReceiveAsync(response, response.Length);
+            await Socket.ReceiveAsync(response, ReadTimeout, CancellationTokenSourceManager);
 
             if (response[1] != Socks4Constants.SOCKS4_CMD_REPLY_REQUEST_GRANTED)
                 HandleProxyCommandError(response);

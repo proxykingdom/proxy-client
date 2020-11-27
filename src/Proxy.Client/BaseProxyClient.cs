@@ -56,6 +56,21 @@ namespace Proxy.Client
         public string UrlQuery { get; private set; }
 
         /// <summary>
+        /// Socket Connect Timeout.
+        /// </summary>
+        public int ConnectTimeout { get; private set; }
+
+        /// <summary>
+        /// Socket Read Timeout.
+        /// </summary>
+        public int ReadTimeout { get; private set; }
+
+        /// <summary>
+        /// Socket Write Timeout.
+        /// </summary>
+        public int WriteTimeout { get; private set; }
+
+        /// <summary>
         /// Underlying socket used to send and receive requests.
         /// </summary>
         protected internal Socket Socket { get; private set; }
@@ -66,14 +81,24 @@ namespace Proxy.Client
         protected internal SslStream SslStream { get; private set; }
 
         /// <summary>
-        /// Destination URI object.
+        /// Destination URI.
         /// </summary>
         protected internal Uri DestinationUri { get; private set; }
+
+        /// <summary>
+        /// Cancellation Token Source Manager.
+        /// </summary>
+        protected internal CancellationTokenSourceManager CancellationTokenSourceManager { get; private set; }
 
         /// <summary>
         /// Indicates whether the destination server explicitly closes the underlying connection.
         /// </summary>
         protected internal bool IsConnectionClosed { get; private set; }
+
+        /// <summary>
+        /// Indicates whether the request has thrown an exception or not.
+        /// </summary>
+        protected internal bool IsFaulted { get; internal set; }
 
         /// <summary>
         /// Indicates whether the underlying Socket and dependencies are disposed.
@@ -87,8 +112,11 @@ namespace Proxy.Client
         /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
         /// <param name="headers">Headers to be sent with the GET command.</param>
         /// <param name="cookies">Cookies to be sent with the GET command.</param>
+        /// <param name="readTimeout">Read Timeout in ms.</param>
+        /// <param name="writeTimeout">Write Timeout in ms.</param>
         /// <returns>Proxy Response</returns>
-        public abstract ProxyResponse Get(string url, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null);
+        public abstract ProxyResponse Get(string url, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null,
+            int readTimeout = 10000, int writeTimeout = 10000);
 
         /// <summary>
         /// Asynchronously connects to the proxy client, sends the GET command to the destination server and returns the response.
@@ -97,9 +125,13 @@ namespace Proxy.Client
         /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
         /// <param name="headers">Headers to be sent with the GET command.</param>
         /// <param name="cookies">Cookies to be sent with the GET command.</param>
-        /// <param name="timeout">Request Timeout in ms.</param>
+        /// <param name="totalTimeout">Total Request Timeout in ms.</param>
+        /// <param name="connectTimeout">Connect Timeout in ms.</param>
+        /// <param name="readTimeout">Read Timeout in ms.</param>
+        /// <param name="writeTimeout">Write Timeout in ms.</param>
         /// <returns>Proxy Response</returns>
-        public abstract Task<ProxyResponse> GetAsync(string url, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null, int timeout = 60000);
+        public abstract Task<ProxyResponse> GetAsync(string url, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null,
+            int totalTimeout = 60000, int connectTimeout = 45000, int readTimeout = 10000, int writeTimeout = 10000);
 
         /// <summary>
         /// Connects to the proxy client, sends the POST command to the destination server and returns the response.
@@ -109,8 +141,11 @@ namespace Proxy.Client
         /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
         /// <param name="headers">Headers to be sent with the POST command.</param>
         /// <param name="cookies">Cookies to be sent with the POST command.</param>
+        /// <param name="readTimeout">Read Timeout in ms.</param>
+        /// <param name="writeTimeout">Write Timeout in ms.</param>
         /// <returns>Proxy Response</returns>
-        public abstract ProxyResponse Post(string url, string body, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null);
+        public abstract ProxyResponse Post(string url, string body, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null,
+            int readTimeout = 10000, int writeTimeout = 10000);
 
         /// <summary>
         /// Asynchronously connects to the proxy client, sends the POST command to the destination server and returns the response.
@@ -120,9 +155,13 @@ namespace Proxy.Client
         /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
         /// <param name="headers">Headers to be sent with the POST command.</param>
         /// <param name="cookies">Cookies to be sent with the POST command.</param>
-        /// <param name="timeout">Request Timeout in ms.</param>
+        /// <param name="totalTimeout">Total Request Timeout in ms.</param>
+        /// <param name="connectTimeout">Connect Timeout in ms.</param>
+        /// <param name="readTimeout">Read Timeout in ms.</param>
+        /// <param name="writeTimeout">Write Timeout in ms.</param>
         /// <returns>Proxy Response</returns>
-        public abstract Task<ProxyResponse> PostAsync(string url, string body, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null, int timeout = 60000);
+        public abstract Task<ProxyResponse> PostAsync(string url, string body, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null,
+            int totalTimeout = 60000, int connectTimeout = 45000, int readTimeout = 10000, int writeTimeout = 10000);
 
         /// <summary>
         /// Connects to the proxy client, sends the PUT command to the destination server and returns the response.
@@ -132,8 +171,11 @@ namespace Proxy.Client
         /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
         /// <param name="headers">Headers to be sent with the PUT command.</param>
         /// <param name="cookies">Cookies to be sent with the PUT command.</param>
+        /// <param name="readTimeout">Read Timeout in ms.</param>
+        /// <param name="writeTimeout">Write Timeout in ms.</param>
         /// <returns>Proxy Response</returns>
-        public abstract ProxyResponse Put(string url, string body, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null);
+        public abstract ProxyResponse Put(string url, string body, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null,
+            int readTimeout = 10000, int writeTimeout = 10000);
 
         /// <summary>
         /// Asynchronously connects to the proxy client, sends the PUT command to the destination server and returns the response.
@@ -143,9 +185,13 @@ namespace Proxy.Client
         /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
         /// <param name="headers">Headers to be sent with the PUT command.</param>
         /// <param name="cookies">Cookies to be sent with the PUT command.</param>
-        /// <param name="timeout">Request Timeout in ms.</param>
+        /// <param name="totalTimeout">Total Request Timeout in ms.</param>
+        /// <param name="connectTimeout">Connect Timeout in ms.</param>
+        /// <param name="readTimeout">Read Timeout in ms.</param>
+        /// <param name="writeTimeout">Write Timeout in ms.</param>
         /// <returns>Proxy Response</returns>
-        public abstract Task<ProxyResponse> PutAsync(string url, string body, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null, int timeout = 60000);
+        public abstract Task<ProxyResponse> PutAsync(string url, string body, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null,
+             int totalTimeout = 60000, int connectTimeout = 45000, int readTimeout = 10000, int writeTimeout = 10000);
 
         /// <summary>
         /// Connects to the proxy client, sends the DELETE command to the destination server and returns the response.
@@ -154,8 +200,11 @@ namespace Proxy.Client
         /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
         /// <param name="headers">Headers to be sent with the DELETE command.</param>
         /// <param name="cookies">Cookies to be sent with the DELETE command.</param>
+        /// <param name="readTimeout">Read Timeout in ms.</param>
+        /// <param name="writeTimeout">Write Timeout in ms.</param>
         /// <returns>Proxy Response</returns>
-        public abstract ProxyResponse Delete(string url, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null);
+        public abstract ProxyResponse Delete(string url, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null,
+            int readTimeout = 10000, int writeTimeout = 10000);
 
         /// <summary>
         /// Asynchronously connects to the proxy client, sends the DELETE command to the destination server and returns the response.
@@ -164,9 +213,13 @@ namespace Proxy.Client
         /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
         /// <param name="headers">Headers to be sent with the DELETE command.</param>
         /// <param name="cookies">Cookies to be sent with the DELETE command.</param>
-        /// <param name="timeout">Request Timeout in ms.</param>
+        /// <param name="totalTimeout">Total Request Timeout in ms.</param>
+        /// <param name="connectTimeout">Connect Timeout in ms.</param>
+        /// <param name="readTimeout">Read Timeout in ms.</param>
+        /// <param name="writeTimeout">Write Timeout in ms.</param>
         /// <returns>Proxy Response</returns>
-        public abstract Task<ProxyResponse> DeleteAsync(string url, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null, int timeout = 60000);
+        public abstract Task<ProxyResponse> DeleteAsync(string url, bool isKeepAlive = true, IEnumerable<ProxyHeader> headers = null, IEnumerable<Cookie> cookies = null,
+            int totalTimeout = 60000, int connectTimeout = 45000, int readTimeout = 10000, int writeTimeout = 10000);
 
         /// <summary>
         /// Disposes the socket dependencies.
@@ -175,6 +228,7 @@ namespace Proxy.Client
         {
             Socket?.Close();
             SslStream?.Close();
+            CancellationTokenSourceManager?.Dispose();
             IsDisposed = true;
         }
 
@@ -195,14 +249,20 @@ namespace Proxy.Client
         /// <param name="requestFn">Sends the request on the underlying socket.</param>
         /// <param name="url">Destination Url.</param>
         /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
+        /// <param name="readTimeout">Read Timeout in ms.</param>
+        /// <param name="writeTimeout">Write Timeout in ms.</param>
         /// <returns>Proxy Response</returns>
         protected internal ProxyResponse HandleRequest(Action connectNegotiationFn,
-            Func<(ProxyResponse response, float firstByteTime)> requestFn, string url, bool isKeepAlive)
+            Func<(ProxyResponse response, float firstByteTime)> requestFn, string url, bool isKeepAlive,
+            int readTimeout, int writeTimeout)
         {
             try
             {
                 var (cachedDestinationHost, cachedScheme) = ParseAndReturnCachedItems(url);
                 float connectTime = 0;
+
+                ReadTimeout = readTimeout > 0 ? readTimeout : 1;
+                WriteTimeout = writeTimeout > 0 ? writeTimeout : 1;
 
                 if (IsCreateSocket())
                 {
@@ -225,10 +285,21 @@ namespace Proxy.Client
 
                 return innerResult.response;
             }
-            catch (Exception ex)
+            catch(SocketException socketEx)
             {
+                IsFaulted = true;
+
+                if (socketEx.SocketErrorCode == SocketError.TimedOut)
+                    throw new TimeoutException($"Proxy host {ProxyHost} on port {ProxyPort} timed out.", socketEx);
+
                 throw new ProxyException(String.Format(CultureInfo.InvariantCulture,
-                    $"Connection to proxy host {ProxyHost} on port {ProxyPort} failed."), ex);
+                   $"Connection to proxy host {ProxyHost} on port {ProxyPort} failed."), socketEx);
+            }
+            catch (Exception genericEx)
+            {
+                IsFaulted = true;
+                throw new ProxyException(String.Format(CultureInfo.InvariantCulture,
+                    $"Connection to proxy host {ProxyHost} on port {ProxyPort} failed."), genericEx);
             }
 
             float CreateSocket()
@@ -236,7 +307,12 @@ namespace Proxy.Client
                 return TimingHelper.Measure(() =>
                 {
                     IsDisposed = false;
-                    Socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                    Socket = new Socket(SocketType.Stream, ProtocolType.Tcp)
+                    {
+                        ReceiveTimeout = ReadTimeout,
+                        SendTimeout = WriteTimeout
+                    };
+
                     Socket.Connect(ProxyHost, ProxyPort);
                     connectNegotiationFn();
                 });
@@ -250,13 +326,22 @@ namespace Proxy.Client
         /// <param name="requestedFn">Sends the request on the underlying socket.</param>
         /// <param name="url">Destination Url.</param>
         /// <param name="isKeepAlive">Indicates whether the connetion is to be disposed or kept alive.</param>
+        /// <param name="connectTimeout">Connect Timeout in ms.</param>
+        /// <param name="readTimeout">Read Timeout in ms.</param>
+        /// <param name="writeTimeout">Write Timeout in ms.</param>
         /// <returns>Proxy Response</returns>
-        protected internal async Task<ProxyResponse> HandleRequestAsync(Func<Task> connectNegotiationFn, 
-            Func<Task<(ProxyResponse response, float firstByteTime)>> requestedFn, string url, bool isKeepAlive)
+        protected internal async Task<ProxyResponse> HandleRequestAsync(Func<Task> connectNegotiationFn,
+            Func<Task<(ProxyResponse response, float firstByteTime)>> requestedFn, string url, bool isKeepAlive,
+            int connectTimeout, int readTimeout, int writeTimeout)
         {
             try
             {
                 var (cachedDestinationHost, cachedScheme) = ParseAndReturnCachedItems(url);
+
+                ConnectTimeout = connectTimeout;
+                ReadTimeout = readTimeout;
+                WriteTimeout = writeTimeout;
+
                 float connectTime = 0;
 
                 if (IsCreateSocket())
@@ -280,10 +365,16 @@ namespace Proxy.Client
 
                 return innerResult.response;
             }
-            catch (Exception ex)
+            catch (OperationCanceledException cancelledEx)
             {
+                IsFaulted = true;
+                throw new TimeoutException($"Proxy host {ProxyHost} on port {ProxyPort} timed out.", cancelledEx);
+            }
+            catch (Exception genericEx)
+            {
+                IsFaulted = true;
                 throw new ProxyException(String.Format(CultureInfo.InvariantCulture,
-                    $"Connection to proxy host {ProxyHost} on port {ProxyPort} failed."), ex);
+                    $"Connection to proxy host {ProxyHost} on port {ProxyPort} failed."), genericEx);
             }
 
             Task<float> CreateSocketAsync()
@@ -291,8 +382,12 @@ namespace Proxy.Client
                 return TimingHelper.MeasureAsync(async () =>
                 {
                     IsDisposed = false;
+                    IsFaulted = false;
+
                     Socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-                    await Socket.ConnectAsync(ProxyHost, ProxyPort);
+                    CancellationTokenSourceManager = new CancellationTokenSourceManager();
+
+                    await Socket.ConnectAsync(ProxyHost, ProxyPort, ConnectTimeout, CancellationTokenSourceManager);
                     await connectNegotiationFn();
                 });
             }
@@ -420,7 +515,6 @@ namespace Proxy.Client
         /// <summary>
         /// Asynchronously performs the SSL Handshake with the Destination Server.
         /// </summary>
-        /// <returns></returns>
         protected internal async Task HandleSslHandshakeAsync()
         {
             var networkStream = new NetworkStream(Socket);
@@ -457,13 +551,13 @@ namespace Proxy.Client
 
             if (Scheme == ProxyScheme.HTTPS)
             {
-                await SslStream.WriteAsync(writeBuffer, 0, writeBuffer.Length);
-                (response, firstByteTime) = await SslStream.ReceiveAllAsync();
+                await SslStream.WriteAsync(writeBuffer, WriteTimeout, CancellationTokenSourceManager);
+                (response, firstByteTime) = await SslStream.ReceiveAllAsync(ReadTimeout, CancellationTokenSourceManager);
             }
             else
             {
-                await Socket.SendAsync(writeBuffer);
-                (response, firstByteTime) = await Socket.ReceiveAllAsync();
+                await Socket.SendAsync(writeBuffer, WriteTimeout, CancellationTokenSourceManager);
+                (response, firstByteTime) = await Socket.ReceiveAllAsync(ReadTimeout, CancellationTokenSourceManager);
             }
 
             return (ResponseBuilderHelper.BuildProxyResponse(response, DestinationUri), firstByteTime);
@@ -496,7 +590,7 @@ namespace Proxy.Client
 
         private bool IsDisposeAndCreateSocket(string cachedDestHost, string cachedScheme, bool isKeepAlive)
         {
-            return IsConnectionClosed || !isKeepAlive || (ProxyType == ProxyType.HTTP && Scheme == ProxyScheme.HTTP
+            return IsConnectionClosed || IsFaulted || !isKeepAlive || (ProxyType == ProxyType.HTTP && Scheme == ProxyScheme.HTTP
                 ? !cachedScheme.Equals(DestinationUri.Scheme)
                 : !cachedDestHost.Equals(DestinationHost) || !cachedScheme.Equals(DestinationUri.Scheme));
         }

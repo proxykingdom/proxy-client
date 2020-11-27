@@ -63,10 +63,10 @@ namespace Proxy.Client
 
             var request = GetCommandRequest(destinationAddress, destinationPort, userIdBytes, hostBytes);
 
-            await Socket.SendAsync(request);
+            await Socket.SendAsync(request, WriteTimeout, CancellationTokenSourceManager);
 
             var response = new byte[8];
-            await Socket.ReceiveAsync(response, response.Length);
+            await Socket.ReceiveAsync(response, ReadTimeout, CancellationTokenSourceManager);
 
             if (response[1] != Socks4Constants.SOCKS4_CMD_REPLY_REQUEST_GRANTED)
                 HandleProxyCommandError(response);

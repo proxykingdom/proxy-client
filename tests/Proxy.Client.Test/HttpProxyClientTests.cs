@@ -189,18 +189,27 @@ namespace Proxy.Client.Test
         }
 
         [Test]
-        public async Task GetAsync_WithTimeout_Successful()
+        public void Get_WithReadTimeout_TimedOut()
         {
-            var response = await _httpProxyClient.GetAsync("http://www.example.com/", timeout: 10000);
-
-            Assert.IsNotNull(response);
-            Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
+            Assert.Throws<TimeoutException>(() => _httpProxyClient.Get("http://www.example.com/", readTimeout: 0));
         }
 
         [Test]
-        public void GetAsync_WithTimeout_TimedOut()
+        public void GetAsync_WithTotalTimeout_TimedOut()
         {
-            Assert.ThrowsAsync<TimeoutException>(async () => await _httpProxyClient.GetAsync("http://www.example.com/", timeout: 0));
+            Assert.ThrowsAsync<TimeoutException>(async () => await _httpProxyClient.GetAsync("http://www.example.com/", totalTimeout: 0));
+        }
+
+        [Test]
+        public void GetAsync_WithReadTimeout_TimedOut()
+        {
+            Assert.ThrowsAsync<TimeoutException>(async () => await _httpProxyClient.GetAsync("http://www.example.com/", readTimeout: 0));
+        }
+
+        [Test]
+        public void GetAsync_WithWriteTimeout_TimedOut()
+        {
+            Assert.ThrowsAsync<TimeoutException>(async () => await _httpProxyClient.GetAsync("http://www.example.com/", writeTimeout: 0));
         }
 
         [Test]
@@ -382,18 +391,27 @@ namespace Proxy.Client.Test
         }
 
         [Test]
-        public async Task PostAsync_WithTimeout_Successful()
+        public void Post_WithReadTimeout_TimedOut()
         {
-            var response = await _httpProxyClient.PostAsync("http://www.example.com/", "testContent", timeout: 10000);
-
-            Assert.IsNotNull(response);
-            Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
+            Assert.Throws<TimeoutException>(() => _httpProxyClient.Post("http://www.example.com/", "testContent", readTimeout: 0));
         }
 
         [Test]
-        public void PostAsync_WithTimeout_TimedOut()
+        public void PostAsync_WithTotalTimeout_TimedOut()
         {
-            Assert.ThrowsAsync<TimeoutException>(async () => await _httpProxyClient.PostAsync("http://www.example.com/", "testContent", timeout: 0));
+            Assert.ThrowsAsync<TimeoutException>(async () => await _httpProxyClient.PostAsync("http://www.example.com/", "testContent", totalTimeout: 0));
+        }
+
+        [Test]
+        public void PostAsync_WithReadTimeout_TimedOut()
+        {
+            Assert.ThrowsAsync<TimeoutException>(async () => await _httpProxyClient.PostAsync("http://www.example.com/", "testContent", readTimeout: 0));
+        }
+
+        [Test]
+        public void PostAsync_WithWriteTimeout_TimedOut()
+        {
+            Assert.ThrowsAsync<TimeoutException>(async () => await _httpProxyClient.PostAsync("http://www.example.com/", "testContent", writeTimeout: 0));
         }
 
         [Test]
@@ -575,18 +593,27 @@ namespace Proxy.Client.Test
         }
 
         [Test]
-        public async Task PutAsync_WithTimeout_Successful()
+        public void Put_WithReadTimeout_TimedOut()
         {
-            var response = await _httpProxyClient.PutAsync("http://www.example.com/", "testContent", timeout: 10000);
-
-            Assert.IsNotNull(response);
-            Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
+            Assert.Throws<TimeoutException>(() => _httpProxyClient.Put("http://www.example.com/", "testContent", readTimeout: 0));
         }
 
         [Test]
-        public void PutAsync_WithTimeout_TimedOut()
+        public void PutAsync_WithTotalTimeout_TimedOut()
         {
-            Assert.ThrowsAsync<TimeoutException>(async () => await _httpProxyClient.PutAsync("http://www.example.com/", "testContent", timeout: 0));
+            Assert.ThrowsAsync<TimeoutException>(async () => await _httpProxyClient.PutAsync("http://www.example.com/", "testContent", totalTimeout: 0));
+        }
+
+        [Test]
+        public void PutAsync_WithReadTimeout_TimedOut()
+        {
+            Assert.ThrowsAsync<TimeoutException>(async () => await _httpProxyClient.PutAsync("http://www.example.com/", "testContent", readTimeout: 0));
+        }
+
+        [Test]
+        public void PutAsync_WithWriteTimeout_TimedOut()
+        {
+            Assert.ThrowsAsync<TimeoutException>(async () => await _httpProxyClient.PutAsync("http://www.example.com/", "testContent", writeTimeout: 0));
         }
 
         [Test]
@@ -768,18 +795,27 @@ namespace Proxy.Client.Test
         }
 
         [Test]
-        public async Task DeleteAsync_WithTimeout_Successful()
+        public void Delete_WithReadTimeout_TimedOut()
         {
-            var response = await _httpProxyClient.DeleteAsync("http://www.example.com/", timeout: 10000);
-
-            Assert.IsNotNull(response);
-            Assert.AreEqual(response.StatusCode, HttpStatusCode.OK);
+            Assert.Throws<TimeoutException>(() => _httpProxyClient.Delete("http://www.example.com/", readTimeout: 0));
         }
 
         [Test]
-        public void DeleteAsync_WithTimeout_TimedOut()
+        public void DeleteAsync_WithTotalTimeout_TimedOut()
         {
-            Assert.ThrowsAsync<TimeoutException>(async () => await _httpProxyClient.DeleteAsync("http://www.example.com/", timeout: 0));
+            Assert.ThrowsAsync<TimeoutException>(async () => await _httpProxyClient.DeleteAsync("http://www.example.com/", totalTimeout: 0));
+        }
+
+        [Test]
+        public void DeleteAsync_WithReadTimeout_TimedOut()
+        {
+            Assert.ThrowsAsync<TimeoutException>(async () => await _httpProxyClient.DeleteAsync("http://www.example.com/", readTimeout: 0));
+        }
+
+        [Test]
+        public void DeleteAsync_WithWriteTimeout_TimedOut()
+        {
+            Assert.ThrowsAsync<TimeoutException>(async () => await _httpProxyClient.DeleteAsync("http://www.example.com/", writeTimeout: 0));
         }
 
         [Test]
