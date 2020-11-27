@@ -51,12 +51,12 @@ using(var socks4ProxyClient = new Socks4ProxyClient("212.86.75.9", 4153))
     var response = await socks4ProxyClient.GetAsync("https://www.example.com/", cookies: proxyCookies);
 }
 ```
-### Adding Timeout
-Below is an example of a request with a 10 second timeout:
+### Adding Timeouts
+Below is an example of a request with a 10 second total timeout and 1 second read/write timeout:
 ```C#
 using(var socks4ProxyClient = new Socks4ProxyClient("212.86.75.9", 4153))
 {
-    var response = await socks4ProxyClient.GetAsync("https://www.example.com/", timeout: 10000);
+    var response = await socks4ProxyClient.GetAsync("https://www.example.com/", totalTimeout: 10000, readTimeout: 1000, writeTimeout: 1000);
 }
 ```
 ### Keep-Alive Support
