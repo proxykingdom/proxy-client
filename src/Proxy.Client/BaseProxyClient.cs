@@ -525,7 +525,7 @@ namespace Proxy.Client
 
         private static bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) => sslPolicyErrors == SslPolicyErrors.None;
 
-        private (ProxyResponse response, float firstByteTime) HandleRequestCommand(byte[] writeBuffer)
+        private (ProxyResponse response, float firstByteTime) HandleRequestCommand(ReadOnlySpan<byte> writeBuffer)
         {
             string response;
             float firstByteTime;
@@ -544,7 +544,7 @@ namespace Proxy.Client
             return (ResponseBuilderHelper.BuildProxyResponse(response, DestinationUri), firstByteTime);
         }
 
-        private async Task<(ProxyResponse response, float firstByteTime)> HandleRequestCommandAsync(byte[] writeBuffer)
+        private async Task<(ProxyResponse response, float firstByteTime)> HandleRequestCommandAsync(ReadOnlyMemory<byte> writeBuffer)
         {
             string response;
             float firstByteTime;

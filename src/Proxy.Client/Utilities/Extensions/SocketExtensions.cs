@@ -6,7 +6,6 @@ using System.Net.Security;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Proxy.Client.Utilities.Extensions
@@ -26,36 +25,36 @@ namespace Proxy.Client.Utilities.Extensions
         /// <returns>The raw response and the time to first byte</returns>
         public static (string response, float firstByteTime) ReceiveAll(this Socket socket)
         {
-            var buffer = new byte[BufferSize];
+            var buffer = new byte[BufferSize].AsMemory();
             var placeHolder = new StringBuilder();
             var bytesRead = 0;
 
             var firstByteTime = TimingHelper.Measure(() => 
             {
-                bytesRead = socket.Receive(buffer); 
+                bytesRead = socket.Receive(buffer.Span); 
             });
 
             if (bytesRead == 0)
                 throw new ProxyException("Destination Server has no data to send.");
 
-            var bufferString = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+            var bufferString = Encoding.ASCII.GetString(buffer.Span.Slice(0, bytesRead));
             placeHolder.Append(bufferString);
 
             while (!bufferString.Contains(RequestConstants.CONTENT_SEPERATOR))
             {
-                bytesRead = socket.Receive(buffer);
+                bytesRead = socket.Receive(buffer.Span);
 
                 if (bytesRead == 0)
                     return (placeHolder.ToString(), firstByteTime);
 
-                bufferString = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+                bufferString = Encoding.ASCII.GetString(buffer.Span.Slice(0, bytesRead));
                 placeHolder.Append(bufferString);
             }
 
             var readString = placeHolder.ToString();
 
-            if (readString.Contains(RequestConstants.CONTENT_LENGTH_HEADER)) socket.DecodeContentLength(placeHolder, buffer, bufferString);
-            else if (readString.Contains(RequestConstants.TRANSFER_ENCODING_CHUNKED_HEADER)) socket.DecodeChunked(placeHolder, buffer, bufferString);
+            if (readString.Contains(RequestConstants.CONTENT_LENGTH_HEADER)) socket.DecodeContentLength(placeHolder, buffer.Span, bufferString);
+            else if (readString.Contains(RequestConstants.TRANSFER_ENCODING_CHUNKED_HEADER)) socket.DecodeChunked(placeHolder, buffer.Span, bufferString);
             else throw new ProxyException("Unknown Transfer Encoding provided by Destination Server.");
 
             return (placeHolder.ToString(), firstByteTime);
@@ -70,7 +69,7 @@ namespace Proxy.Client.Utilities.Extensions
         /// <returns>The raw response and the time to first byte</returns>
         public static async Task<(string response, float firstByteTime)> ReceiveAllAsync(this Socket socket, int readTimeout, CancellationTokenSourceManager cancellationTokenSourceManager)
         {
-            var buffer = new byte[BufferSize];
+            var buffer = new byte[BufferSize].AsMemory();
             var placeHolder = new StringBuilder();
             var bytesRead = 0;
 
@@ -82,7 +81,7 @@ namespace Proxy.Client.Utilities.Extensions
             if (bytesRead == 0)
                 throw new ProxyException("Destination Server has no data to send.");
 
-            var bufferString = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+            var bufferString = Encoding.ASCII.GetString(buffer.Span.Slice(0, bytesRead));
             placeHolder.Append(bufferString);
 
             while (!bufferString.Contains(RequestConstants.CONTENT_SEPERATOR))
@@ -92,14 +91,14 @@ namespace Proxy.Client.Utilities.Extensions
                 if (bytesRead == 0) 
                     return (placeHolder.ToString(), firstByteTime);
 
-                bufferString = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+                bufferString = Encoding.ASCII.GetString(buffer.Span.Slice(0, bytesRead));
                 placeHolder.Append(bufferString);
             }
 
             var readString = placeHolder.ToString();
 
             if (readString.Contains(RequestConstants.CONTENT_LENGTH_HEADER)) await socket.DecodeContentLengthAsync(placeHolder, buffer, bufferString, readTimeout, cancellationTokenSourceManager);
-            else if (readString.Contains(RequestConstants.TRANSFER_ENCODING_CHUNKED_HEADER)) await socket.DecodeChunkedAsync(placeHolder, bufferString, readTimeout, cancellationTokenSourceManager);
+            else if (readString.Contains(RequestConstants.TRANSFER_ENCODING_CHUNKED_HEADER)) await socket.DecodeChunkedAsync(placeHolder, buffer, bufferString, readTimeout, cancellationTokenSourceManager);
             else throw new ProxyException("Unknown Transfer Encoding provided by Destination Server.");
 
             return (placeHolder.ToString(), firstByteTime);
@@ -112,36 +111,36 @@ namespace Proxy.Client.Utilities.Extensions
         /// <returns>The raw response and the time to first byte</returns>
         public static (string response, float firstByteTime) ReceiveAll(this SslStream sslStream)
         {
-            var buffer = new byte[BufferSize];
+            var buffer = new byte[BufferSize].AsMemory();
             var placeHolder = new StringBuilder();
             var bytesRead = 0;
 
             var firstByteTime = TimingHelper.Measure(() => 
             {
-                bytesRead = sslStream.Read(buffer, 0, buffer.Length); 
+                bytesRead = sslStream.Read(buffer.Span);
             });
 
             if (bytesRead == 0)
                 throw new ProxyException("Destination Server has no data to send.");
 
-            var bufferString = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+            var bufferString = Encoding.ASCII.GetString(buffer.Span.Slice(0, bytesRead));
             placeHolder.Append(bufferString);
 
             while (!bufferString.Contains(RequestConstants.CONTENT_SEPERATOR))
             {
-                bytesRead = sslStream.Read(buffer, 0, buffer.Length);
+                bytesRead = sslStream.Read(buffer.Span);
 
                 if (bytesRead == 0) 
                     return (placeHolder.ToString(), firstByteTime);
 
-                bufferString = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+                bufferString = Encoding.ASCII.GetString(buffer.Span.Slice(0, bytesRead));
                 placeHolder.Append(bufferString);
             }
 
             var readString = placeHolder.ToString();
 
-            if (readString.Contains(RequestConstants.CONTENT_LENGTH_HEADER)) sslStream.DecodeContentLength(placeHolder, buffer, bufferString);
-            else if (readString.Contains(RequestConstants.TRANSFER_ENCODING_CHUNKED_HEADER)) sslStream.DecodeChunked(placeHolder, buffer, bufferString);
+            if (readString.Contains(RequestConstants.CONTENT_LENGTH_HEADER)) sslStream.DecodeContentLength(placeHolder, buffer.Span, bufferString);
+            else if (readString.Contains(RequestConstants.TRANSFER_ENCODING_CHUNKED_HEADER)) sslStream.DecodeChunked(placeHolder, buffer.Span, bufferString);
             else throw new ProxyException("Unknown Transfer Encoding provided by Destination Server.");
 
             return (placeHolder.ToString(), firstByteTime);
@@ -156,29 +155,29 @@ namespace Proxy.Client.Utilities.Extensions
         /// <returns>The raw response and the time to first byte</returns>
         public static async Task<(string response, float firstByteTime)> ReceiveAllAsync(this SslStream sslStream, int readTimeout, CancellationTokenSourceManager cancellationTokenSourceManager)
         {
-            var buffer = new byte[BufferSize];
+            var buffer = new byte[BufferSize].AsMemory();
             var placeHolder = new StringBuilder();
             var bytesRead = 0;
 
             var firstByteTime = await TimingHelper.MeasureAsync(async () =>
             {
-                bytesRead = await sslStream.ReadAsync(buffer, buffer.Length, readTimeout, cancellationTokenSourceManager);
+                bytesRead = await sslStream.ReadAsync(buffer, readTimeout, cancellationTokenSourceManager);
             });
 
             if (bytesRead == 0)
                 throw new ProxyException("Destination Server has no data to send.");
 
-            var bufferString = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+            var bufferString = Encoding.ASCII.GetString(buffer.Span.Slice(0, bytesRead));
             placeHolder.Append(bufferString);
 
             while(!bufferString.Contains(RequestConstants.CONTENT_SEPERATOR))
             {
-                bytesRead = await sslStream.ReadAsync(buffer, buffer.Length, readTimeout, cancellationTokenSourceManager);
+                bytesRead = await sslStream.ReadAsync(buffer, readTimeout, cancellationTokenSourceManager);
 
                 if (bytesRead == 0) 
                     return (placeHolder.ToString(), firstByteTime);
 
-                bufferString = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+                bufferString = Encoding.ASCII.GetString(buffer.Span.Slice(0, bytesRead));
                 placeHolder.Append(bufferString);
             }
 
@@ -216,7 +215,7 @@ namespace Proxy.Client.Utilities.Extensions
         /// <param name="writeTimeout">Socket Write Timeout.</param>
         /// <param name="cancellationTokenSourceManager">Cancellation Token Source manager.</param>
         /// <returns>Number of sent bytes</returns>
-        public static async ValueTask<int> SendAsync(this Socket socket, byte[] buffer, int writeTimeout, CancellationTokenSourceManager cancellationTokenSourceManager)
+        public static async ValueTask<int> SendAsync(this Socket socket, ReadOnlyMemory<byte> buffer, int writeTimeout, CancellationTokenSourceManager cancellationTokenSourceManager)
         {
             cancellationTokenSourceManager.Start(writeTimeout);
 
@@ -235,7 +234,7 @@ namespace Proxy.Client.Utilities.Extensions
         /// <param name="readTimeout">Socket Read Timeout.</param>
         /// <param name="cancellationTokenSourceManager">Cancellation Token Source manager.</param>
         /// <returns>Number of read bytes</returns>
-        public static async ValueTask<int> ReceiveAsync(this Socket socket, byte[] buffer, int readTimeout, CancellationTokenSourceManager cancellationTokenSourceManager)
+        public static async ValueTask<int> ReceiveAsync(this Socket socket, Memory<byte> buffer, int readTimeout, CancellationTokenSourceManager cancellationTokenSourceManager)
         {
             cancellationTokenSourceManager.Start(readTimeout);
 
@@ -253,7 +252,7 @@ namespace Proxy.Client.Utilities.Extensions
         /// <param name="buffer">Send request byte buffer.</param>
         /// <param name="writeTimeout">Socket Write Timeout.</param>
         /// <param name="cancellationTokenSourceManager">Cancellation Token Source manager.</param>
-        public static async ValueTask WriteAsync(this SslStream sslStream, byte[] buffer, int writeTimeout, CancellationTokenSourceManager cancellationTokenSourceManager)
+        public static async ValueTask WriteAsync(this SslStream sslStream, ReadOnlyMemory<byte> buffer, int writeTimeout, CancellationTokenSourceManager cancellationTokenSourceManager)
         {
             cancellationTokenSourceManager.Start(writeTimeout);
 
@@ -271,11 +270,11 @@ namespace Proxy.Client.Utilities.Extensions
         /// <param name="readTimeout">Socket Read Timeout.</param>
         /// <param name="cancellationTokenSourceManager">Cancellation Token Source manager.</param>
         /// <returns>Number of read bytes</returns>
-        public static async ValueTask<int> ReadAsync(this SslStream sslStream, byte[] buffer, int count, int readTimeout, CancellationTokenSourceManager cancellationTokenSourceManager)
+        public static async ValueTask<int> ReadAsync(this SslStream sslStream, Memory<byte> buffer, int readTimeout, CancellationTokenSourceManager cancellationTokenSourceManager)
         {
             cancellationTokenSourceManager.Start(readTimeout);
 
-            var readBytes = await sslStream.ReadAsync(buffer, 0, count, cancellationTokenSourceManager.Token);
+            var readBytes = await sslStream.ReadAsync(buffer, cancellationTokenSourceManager.Token);
 
             cancellationTokenSourceManager.Stop();
 
@@ -285,7 +284,7 @@ namespace Proxy.Client.Utilities.Extensions
         #region Content Decoding Methods
         #region Content Length Methods
 
-        private static string DecodeContentLength(this Socket socket, StringBuilder placeHolder, byte[] buffer, string bufferString)
+        private static string DecodeContentLength(this Socket socket, StringBuilder placeHolder, Span<byte> buffer, string bufferString)
         {
             var (contentLength, totalBytesRead) = ExtractContentLength(placeHolder, bufferString);
 
@@ -293,13 +292,13 @@ namespace Proxy.Client.Utilities.Extensions
             {
                 var innerBytesRead = socket.Receive(buffer, SocketFlags.None);
                 totalBytesRead += innerBytesRead;
-                placeHolder.Append(Encoding.ASCII.GetString(buffer, 0, innerBytesRead));
+                placeHolder.Append(Encoding.ASCII.GetString(buffer.Slice(0, innerBytesRead)));
             }
 
             return placeHolder.ToString();
         }
 
-        private static async Task<string> DecodeContentLengthAsync(this Socket socket, StringBuilder placeHolder, byte[] buffer, string bufferString,
+        private static async Task<string> DecodeContentLengthAsync(this Socket socket, StringBuilder placeHolder, Memory<byte> buffer, string bufferString,
             int readTimeout, CancellationTokenSourceManager timeoutCancellationTokenSourceWrapper)
         {
             var (contentLength, totalBytesRead) = ExtractContentLength(placeHolder, bufferString);
@@ -308,34 +307,34 @@ namespace Proxy.Client.Utilities.Extensions
             {
                 var innerBytesRead = await socket.ReceiveAsync(buffer, readTimeout, timeoutCancellationTokenSourceWrapper);
                 totalBytesRead += innerBytesRead;
-                placeHolder.Append(Encoding.ASCII.GetString(buffer, 0, innerBytesRead));
+                placeHolder.Append(Encoding.ASCII.GetString(buffer.Span.Slice(0, innerBytesRead)));
             }
 
             return placeHolder.ToString();
         }
 
-        private static void DecodeContentLength(this SslStream sslStream, StringBuilder placeHolder, byte[] buffer, string bufferString)
+        private static void DecodeContentLength(this SslStream sslStream, StringBuilder placeHolder, Span<byte> buffer, string bufferString)
         {
             var (contentLength, totalBytesRead) = ExtractContentLength(placeHolder, bufferString);
 
             while (totalBytesRead < contentLength)
             {
-                var innerBytesRead = sslStream.Read(buffer, 0, buffer.Length);
+                var innerBytesRead = sslStream.Read(buffer);
                 totalBytesRead += innerBytesRead;
-                placeHolder.Append(Encoding.ASCII.GetString(buffer, 0, innerBytesRead));
+                placeHolder.Append(Encoding.ASCII.GetString(buffer.Slice(0, innerBytesRead)));
             }
         }
 
-        private static async Task DecodeContentLengthAsync(this SslStream sslStream, StringBuilder placeHolder, byte[] buffer, string bufferString, 
+        private static async Task DecodeContentLengthAsync(this SslStream sslStream, StringBuilder placeHolder, Memory<byte> buffer, string bufferString, 
             int readTimeout, CancellationTokenSourceManager timeoutCancellationTokenSourceWrapper)
         {
             var (contentLength, totalBytesRead) = ExtractContentLength(placeHolder, bufferString);
 
             while (totalBytesRead < contentLength)
             {
-                var innerBytesRead = await sslStream.ReadAsync(buffer, buffer.Length, readTimeout, timeoutCancellationTokenSourceWrapper);
+                var innerBytesRead = await sslStream.ReadAsync(buffer, readTimeout, timeoutCancellationTokenSourceWrapper);
                 totalBytesRead += innerBytesRead;
-                placeHolder.Append(Encoding.ASCII.GetString(buffer, 0, innerBytesRead));
+                placeHolder.Append(Encoding.ASCII.GetString(buffer.Span.Slice(0, innerBytesRead)));
             }
         }
 
@@ -352,14 +351,14 @@ namespace Proxy.Client.Utilities.Extensions
         #endregion
 
         #region Chunked Methods
-        private static void DecodeChunked(this Socket socket, StringBuilder placeHolder, byte[] buffer, string bufferString)
+        private static void DecodeChunked(this Socket socket, StringBuilder placeHolder, Span<byte> buffer, string bufferString)
         {
             var splitBuffer = bufferString.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.RemoveEmptyEntries);
 
             if (splitBuffer.Length == 1)
             {
-                var peekBytesRead = socket.Receive(buffer, PeekBufferSize, SocketFlags.None);
-                bufferString = Encoding.ASCII.GetString(buffer, 0, peekBytesRead);
+                var peekBytesRead = socket.Receive(buffer.Slice(0, PeekBufferSize), SocketFlags.None);
+                bufferString = Encoding.ASCII.GetString(buffer.Slice(0, peekBytesRead));
                 placeHolder.Append(bufferString);
             }
             else
@@ -376,102 +375,27 @@ namespace Proxy.Client.Utilities.Extensions
                     var remainingReadSize = chunkSize - totalBytesRead;
                     var readSize = remainingReadSize > BufferSize ? BufferSize : remainingReadSize;
 
-                    var innerBytesRead = socket.Receive(buffer, readSize, SocketFlags.None);
+                    var innerBytesRead = socket.Receive(buffer.Slice(readSize), SocketFlags.None);
                     totalBytesRead += innerBytesRead;
-                    placeHolder.Append(Encoding.ASCII.GetString(buffer, 0, innerBytesRead));
+                    placeHolder.Append(Encoding.ASCII.GetString(buffer.Slice(0, innerBytesRead)));
                 }
 
-                var peekBytesRead = socket.Receive(buffer, PeekBufferSize, SocketFlags.None);
-                bufferString = Encoding.ASCII.GetString(buffer, 0, peekBytesRead);
+                var peekBytesRead = socket.Receive(buffer.Slice(0, PeekBufferSize), SocketFlags.None);
+                bufferString = Encoding.ASCII.GetString(buffer.Slice(0, peekBytesRead));
 
                 (chunkSize, totalBytesRead) = ExtractChunkSize(bufferString);
             }
         }
 
-        private static async Task DecodeChunkedAsync(this Socket socket, StringBuilder placeHolder, string bufferString, 
-            int readTimeout, CancellationTokenSourceManager timeoutCancellationTokenSourceWrapper)
-        {
-            var peekBuffer = new byte[PeekBufferSize];
-            var splitBuffer = bufferString.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.RemoveEmptyEntries);
-
-            if (splitBuffer.Length == 1)
-            {
-                var peekBytesRead = await socket.ReceiveAsync(peekBuffer, readTimeout, timeoutCancellationTokenSourceWrapper);
-                bufferString = Encoding.ASCII.GetString(peekBuffer, 0, peekBytesRead);
-                placeHolder.Append(bufferString);
-            }
-            else
-            {
-                bufferString = splitBuffer[1];
-            }
-
-            var (chunkSize, totalBytesRead) = ExtractChunkSize(bufferString);
-
-            while (chunkSize != 0)
-            {
-                while (totalBytesRead < chunkSize)
-                {
-                    var remainingReadSize = chunkSize - totalBytesRead;
-                    var readSize = remainingReadSize > BufferSize ? BufferSize : remainingReadSize;
-                    var readBuffer = new byte[readSize];
-
-                    var innerBytesRead = await socket.ReceiveAsync(readBuffer, readTimeout, timeoutCancellationTokenSourceWrapper);
-                    totalBytesRead += innerBytesRead;
-                    placeHolder.Append(Encoding.ASCII.GetString(readBuffer, 0, innerBytesRead));
-                }
-
-                var peekBytesRead = await socket.ReceiveAsync(peekBuffer, readTimeout, timeoutCancellationTokenSourceWrapper);
-                bufferString = Encoding.ASCII.GetString(peekBuffer, 0, peekBytesRead);
-
-                (chunkSize, totalBytesRead) = ExtractChunkSize(bufferString);
-            }
-        }
-
-        private static void DecodeChunked(this SslStream ss, StringBuilder placeHolder, byte[] buffer, string bufferString)
-        {
-            var splitBuffer = bufferString.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.RemoveEmptyEntries);
-
-            if (splitBuffer.Length == 1)
-            {
-                var peekBytesRead = ss.Read(buffer, 0, PeekBufferSize);
-                bufferString = Encoding.ASCII.GetString(buffer, 0, peekBytesRead);
-                placeHolder.Append(bufferString);
-            }
-            else
-            {
-                bufferString = splitBuffer[1];
-            }
-
-            var (chunkSize, totalBytesRead) = ExtractChunkSize(bufferString);
-
-            while (chunkSize != 0)
-            {
-                while (totalBytesRead < chunkSize)
-                {
-                    var remainingReadSize = chunkSize - totalBytesRead;
-                    var readSize = remainingReadSize > BufferSize ? BufferSize : remainingReadSize;
-
-                    var innerBytesRead = ss.Read(buffer, 0, readSize);
-                    totalBytesRead += innerBytesRead;
-                    placeHolder.Append(Encoding.ASCII.GetString(buffer, 0, innerBytesRead));
-                }
-
-                var peekBytesRead = ss.Read(buffer, 0, PeekBufferSize);
-                bufferString = Encoding.ASCII.GetString(buffer, 0, peekBytesRead);
-
-                (chunkSize, totalBytesRead) = ExtractChunkSize(bufferString);
-            }
-        }
-
-        private static async Task DecodeChunkedAsync(this SslStream sslStream, StringBuilder placeHolder, byte[] buffer, string bufferString, 
+        private static async Task DecodeChunkedAsync(this Socket socket, StringBuilder placeHolder, Memory<byte> buffer, string bufferString, 
             int readTimeout, CancellationTokenSourceManager timeoutCancellationTokenSourceWrapper)
         {
             var splitBuffer = bufferString.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.RemoveEmptyEntries);
 
             if (splitBuffer.Length == 1)
             {
-                var peekBytesRead = await sslStream.ReadAsync(buffer, PeekBufferSize, readTimeout, timeoutCancellationTokenSourceWrapper);
-                bufferString = Encoding.ASCII.GetString(buffer, 0, peekBytesRead);
+                var peekBytesRead = await socket.ReceiveAsync(buffer.Slice(0, PeekBufferSize), readTimeout, timeoutCancellationTokenSourceWrapper);
+                bufferString = Encoding.ASCII.GetString(buffer.Span.Slice(0, peekBytesRead));
                 placeHolder.Append(bufferString);
             }
             else
@@ -488,19 +412,92 @@ namespace Proxy.Client.Utilities.Extensions
                     var remainingReadSize = chunkSize - totalBytesRead;
                     var readSize = remainingReadSize > BufferSize ? BufferSize : remainingReadSize;
 
-                    var innerBytesRead = await sslStream.ReadAsync(buffer, readSize, readTimeout, timeoutCancellationTokenSourceWrapper);
+                    var innerBytesRead = await socket.ReceiveAsync(buffer.Slice(0, readSize), readTimeout, timeoutCancellationTokenSourceWrapper);
                     totalBytesRead += innerBytesRead;
-                    placeHolder.Append(Encoding.ASCII.GetString(buffer, 0, innerBytesRead));
+                    placeHolder.Append(Encoding.ASCII.GetString(buffer.Span.Slice(0, innerBytesRead)));
                 }
 
-                var peekBytesRead = await sslStream.ReadAsync(buffer, PeekBufferSize, readTimeout, timeoutCancellationTokenSourceWrapper);
-                bufferString = Encoding.ASCII.GetString(buffer, 0, peekBytesRead);
+                var peekBytesRead = await socket.ReceiveAsync(buffer.Slice(0, PeekBufferSize), readTimeout, timeoutCancellationTokenSourceWrapper);
+                bufferString = Encoding.ASCII.GetString(buffer.Span.Slice(0, peekBytesRead));
 
                 (chunkSize, totalBytesRead) = ExtractChunkSize(bufferString);
             }
         }
 
-        private static (int chunkSize, int bytesRead) ExtractChunkSize(string newContentLine)
+        private static void DecodeChunked(this SslStream ss, StringBuilder placeHolder, Span<byte> buffer, string bufferString)
+        {
+            var splitBuffer = bufferString.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.RemoveEmptyEntries);
+
+            if (splitBuffer.Length == 1)
+            {
+                var peekBytesRead = ss.Read(buffer.Slice(0, PeekBufferSize));
+                bufferString = Encoding.ASCII.GetString(buffer.Slice(0, peekBytesRead));
+                placeHolder.Append(bufferString);
+            }
+            else
+            {
+                bufferString = splitBuffer[1];
+            }
+
+            var (chunkSize, totalBytesRead) = ExtractChunkSize(bufferString);
+
+            while (chunkSize != 0)
+            {
+                while (totalBytesRead < chunkSize)
+                {
+                    var remainingReadSize = chunkSize - totalBytesRead;
+                    var readSize = remainingReadSize > BufferSize ? BufferSize : remainingReadSize;
+
+                    var innerBytesRead = ss.Read(buffer.Slice(0, readSize));
+                    totalBytesRead += innerBytesRead;
+                    placeHolder.Append(Encoding.ASCII.GetString(buffer.Slice(0, innerBytesRead)));
+                }
+
+                var peekBytesRead = ss.Read(buffer.Slice(0, PeekBufferSize));
+                bufferString = Encoding.ASCII.GetString(buffer.Slice(0, peekBytesRead));
+
+                (chunkSize, totalBytesRead) = ExtractChunkSize(bufferString);
+            }
+        }
+
+        private static async Task DecodeChunkedAsync(this SslStream sslStream, StringBuilder placeHolder, Memory<byte> buffer, string bufferString, 
+            int readTimeout, CancellationTokenSourceManager timeoutCancellationTokenSourceWrapper)
+        {
+            var splitBuffer = bufferString.Split(new[] { RequestConstants.CONTENT_SEPERATOR }, 2, StringSplitOptions.RemoveEmptyEntries);
+
+            if (splitBuffer.Length == 1)
+            {
+                var peekBytesRead = await sslStream.ReadAsync(buffer.Slice(0, PeekBufferSize), readTimeout, timeoutCancellationTokenSourceWrapper);
+                bufferString = Encoding.ASCII.GetString(buffer.Span.Slice(0, peekBytesRead));
+                placeHolder.Append(bufferString);
+            }
+            else
+            {
+                bufferString = splitBuffer[1];
+            }
+
+            var (chunkSize, totalBytesRead) = ExtractChunkSize(bufferString);
+
+            while (chunkSize != 0)
+            {
+                while (totalBytesRead < chunkSize)
+                {
+                    var remainingReadSize = chunkSize - totalBytesRead;
+                    var readSize = remainingReadSize > BufferSize ? BufferSize : remainingReadSize;
+
+                    var innerBytesRead = await sslStream.ReadAsync(buffer.Slice(0, readSize), readTimeout, timeoutCancellationTokenSourceWrapper);
+                    totalBytesRead += innerBytesRead;
+                    placeHolder.Append(Encoding.ASCII.GetString(buffer.Span.Slice(0, innerBytesRead)));
+                }
+
+                var peekBytesRead = await sslStream.ReadAsync(buffer.Slice(0, PeekBufferSize), readTimeout, timeoutCancellationTokenSourceWrapper);
+                bufferString = Encoding.ASCII.GetString(buffer.Span.Slice(0, peekBytesRead));
+
+                (chunkSize, totalBytesRead) = ExtractChunkSize(bufferString);
+            }
+        }
+
+        private static (int chunkSize, int bytesRead) ExtractChunkSize(ReadOnlySpan<char> newContentLine)
         {
             var foundNewLine = newContentLine.IndexOf(Environment.NewLine);
 
@@ -508,15 +505,16 @@ namespace Proxy.Client.Utilities.Extensions
                 return (0, 0);
 
             int endChunkStringIndex = 0;
-            var chunkSizeString = newContentLine.Substring(0, foundNewLine);
+            var chunkSizeString = newContentLine.Slice(0, foundNewLine);
             var chunkSize = int.Parse(chunkSizeString, NumberStyles.HexNumber);
             var totalBytesRead = newContentLine.Length - (chunkSizeString.Length + 4);
 
             while (totalBytesRead > chunkSize)
             {
                 endChunkStringIndex = chunkSize + (chunkSizeString.Length + 4);
-                foundNewLine = newContentLine.IndexOf(Environment.NewLine, endChunkStringIndex);
-                chunkSizeString = newContentLine.Substring(endChunkStringIndex, foundNewLine - endChunkStringIndex);
+                var endChunkStringIndexSlice = newContentLine.Slice(endChunkStringIndex);
+                foundNewLine = endChunkStringIndexSlice.IndexOf(Environment.NewLine);
+                chunkSizeString = endChunkStringIndexSlice.Slice(0, foundNewLine - endChunkStringIndex);
                 chunkSize = int.Parse(chunkSizeString, NumberStyles.HexNumber);
             }
 

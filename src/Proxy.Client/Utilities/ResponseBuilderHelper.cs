@@ -56,7 +56,7 @@ namespace Proxy.Client.Utilities
                     headerList.Add(ProxyHeader.Create(headerPair[0], headerPair[1]));
                 }
 
-                return ProxyResponse.Create(status, headerList, cookieContainer.GetCookies(destinationUri) as IEnumerable<Cookie>, splitResponse[1]);
+                return ProxyResponse.Create(status, headerList, cookieContainer.GetCookies(destinationUri), splitResponse[1]);
             }
         }
 
