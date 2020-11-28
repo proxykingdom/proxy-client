@@ -365,7 +365,7 @@ namespace Proxy.Client
             }
         }
 
-        private byte[] GetCommandRequest(byte[] destinationAddressBytes, byte[] destinationPortBytes, byte[] userIdBytes)
+        private static byte[] GetCommandRequest(byte[] destinationAddressBytes, byte[] destinationPortBytes, byte[] userIdBytes)
         {
             var request = new byte[9 + userIdBytes.Length];
 

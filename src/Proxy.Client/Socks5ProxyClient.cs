@@ -565,7 +565,7 @@ namespace Proxy.Client
             return buffer.ToString();
         }
 
-        private byte[] GetCommandRequest(byte[] destinationAddressBytes, byte[] destinationPortBytes, byte addressType)
+        private static byte[] GetCommandRequest(byte[] destinationAddressBytes, byte[] destinationPortBytes, byte addressType)
         {
             var request = new byte[4 + destinationAddressBytes.Length + 2];
             

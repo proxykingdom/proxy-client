@@ -76,7 +76,7 @@ namespace Proxy.Client
         }
 
         #region Private Methods
-        private byte[] GetCommandRequest(byte[] destinationAddressBytes, byte[] destinationPortBytes, byte[] userIdBytes, byte[] hostBytes)
+        private static byte[] GetCommandRequest(byte[] destinationAddressBytes, byte[] destinationPortBytes, byte[] userIdBytes, byte[] hostBytes)
         {
             var request = new byte[10 + userIdBytes.Length + hostBytes.Length];
 
