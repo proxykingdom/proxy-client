@@ -17,10 +17,6 @@ Install-Package Proxy.Client
 ```shell
 dotnet add package Proxy.Client
 ```
-
-## Target Framework
-.NET 5.0
-
 ## Basic Usage
 ```C#
 using(var socks4ProxyClient = new Socks4ProxyClient("212.86.75.9", 4153))
