@@ -266,7 +266,6 @@ namespace Proxy.Client.Utilities.Extensions
         /// </summary>
         /// <param name="sslStream">Underlying SSL Stream.</param>
         /// <param name="buffer">Read byte buffer.</param>
-        /// <param name="count">Maximum number of bytes to read from the stream.</param>
         /// <param name="readTimeout">Socket Read Timeout.</param>
         /// <param name="cancellationTokenSourceManager">Cancellation Token Source manager.</param>
         /// <returns>Number of read bytes</returns>
