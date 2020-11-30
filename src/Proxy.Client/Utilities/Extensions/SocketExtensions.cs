@@ -13,7 +13,7 @@ namespace Proxy.Client.Utilities.Extensions
     /// <summary>
     /// Extension class that performs socket operations.
     /// </summary>
-    internal static class SocketTaskExtensions
+    internal static class SocketExtensions
     {
         private const int BufferSize = 500;
         private const int PeekBufferSize = 10;
