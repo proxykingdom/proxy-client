@@ -22,7 +22,7 @@ namespace Proxy.Client.Utilities.Extensions
 
             stopwatch.Stop();
 
-            return stopwatch.ElapsedMilliseconds;
+            return (float)stopwatch.Elapsed.TotalSeconds;
         }
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace Proxy.Client.Utilities.Extensions
 
             stopwatch.Stop();
 
-            return (stopwatch.ElapsedMilliseconds, response);
+            return ((float)stopwatch.Elapsed.TotalSeconds, response);
         }
 
         /// <summary>
@@ -55,7 +55,7 @@ namespace Proxy.Client.Utilities.Extensions
 
             stopwatch.Stop();
 
-            return stopwatch.ElapsedMilliseconds;
+            return (float)stopwatch.Elapsed.TotalSeconds;
         }
 
         /// <summary>
@@ -72,7 +72,7 @@ namespace Proxy.Client.Utilities.Extensions
 
             stopwatch.Stop();
 
-            return (stopwatch.ElapsedMilliseconds, response);
+            return ((float)stopwatch.Elapsed.TotalSeconds, response);
         }
     }
 }
