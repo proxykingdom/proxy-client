@@ -34,8 +34,7 @@ namespace Proxy.Client.Utilities.Extensions
                 bytesRead = socket.Receive(buffer.Span); 
             });
 
-            if (bytesRead == 0)
-                throw new ProxyException("Destination Server has no data to send.");
+            if (bytesRead == 0) throw new ProxyException("Destination Server has no data to send.");
 
             var bufferString = Encoding.ASCII.GetString(buffer.Span.Slice(0, bytesRead));
             placeHolder.Append(bufferString);
@@ -78,8 +77,7 @@ namespace Proxy.Client.Utilities.Extensions
                 bytesRead = await socket.ReceiveAsync(buffer, readTimeout, cancellationTokenSourceManager);
             });
 
-            if (bytesRead == 0)
-                throw new ProxyException("Destination Server has no data to send.");
+            if (bytesRead == 0) throw new ProxyException("Destination Server has no data to send.");
 
             var bufferString = Encoding.ASCII.GetString(buffer.Span.Slice(0, bytesRead));
             placeHolder.Append(bufferString);
@@ -120,8 +118,7 @@ namespace Proxy.Client.Utilities.Extensions
                 bytesRead = sslStream.Read(buffer.Span);
             });
 
-            if (bytesRead == 0)
-                throw new ProxyException("Destination Server has no data to send.");
+            if (bytesRead == 0) throw new ProxyException("Destination Server has no data to send.");
 
             var bufferString = Encoding.ASCII.GetString(buffer.Span.Slice(0, bytesRead));
             placeHolder.Append(bufferString);
@@ -164,8 +161,7 @@ namespace Proxy.Client.Utilities.Extensions
                 bytesRead = await sslStream.ReadAsync(buffer, readTimeout, cancellationTokenSourceManager);
             });
 
-            if (bytesRead == 0)
-                throw new ProxyException("Destination Server has no data to send.");
+            if (bytesRead == 0) throw new ProxyException("Destination Server has no data to send.");
 
             var bufferString = Encoding.ASCII.GetString(buffer.Span.Slice(0, bytesRead));
             placeHolder.Append(bufferString);
@@ -290,6 +286,9 @@ namespace Proxy.Client.Utilities.Extensions
             while (totalBytesRead < contentLength)
             {
                 var innerBytesRead = socket.Receive(buffer, SocketFlags.None);
+
+                if (innerBytesRead == 0) throw new ProxyException("Stream ended without reaching expected limit.");
+
                 totalBytesRead += innerBytesRead;
                 placeHolder.Append(Encoding.ASCII.GetString(buffer.Slice(0, innerBytesRead)));
             }
@@ -305,6 +304,9 @@ namespace Proxy.Client.Utilities.Extensions
             while (totalBytesRead < contentLength)
             {
                 var innerBytesRead = await socket.ReceiveAsync(buffer, readTimeout, timeoutCancellationTokenSourceWrapper);
+
+                if (innerBytesRead == 0) throw new ProxyException("Stream ended without reaching expected limit.");
+
                 totalBytesRead += innerBytesRead;
                 placeHolder.Append(Encoding.ASCII.GetString(buffer.Span.Slice(0, innerBytesRead)));
             }
@@ -319,6 +321,9 @@ namespace Proxy.Client.Utilities.Extensions
             while (totalBytesRead < contentLength)
             {
                 var innerBytesRead = sslStream.Read(buffer);
+
+                if (innerBytesRead == 0) throw new ProxyException("Stream ended without reaching expected limit.");
+
                 totalBytesRead += innerBytesRead;
                 placeHolder.Append(Encoding.ASCII.GetString(buffer.Slice(0, innerBytesRead)));
             }
@@ -332,6 +337,9 @@ namespace Proxy.Client.Utilities.Extensions
             while (totalBytesRead < contentLength)
             {
                 var innerBytesRead = await sslStream.ReadAsync(buffer, readTimeout, timeoutCancellationTokenSourceWrapper);
+
+                if (innerBytesRead == 0) throw new ProxyException("Stream ended without reaching expected limit.");
+
                 totalBytesRead += innerBytesRead;
                 placeHolder.Append(Encoding.ASCII.GetString(buffer.Span.Slice(0, innerBytesRead)));
             }
@@ -375,6 +383,9 @@ namespace Proxy.Client.Utilities.Extensions
                     var readSize = remainingReadSize > BufferSize ? BufferSize : remainingReadSize;
 
                     var innerBytesRead = socket.Receive(buffer.Slice(readSize), SocketFlags.None);
+
+                    if (innerBytesRead == 0) throw new ProxyException("Stream ended without reaching expected limit.");
+
                     totalBytesRead += innerBytesRead;
                     placeHolder.Append(Encoding.ASCII.GetString(buffer.Slice(0, innerBytesRead)));
                 }
@@ -412,6 +423,9 @@ namespace Proxy.Client.Utilities.Extensions
                     var readSize = remainingReadSize > BufferSize ? BufferSize : remainingReadSize;
 
                     var innerBytesRead = await socket.ReceiveAsync(buffer.Slice(0, readSize), readTimeout, timeoutCancellationTokenSourceWrapper);
+
+                    if (innerBytesRead == 0) throw new ProxyException("Stream ended without reaching expected limit.");
+
                     totalBytesRead += innerBytesRead;
                     placeHolder.Append(Encoding.ASCII.GetString(buffer.Span.Slice(0, innerBytesRead)));
                 }
@@ -448,6 +462,9 @@ namespace Proxy.Client.Utilities.Extensions
                     var readSize = remainingReadSize > BufferSize ? BufferSize : remainingReadSize;
 
                     var innerBytesRead = ss.Read(buffer.Slice(0, readSize));
+
+                    if (innerBytesRead == 0) throw new ProxyException("Stream ended without reaching expected limit.");
+
                     totalBytesRead += innerBytesRead;
                     placeHolder.Append(Encoding.ASCII.GetString(buffer.Slice(0, innerBytesRead)));
                 }
@@ -485,6 +502,9 @@ namespace Proxy.Client.Utilities.Extensions
                     var readSize = remainingReadSize > BufferSize ? BufferSize : remainingReadSize;
 
                     var innerBytesRead = await sslStream.ReadAsync(buffer.Slice(0, readSize), readTimeout, timeoutCancellationTokenSourceWrapper);
+
+                    if (innerBytesRead == 0) throw new ProxyException("Stream ended without reaching expected limit.");
+
                     totalBytesRead += innerBytesRead;
                     placeHolder.Append(Encoding.ASCII.GetString(buffer.Span.Slice(0, innerBytesRead)));
                 }
