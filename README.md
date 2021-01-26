@@ -28,7 +28,7 @@ using(var socks4ProxyClient = new Socks4ProxyClient("212.86.75.9", 4153))
 ```C#
 using(var socks4ProxyClient = new Socks4ProxyClient("212.86.75.9", 4153))
 {
-    var proxyHeaders = var headers = new List<ProxyHeader>
+    var proxyHeaders = new List<ProxyHeader>
     {
         ProxyHeader.Create("User-Agent", "My-UserAgent"),
         ProxyHeader.Create("Cache-Control", "no-cache")
